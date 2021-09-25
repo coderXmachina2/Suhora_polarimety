@@ -1,0 +1,3 @@
+apt_phot notebooks output excel to this directory
+
+polarimetry takes in input from this directory

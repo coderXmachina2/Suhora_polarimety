@@ -59,7 +59,7 @@ def make_calib_files(bias, dark, flat):
     master_drk =  np.median(drk_frames, axis= 0)
     
     #Here is an idea, depending on which pol filter you want to use, only take 
-    #the corresponding p filter
+    #the corresponding p filter (P3 - R) or (P1 - R)
     #
     
     for flat_f in flat:

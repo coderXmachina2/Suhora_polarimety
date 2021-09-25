@@ -155,13 +155,18 @@ def apt_phot_local_bkg_sub(fits_data_1, search_offset, search_array, positions, 
 def solve_apt(combine_target, trial_radii,verbose):
     knees = []
 
+    #print(combine_target, trial_radii)
+    #print("Your machine finna break")
     for x in range(0, len(combine_target)):
+        #print(x)
         kn = KneeLocator(trial_radii, 
                          combine_target[x], 
                          curve='concave', 
                          direction='increasing')
         knees.append(kn.knee)
         if(verbose):
+            plt.plot(combine_target)
+            plt.show()
             print("Target:", x+1 ,kn.knee)
 
     if(verbose):

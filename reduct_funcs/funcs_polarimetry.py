@@ -27,6 +27,7 @@ def source_peak_finder_pol_std(fits_data_1, siegma, search_array, trim, plot_pea
     """
     Function that finds coordinates of stars.
     Star Finder used for the really faint stars of the pol std group
+    So I guess this faint source detection thing is kind of pointless now. All of the targets are observeable
     """
     #Some things that hold data
     x_peak = []
