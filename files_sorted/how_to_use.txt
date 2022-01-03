@@ -1,7 +1,0 @@
-Manually sort your files according to
-
-obs_date -> bias
-	 -> dark
-	 -> target
-	 -> flat
-	 -> pol_std

@@ -1,4 +1,0 @@
-Manually sort your flats into the directories. Put flats into:
-
-P1-R
-P3-R

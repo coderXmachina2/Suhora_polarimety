@@ -161,7 +161,7 @@ def peak_to_DAO(apt_pos):
     DAO_array = []
     for pos in apt_pos:
         pos_array = [   ]
-        #print(pos[0], pos[1])
+
         pos_array.append(pos[0])
         pos_array.append(pos[1])
         DAO_array.append(pos_array)
@@ -169,6 +169,106 @@ def peak_to_DAO(apt_pos):
     return(DAO_array)
     
 def dao_star_finder(fits_data_1, search_array, siegma, second_thresh ,search_offset, apt_rad, ann_in_rad, ann_out_rad, plot, plot_tab):
+    
+    search_this = fits_data_1[0].data[512-search_offset:512+search_offset,
+                                   512-search_offset:512+search_offset]
+    
+    #DAO star finder. Takes in argument sigma 
+    mean, median, std = sigma_clipped_stats(search_this, sigma=siegma)
+    daofind = DAOStarFinder(fwhm=3.0, threshold=5.*std) #what happens if we change fwhm
+    sources = daofind(search_this - median)#, mask=mask)  #sources is a table just like tbl
+    
+    if plot_tab:
+        print("DAO found", len(sources), "objects discovered")
+        print(sources)
+    
+    for col in sources.colnames:  
+        sources[col].info.format = '%.8g'  #for consistent table output
+        
+    x_peak = []
+    y_peak = []
+    measure_flux = []
+    peak_val = []
+    
+    for things in sources:
+        x_peak.append(things['xcentroid'])    #xcentroid #ycentroid
+        y_peak.append(things['ycentroid'])
+        measure_flux.append(things['flux'])
+        peak_val.append(things['peak'])
+        
+    #second round thresholding (second filter)    
+    x_targ = []
+    y_targ = []
+    flux_targ = []
+    peak_targ = []
+    sub_sample = []
+    
+    if plot_tab:
+        print("second_thresh", second_thresh)
+    
+    for peaks in peak_val: 
+        if peaks < second_thresh: #was 2 thousand 
+            sub_sample.append(peaks)
+                
+    threshold = np.mean(sub_sample)+5*np.std(sub_sample)
+    
+    for i in range(0, len(measure_flux)): #looks inside zone
+        """
+        #TODO replace with a circle
+        #Calculate a distance r
+        #if distnace to point (d = sqrt( (x-x)^2 + (y-y)^2) is less than some input d#search offset is the center
+        """
+        if(y_peak[i] > search_offset-search_array[0] and 
+           y_peak[i] < search_offset+search_array[1] and 
+           x_peak[i] > search_offset-search_array[2] and 
+           x_peak[i] < search_offset+search_array[3] and peak_val[i] > threshold):
+            x_targ.append(x_peak[i])
+            y_targ.append(y_peak[i])
+            flux_targ.append(measure_flux[i])
+            peak_targ.append(peak_val[i])
+    
+    positions = np.transpose((x_targ, y_targ)) #positions
+    apertures = CircularAperture(positions, r=apt_rad) #Its just standard 4
+    annulus_aperture = CircularAnnulus(positions, r_in= ann_in_rad, r_out=ann_out_rad)
+    
+    if (plot):
+        plt.imshow(search_this)#, cmap='Greys', origin='lower', norm=norm,interpolation='nearest')
+        plt.title(fits_data_1[0].header['OBJECT']+ " " +fits_data_1[0].header['FILTER'] + " reduced " + fits_data_1[0].header['TIME-OBS']+" DAOphot")
+        plt.axvline(x=len(search_this)/2, c='black', alpha=0.2)
+        plt.axhline(y=len(search_this[0])/2, c='black', alpha=0.2)
+
+        #This thing is freaking magical!
+        plt.plot([search_offset+search_array[3],search_offset+search_array[3]], [search_offset-search_array[0],search_offset+search_array[1]], 'k-', lw=1.75, alpha=0.4, linestyle = '--') #vertical
+        plt.plot([search_offset-search_array[2],search_offset-search_array[2]], [search_offset-search_array[0],search_offset+search_array[1]], 'k-', lw=1.75, alpha=0.4, linestyle ='--') #vertical 
+        plt.plot([search_offset-search_array[2],search_offset+search_array[3]], [search_offset+search_array[1],search_offset+search_array[1]], 'k-', lw=1.75, alpha=0.4, linestyle ='--') #horizontal
+        plt.plot([search_offset+search_array[3],search_offset-search_array[2]], [search_offset-search_array[0],search_offset-search_array[0]], 'k-', lw=1.75, alpha=0.4, linestyle = '--') #horizontal lines
+
+        for xint in range(0,len(x_targ)):
+            plt.text(x_targ[xint], 
+                     y_targ[xint], 
+                     "Target "+ str(xint+1) + " " + str((round(x_targ[xint], 2), round(y_targ[xint],2))) + "\nFlux: " +
+                     str(round(flux_targ[xint], 4)) +
+                     "\nPeak_val: " + str(round(peak_targ[xint], 4)), 
+                     fontsize=16, alpha=10)
+
+        ap_patches = apertures.plot(color='white', lw=2,
+                                   label='Photometry aperture')
+        ann_patches = annulus_aperture.plot(color='red', lw=2,
+                                            label='Background annulus')
+        handles = (ap_patches[0], ann_patches[0])
+
+        plt.legend(loc=(0.17, 0.05), facecolor='#458989', labelcolor='white',
+                   handles=handles, prop={'weight': 'bold', 'size': 11})
+        plt.colorbar()
+        plt.grid(lw='0.15')
+        plt.show()
+    
+    return positions
+
+def dao_star_finder_HD104860(fits_data_1, search_array, siegma, second_thresh ,search_offset, apt_rad, ann_in_rad, ann_out_rad, plot, plot_tab):
+    """
+    #Special function for 104860
+    """
     
     search_this = fits_data_1[0].data[512-search_offset:512+search_offset,
                                    512-search_offset:512+search_offset]
