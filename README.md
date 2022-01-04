@@ -13,7 +13,7 @@ Steps:
 
 ![Region_Of_Interest](https://github.com/coderXmachina2/Suhora_polarimety/blob/main/github_imgs/region_of_interest.png)
 
-4. Perform computation of normalized Stokes parameters q and u from source counts based on equations from Ramanprakash et al. 2019 where q = (I<sup>0</sup>-I<sup>90</sup>)/(I<sup>0</sup>+I<sup>90</sup>) and u = (I<sup>45</sup>-I<sup>135</sup>)/(I<sup>45</sup>+I<sup>135</sup>) 
+4. Perform computation of normalized Stokes parameters q and u from source counts based on equations from Ramanprakash et al. 2019 where q = (I<sub>0</sub>-I<sub>90</sub>)/(I<sub>0</sub>+I<sub>90</sub>) and u = (I<sub>45</sub>-I<sub>135</sub>)/(I<sub>45</sub>+I<sub>135</sub>) 
 
 ![XL1n2](https://github.com/coderXmachina2/Suhora_polarimety/blob/main/github_imgs/Excels_1_and_2.PNG)
 
@@ -23,7 +23,16 @@ Steps:
 
 ![master_pol_plot](https://github.com/coderXmachina2/Suhora_polarimety/blob/main/github_imgs/master_plot_polarimetry.png)
 
-8. Calibrate for instrumental polarization
-9. Calculate Polarization Degree and Polarization Angle (PA)
+8. Check for polarimetric stability/ time variability and calculate instrumental polarization
+
+![q_stab](https://github.com/coderXmachina2/Suhora_polarimety/blob/main/github_imgs/q_stability.png)
+
+![u_stab](https://github.com/coderXmachina2/Suhora_polarimety/blob/main/github_imgs/u_stability.png)
+
+10. Calculate Polarization Degree (PD) and Polarization Angle (PA)
+
+![PD_stab](https://github.com/coderXmachina2/Suhora_polarimety/blob/main/github_imgs/PD_stab.png)
+
+![PA_stab](https://github.com/coderXmachina2/Suhora_polarimety/blob/main/github_imgs/PA_stab.png)
 
 Excel files included in repo
