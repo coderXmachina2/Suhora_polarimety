@@ -2,6 +2,10 @@
 
 R band optical polarimetry of EE Cephei with birefringent Wollaston prism/ birefringent Savart plate polarimetric filter. Basically the tools and processing pipe to compute polarization degree and position angle.
 
+The objective of the experiment is to investigate the variation of Polarization Degree (PD) and Polarization Angle (PA) as a function of time in conjunction with the 2020 Eclipse of the debris disk of the variable star EE Cep
+
+![flux_plot](https://github.com/coderXmachina2/Suhora_polarimety/blob/main/github_imgs/EE_Cep_Stand_Mag_flux_plot.PNG)
+
 Steps:
 1. Reduce CCD image. Subtract the image with bias, subtract the image with dark, divide image by bias subtracted master flat. Corrects the flux distribution of the image. Flat fielding reduces the interpixel variations in the image (the bright spot in the image center).
 
