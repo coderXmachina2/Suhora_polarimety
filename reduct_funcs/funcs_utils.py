@@ -108,6 +108,9 @@ def data_loader():
     ret_list_target = []
     
     print("Load all excel data") #One string the path is everything before master. the filename is after.
+    
+    ##########
+    #2020-03-05
 
     target_data_03_05 = funcs_polarimetry.load_pol_data( "./stats/2020-03-05/target/EE_Cep/master_2020-03-05_eecep_P1-P3R0-102_combined.xlsx", False )
     zero_pol_std_03_05 = funcs_polarimetry.load_pol_data("./stats/2020-03-05/pol_std/G191B2B/master_2020-03-05_g191b2b_P1-P3R0-46_combined.xlsx", False )
@@ -117,13 +120,26 @@ def data_loader():
     ret_list_high_pol.append(high_pol_std_03_05)
     ret_list_target.append(target_data_03_05)
     
+    ##########
+    #2020-03-13
+    #I am making a fiducial date for trouble shooting. 2020-03-13
+    #zero_pol_std_03_13 = funcs_polarimetry.load_pol_data( "./stats/2020-03-13/pol_std/G191B2B/master_2020-03-13_G191B2B_P1-P3R0-60_mac_comb.xlsx", False) #This is unstable. Try Relading it
+    
+    #ret_list_zero_pol.append(zero_pol_std_03_13) #worse
+    
+    ##########
+    #2020-03-14
+    
     target_data_03_14 = funcs_polarimetry.load_pol_data( "./stats/2020-03-14/target/EE_Cep/master_2020-03-14_EE Cep_P1-P3R0-69_combined.xlsx", False )
-    zero_pol_std_03_14 = funcs_polarimetry.load_pol_data( "./stats/2020-03-14/pol_std/G191B2B/master_2020-03-14_G191B2B_P1-P3R0-60_combined.xlsx", False)
+    zero_pol_std_03_14 = funcs_polarimetry.load_pol_data( "./stats/2020-03-14/pol_std/G191B2B/master_2020-03-14_G191B2B_P1-P3R0-60_combined.xlsx", False) #This is unstable. Try Relading it
     high_pol_std_03_14 = funcs_polarimetry.load_pol_data("./stats/2020-03-14/pol_std/HD215806/master_2020-03-14_HD215806_P1-P3R60-301_combined.xlsx", False)
 
-    ret_list_zero_pol.append(zero_pol_std_03_14)
+    #ret_list_zero_pol.append(zero_pol_std_03_14) #bad
     ret_list_high_pol.append(high_pol_std_03_14)
     ret_list_target.append(target_data_03_14)
+    
+    ##########
+    #2020-03-15
     
     target_data_03_15 = funcs_polarimetry.load_pol_data("./stats/2020-03-15/target/EE_Cep/master_2020-03-15_EE Cep_P1-P3R19-59_combined.xlsx", False )
     zero_pol_std_03_15 = funcs_polarimetry.load_pol_data("./stats/2020-03-15/pol_std/G191B2B/master_2020-03-15_G191B2B_P1-P3R0-40_combined.xlsx", False )
@@ -132,16 +148,25 @@ def data_loader():
     ret_list_zero_pol.append(zero_pol_std_03_15)
     ret_list_high_pol.append(high_pol_std_03_15)
     ret_list_target.append(target_data_03_15)
+    
+    ##########
+    #2020-03-24
 
     target_data_03_24 = funcs_polarimetry.load_pol_data("./stats/2020-03-24/target/EE_Cep/master_2020-03-24_eecep_P1-P3R600-770_mac_comb.xlsx", False)
     
     ret_list_target.append(target_data_03_24)
+    
+    ##########
+    #2020-03-25
     
     target_data_03_25 = funcs_polarimetry.load_pol_data("./stats/2020-03-25/target/EE_Cep/master_2020-03-25_eecep_P1-P3R464-540_combined.xlsx", False)
     zero_pol_std_03_25 = funcs_polarimetry.load_pol_data("./stats/2020-03-25/pol_std/HD212311/master_2020-03-25_hd212311_P1-P3R0-44_combined.xlsx", False)
     
     ret_list_zero_pol.append(zero_pol_std_03_25)
     ret_list_target.append(target_data_03_25)
+    
+    ##########
+    #2020-03-26
 
     target_data_03_26 = funcs_polarimetry.load_pol_data("./stats/2020-03-26/target/EE_Cep/master_2020-03-26_eecep_P1-P3R40-109_mac_comb.xlsx", False)
     zero_pol_std_03_26 = funcs_polarimetry.load_pol_data("./stats/2020-03-26/pol_std/G191B2B/master_2020-03-26_g191b2b_P1-P3R0-30_combined.xlsx", False )
@@ -158,24 +183,39 @@ def data_loader():
     ret_list_high_pol.append(high_pol_std_03_26_02)
     ret_list_high_pol.append(high_pol_std_03_26_03)
     ret_list_high_pol.append(high_pol_std_03_26_04)
+    
+    ##########
+    #2020-03-31
 
     target_data_03_31 = funcs_polarimetry.load_pol_data("./stats/2020-03-31/target/EE_Cep/master_2020-03-31_eecep_P1-P3R140-194_mac_comb_x.xlsx", False)
     zero_pol_std_03_31 = funcs_polarimetry.load_pol_data("./stats/2020-03-31/pol_std/HD212311/master_2020-03-31_hd212311_P1-P3R0-40_mac_comb_outlier_zapped.xlsx", False )
     
     ret_list_target.append(target_data_03_31)
     ret_list_zero_pol.append(zero_pol_std_03_31)
+    
+    ##########
+    #2020-04-01
 
     target_data_04_01 = funcs_polarimetry.load_pol_data("./stats/2020-04-01/target/EE_Cep/master_2020-04-01_EE_Cep_P1-P3R307-425.xlsx", False)
     
     ret_list_target.append(target_data_04_01)
+    
+    ##########
+    #2020-04-04
 
     target_data_04_04 = funcs_polarimetry.load_pol_data("./stats/2020-04-04/target/EE_Cep/master_2020-04-04_EE Cep_P3-R26-46_mancombined_corr.xlsx", False)
     
     ret_list_target.append(target_data_04_04)
+    
+    ##########
+    #2020-04-05
 
     target_data_04_05 = funcs_polarimetry.load_pol_data("./stats/2020-04-05/target/EE_Cep/master_2020-04-05_EE Cep_P1-P3R0-43_corr.xlsx", False)
     
     ret_list_target.append(target_data_04_05)
+    
+    ##########
+    #2020-04-06
 
     zero_pol_std_04_06 = funcs_polarimetry.load_pol_data("./stats/2020-04-06/pol_std/HD212311/master_2020-04-06_hd212311_P1-P3R0-180_mac_comb.xlsx", False)
     high_pol_std_04_06 = funcs_polarimetry.load_pol_data("./stats/2020-04-06/pol_std/HD215806/master_2020-04-06_hd215806_P1-P3R180-388_mac_comb.xlsx", False)
@@ -187,6 +227,9 @@ def data_loader():
     ret_list_high_pol.append(high_pol_std_04_06)
     ret_list_high_pol.append(high_pol_std_04_06_02)
     
+    ##########
+    #2020-04-07
+    
     zero_pol_std_04_07 = funcs_polarimetry.load_pol_data("./stats/2020-04-07/pol_std/HD212311/master_2020-04-07_hd212311_P1-P3R0-180_mac_comb.xlsx", False)
     high_pol_std_04_07 = funcs_polarimetry.load_pol_data("./stats/2020-04-07/pol_std/HD215806/master_2020-04-07_hd215806_P1-P3R180-300_mac_comb.xlsx", False)
     high_pol_std_04_07_02 = funcs_polarimetry.load_pol_data("./stats/2020-04-07/pol_std/oj287/master_2020-04-07_oj287_P1-P3R300-312_mac_comb.xlsx", False)
@@ -196,6 +239,9 @@ def data_loader():
     ret_list_zero_pol.append(zero_pol_std_04_07)
     ret_list_high_pol.append(high_pol_std_04_07)
     ret_list_high_pol.append(high_pol_std_04_07_02)
+    
+    ##########
+    #2020-04-08
     
     zero_pol_std_04_08 = funcs_polarimetry.load_pol_data("./stats/2020-04-08/pol_std/HD212311/master_2020-04-08_hd212311_P1-P3R344-538_mac_comb.xlsx", False)
     high_pol_std_04_08 = funcs_polarimetry.load_pol_data("./stats/2020-04-08/pol_std/HD204827/master_2020-04-08_hd204827_P1-P3R42-276_mac_comb.xlsx", False)
@@ -207,10 +253,14 @@ def data_loader():
     ret_list_high_pol.append(high_pol_std_04_08)
     ret_list_high_pol.append(high_pol_std_04_08_02)
     
+    ##########
+    #2020-04-15
+    
     zero_pol_std_04_15 = funcs_polarimetry.load_pol_data("./stats/2020-04-15/pol_std/HD212311/master_2020-04-15_hd212311_P1-P3R120-340_mac_comb.xlsx", False)
-    high_pol_std_04_15 = funcs_polarimetry.load_pol_data("./stats/2020-04-15/pol_std/HD204827/master_2020-04-15_hd204827_P1-P3R0-120_mac_comb.xlsx", False)
+    high_pol_std_04_15 = funcs_polarimetry.load_pol_data("./stats/2020-04-15/pol_std/HD204827/master_2020-04-15_hd204827_P1-P3R0-120_mac_comb_corr.xlsx", False)
     high_pol_std_04_15_02 = funcs_polarimetry.load_pol_data("./stats/2020-04-15/pol_std/HD215806/master_2020-04-15_hd215806_P1-P3R340-442_mac_comb.xlsx", False)
     high_pol_std_04_15_03 = funcs_polarimetry.load_pol_data("./stats/2020-04-15/pol_std/OJ287/master_2020-04-15_oj287_P1-P3R503-541_mac_comb.xlsx", False)
+    
     target_data_04_15 = funcs_polarimetry.load_pol_data("./stats/2020-04-15/target/EE_Cep/master_2020-04-15_eecep_P1-P3R320-426_mac_comb.xlsx", False)
     
     ret_list_target.append(target_data_04_15)
@@ -219,7 +269,9 @@ def data_loader():
     ret_list_high_pol.append(high_pol_std_04_15_02)
     ret_list_high_pol.append(high_pol_std_04_15_03)
    
-    #That is a duplicate
+    ##########
+    #2020-04-16
+    
     zero_pol_std_04_16 = funcs_polarimetry.load_pol_data("./stats/2020-04-16/pol_std/G191B2B/master_2020-04-16_g191b2b_P1-P3R62-134_mac_comb_corr.xlsx", False)
     zero_pol_std_04_16_02 = funcs_polarimetry.load_pol_data("./stats/2020-04-16/pol_std/HD212311/master_2020-04-16_hd212311_P1-P3R194-234_mac_comb.xlsx", False)
     
@@ -229,22 +281,80 @@ def data_loader():
     high_pol_std_04_16_04 = funcs_polarimetry.load_pol_data("./stats/2020-04-16/pol_std/OJ287/master_2020-04-16_oj287_P1-P3R324-344_mac_comb.xlsx", False)
     
     target_data_04_16 = funcs_polarimetry.load_pol_data("./stats/2020-04-16/target/EE_Cep/master_2020-04-16_eecep_P1-P3R300-500_mac_comb_corr.xlsx", False)
-    #missing a target here ma dude. Please perform photometry.
-    #target_data_04_16 = funcs_polarimetry.load_pol_data("somefile", False)
+
     ret_list_zero_pol.append(zero_pol_std_04_16)
     ret_list_zero_pol.append(zero_pol_std_04_16_02)
     ret_list_high_pol.append(high_pol_std_04_16)
     ret_list_high_pol.append(high_pol_std_04_16_02)
     ret_list_high_pol.append(high_pol_std_04_16_03)
     ret_list_high_pol.append(high_pol_std_04_16_04)
-    #append target!
+
     ret_list_target.append(target_data_04_16)
     
-    #Ma dude
-    high_pol_std_04_18 = funcs_polarimetry.load_pol_data("./stats/2020-04-18/pol_std/oj287/master_2020-04-18_OJ287_P1-P3R0-20_mac_comb.xlsx", False)
-    ret_list_high_pol.append(high_pol_std_04_18)
+    ##########
+    #2020-04-18
     
-    #target_data_04_15 = funcs_polarimetry.load_pol_data("./stats/2020-04-15/target/EE_Cep/master_2020-04-15_eecep_P1-P3R320-426_mac_comb.xlsx", False)
+    high_pol_std_04_18 = funcs_polarimetry.load_pol_data("./stats/2020-04-18/pol_std/oj287/master_2020-04-18_OJ287_P1-P3R0-20_mac_comb.xlsx", False)
+    target_data_04_18 = funcs_polarimetry.load_pol_data("./stats/2020-04-18/target/EE_Cep/master_2020-04-18_EE Cet_P1-P3R0-100_mac_comb_corr.xlsx", False)
+    
+    ret_list_high_pol.append(high_pol_std_04_18)
+    ret_list_target.append(target_data_04_18)
+    
+    ##########
+    #2020-04-19
+    
+    zero_pol_std_04_19 = funcs_polarimetry.load_pol_data("./stats/2020-04-19/pol_std/HD212311/master_2020-04-19_HD212311_P1-P3R0-165_mac_comb_corr.xlsx", False)
+    high_pol_std_04_19 = funcs_polarimetry.load_pol_data("./stats/2020-04-19/pol_std/HD215806/master_2020-04-19_hd215806_P1-P3R165-265_mac_comb_corr.xlsx", False)
+    high_pol_std_04_19_02 = funcs_polarimetry.load_pol_data("./stats/2020-04-19/pol_std/OJ287/master_2020-04-19_oj287_P1-P3R265-285_mac_comb.xlsx", False)
+    
+    target_data_04_19 = funcs_polarimetry.load_pol_data("./stats/2020-04-19/target/EE_Cep/master_2020-04-19_EE Cep_P1-P3R0-50_mac_comb_corr.xlsx", False)
+    
+    ret_list_zero_pol.append(zero_pol_std_04_19)
+    ret_list_high_pol.append(high_pol_std_04_19)
+    ret_list_high_pol.append(high_pol_std_04_19_02)
+    
+    ret_list_target.append(target_data_04_19)
+    
+    ##########
+    #2020-04-21
+    
+    zero_pol_std_04_21 = funcs_polarimetry.load_pol_data("./stats/2020-04-21/pol_std/HD212311/master_2020-04-21_hd212311_P1-P3R0-60_mac_comb_corr.xlsx", False)
+    high_pol_std_04_21 = funcs_polarimetry.load_pol_data("./stats/2020-04-21/pol_std/HD215806/master_2020-04-21_hd215806_P1-P3R60-120_mac_comb.xlsx", False)
+    high_pol_std_04_21_02 = funcs_polarimetry.load_pol_data("./stats/2020-04-21/pol_std/OJ287/master_2020-04-21_oj287_P1-P3R167-209_mac_comb_corr.xlsx", False)
+    
+    target_data_04_21 = funcs_polarimetry.load_pol_data("./stats/2020-04-21/target/EE_Cep/master_2020-04-21_eecep_P1-P3R524-586_mac_comb.xlsx", False)
+    
+    ret_list_zero_pol.append(zero_pol_std_04_21)
+    ret_list_high_pol.append(high_pol_std_04_21)
+    ret_list_high_pol.append(high_pol_std_04_21_02)
+    
+    ret_list_target.append(target_data_04_21)
+    
+    ##########
+    #2020-04-22
+    
+    zero_pol_std_04_22 = funcs_polarimetry.load_pol_data("./stats/2020-04-22/pol_std/HD212311/master_2020-04-22_hd212311_P1-P3R74-154_mac_comb_corr.xlsx", False)
+    high_pol_std_04_22 = funcs_polarimetry.load_pol_data("./stats/2020-04-22/pol_std/HD215806/master_2020-04-22_hd215806_P1-P3R154-226_mac_comb_corr.xlsx", False)
+    high_pol_std_04_22_02 = funcs_polarimetry.load_pol_data("./stats/2020-04-22/pol_std/BD64106/master_2020-04-22_bd64106_P1-P3R0-74_mac_comb_corr.xlsx", False)
+    high_pol_std_04_22_03 = funcs_polarimetry.load_pol_data("./stats/2020-04-22/pol_std/OJ287/master_2020-04-22_oj287_P1-P3R266-288_mac_comb.xlsx", False)
+    
+    target_data_04_22 = funcs_polarimetry.load_pol_data("./stats/2020-04-22/target/EE_Cep/master_2020-04-22_eecep_P1-P3R240-342_mac_comb.xlsx", False)
+    
+    ret_list_zero_pol.append(zero_pol_std_04_22)
+    ret_list_high_pol.append(high_pol_std_04_22)
+    ret_list_high_pol.append(high_pol_std_04_22_02)
+    ret_list_high_pol.append(high_pol_std_04_22_03)
+    
+    ret_list_target.append(target_data_04_22)
+    ###
+    
+    ##########
+    #2020-04-22
+    
+    high_pol_std_04_23 = funcs_polarimetry.load_pol_data("./stats/2020-04-23/pol_std/BD64106/master_2020-04-23_bd64106_P1-P3R0-60_mac_comb.xlsx", False)
+    
+    ret_list_high_pol.append(high_pol_std_04_23)
+    
     
     #For now let 07_29 be the last batch of data for now
     target_data_07_29 = funcs_polarimetry.load_pol_data("./stats/2020-07-29/target/EE_Cep/master_2020-07-29_eecep_P1-P3R360-484_mac_comb.xlsx", False)

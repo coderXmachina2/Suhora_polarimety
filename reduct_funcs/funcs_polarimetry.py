@@ -24,6 +24,8 @@ from photutils import find_peaks
 from photutils.detection import DAOStarFinder
 from astropy.visualization.mpl_normalize import ImageNormalize
 from astropy.visualization import SqrtStretch
+from scipy import interpolate
+from scipy.interpolate import interp1d
 
 def source_peak_finder_pol_std(fits_data_1, siegma, search_array, trim, plot_peaks, verbose):
     """
@@ -223,6 +225,8 @@ def correct_q_u(target_data, zero_pol_std, high_pol_std, zero_pol_offset):
 def calc_pd2(input_data, plot_title, plot_c,sv_im_str ,perc_arg ,calc_pd_verbose, sv_arg):
     """
     #Input 
+    
+    #Does not plot as a function of MJD
     """
     print("Calculate Polarization Degree:")
     pol_d_array = []
@@ -264,15 +268,13 @@ def calc_pd2(input_data, plot_title, plot_c,sv_im_str ,perc_arg ,calc_pd_verbose
             pol_d_err_array.append(pol_d_err)
 
     t = Time(mjd_strs, format='isot', scale='utc')
-    #print(t, t.mjd)
-    #print(pol_d_array)
     
     #If i'm plotting pd then  when it moves to another one it will change shapes
     plt.scatter(np.linspace(0, len(pol_d_array)-1, num=len(pol_d_array)), pol_d_array, marker ="^")
     plt.errorbar(np.linspace(0, len(pol_d_array)-1, num=len(pol_d_array)), pol_d_array, xerr=[0]*len(pol_d_array), yerr=pol_d_err_array, lw=0.75, fmt="^", color=plot_c, alpha=0.9)
     plt.title(plot_title)
     
-    for h in range(0, len( t )):
+    for h in range(0, len(t)):
         plt.text(h, pol_d_array[h], array_des_nom[h]+"\nMJD: "+str(int(t[h].mjd))+"\nPD:"+str(round(pol_d_array[h], 2))+u"\u00B1"+str(round(pol_d_err_array[h], 1)), fontsize=14 ,rotation = 45)
 
     plt.grid()
@@ -316,7 +318,7 @@ def calc_pa2(input_data, plot_title, plot_c,sv_im_str  ,deg_arg , calc_pa_verbos
         pol_pa_err = math.sqrt(((1/(2*mean_q*(1 + (mean_u_squared/mean_q_squared))))**2 )*(mean_u_err_squared) + ((-1*( (mean_u)/(2*sum_o_squares)))**2 )*(mean_q_err_squared))
                 
         if(deg_arg):
-            if(calc_pa_verbose):
+            if(calc_pa_verbose): #
                 print("MJD:", result.group(1), pol_pa*(180/3.142), u"\u00B1",  pol_pa_err*(180/3.142))
             pol_pa_array.append(pol_pa*(180/3.142)) 
             pol_pa_err_array.append(pol_pa_err*(180/3.142)) 
@@ -341,6 +343,10 @@ def calc_pa2(input_data, plot_title, plot_c,sv_im_str  ,deg_arg , calc_pa_verbos
     plt.savefig(sv_im_str, bbox_inches='tight',pad_inches=0.1)
     plt.show()  
 
+    
+    
+
+    
 #These are rather deprecated
 #
 #
@@ -392,6 +398,189 @@ def calc_pa(target_data, zero_pol_std, high_pol_std, name_array):
 #
 #These are rather deprecated
 
+def plot_PA_stability(input_data, q_u_check, plot_verbose , mjd_align_check, verbose, sv_im):
+    #MJD PLOT SHOULD BE ITS OWN FUNCTION AYE
+    print("Plot Position Angle stability")
+
+    means_arr = []
+    means_err_arr = []
+    array_des_dates = []
+    
+    array_des_noms = []
+    mjd_strs = []
+    
+    for dats in input_data:        
+        result = re.search('(.*)_', list(dats.keys())[0][:12])
+        targ_name_str = re.search('_(.*)', list(dats.keys())[0])
+
+        array_des_noms.append(targ_name_str.group(1))
+        mjd_strs.append(result.group(1)+'T00:00:00.000000000')
+        array_des_dates.append(result.group(1)) #This is 
+        
+        
+        mean_q_err_squared = np.mean(dats[list(dats.keys())[0]][1][1:])**2
+        mean_u_err_squared = np.mean(dats[list(dats.keys())[0]][3][1:])**2
+        
+        mean_q_squared = np.mean(dats[list(dats.keys())[0]][0][1:])**2
+        mean_u_squared = np.mean(dats[list(dats.keys())[0]][2][1:])**2
+        
+        mean_q = np.mean(dats[list(dats.keys())[0]][0][1:])
+        mean_u = np.mean(dats[list(dats.keys())[0]][2][1:])
+        
+        sum_o_squares = mean_q_squared + mean_u_squared
+        
+        #So what do we need?
+        #For RINGO Slowikoska et al
+        pol_pa = 0.5*math.atan2(mean_u , mean_q )
+        pol_pa_err = math.sqrt(((1/(2*mean_q*(1 + (mean_u_squared/mean_q_squared))))**2 )*(mean_u_err_squared) + ((-1*( (mean_u)/(2*sum_o_squares)))**2 )*(mean_q_err_squared))
+        
+        if(verbose and mjd_align_check):
+            print(targ_name_str.group(1), Time([result.group(1)+'T00:00:00.000000000'])[0].mjd  )
+        elif(verbose):
+            print(targ_name_str.group(1), result.group(1))
+            
+        if(q_u_check=='degree'):
+            if(verbose):
+                print("Pol PA!!!", pol_pa*(180/3.142),u"\u00B1",pol_pa*(180/3.142) )
+
+                means_arr.append(  pol_pa*(180/3.142)   ) #mean of qs. Calculate PD
+                means_err_arr.append(pol_pa_err*(180/3.142)) #std of list. 
+        elif(q_u_check=='rad'):
+            if(verbose):
+                print("Pol PA!!!", pol_pa,u"\u00B1",pol_pa_err)
+
+                means_arr.append(pol_pa)
+                means_err_arr.append(pol_pa_err)
+            
+    t = Time(mjd_strs, format='isot', scale='utc')
+    
+    if(mjd_align_check):
+        for a in range(0, len(input_data)):
+            print(list(input_data[a].keys())[0], t[a], t.mjd[a])
+
+    fig, ax = plt.subplots()
+    markers, caps, bars = ax.errorbar(t.mjd, means_arr, yerr=means_err_arr, xerr =[0]*len(means_arr),
+            fmt='o', ecolor='blue',capsize=2, capthick=2)
+    plt.title(array_des_noms[0]+" Position Angle stability", fontsize=24)
+    if(plot_verbose):
+        for l in range(0, len(t.mjd)):
+            plt.text(t.mjd[l], means_arr[l], str(round(means_arr[l], 6))+u"\u00B1"+str(np.round(means_err_arr[l],4)), fontsize=24)
+    plt.yticks(fontsize = 22)
+    plt.xticks(fontsize = 22)
+    if(q_u_check=='q'):
+        plt.ylabel('q', fontsize=24)
+    elif(q_u_check=='u'):
+        plt.ylabel('u', fontsize=24)
+    plt.axhline(y=0, color = 'black')
+    plt.xlabel('MJD',fontsize=24)
+    plt.grid()
+
+    [bar.set_alpha(0.22) for bar in bars]
+    [cap.set_alpha(0.5) for cap in caps]
+    
+    if(sv_im != ''):
+        plt.savefig(sv_im,bbox_inches='tight',pad_inches=0.1 )
+
+    plt.show()    
+
+def plot_PD_stability(input_data, q_u_check, plot_verbose , mjd_align_check, verbose, sv_im):
+    #MJD PLOT SHOULD BE ITS OWN FUNCTION AYE
+    print("Plot Polarization Degree stability")
+
+    means_arr = []
+    means_err_arr = []
+    array_des_dates = []
+    
+    array_des_noms = []
+    mjd_strs = []
+    
+    for dats in input_data:        
+        result = re.search('(.*)_', list(dats.keys())[0][:12])
+        targ_name_str = re.search('_(.*)', list(dats.keys())[0])
+
+        array_des_noms.append(targ_name_str.group(1))
+        mjd_strs.append(result.group(1)+'T00:00:00.000000000')
+        array_des_dates.append(result.group(1)) #This is 
+        
+        
+        mean_q_squared = np.mean(dats[list(dats.keys())[0]][0][1:])**2
+        mean_u_squared = np.mean(dats[list(dats.keys())[0]][2][1:])**2
+        
+        mean_q_err_squared = np.mean(dats[list(dats.keys())[0]][1][1:])**2
+        mean_u_err_squared = np.mean(dats[list(dats.keys())[0]][3][1:])**2
+        
+        sum_o_squares = mean_q_squared + mean_u_squared
+        
+        pol_d = math.sqrt(sum_o_squares)
+        #From Slowikowska et al 2016
+        pol_d_err  = math.sqrt( ((mean_q_squared)/(sum_o_squares))*(mean_q_err_squared)+ ((mean_u_squared)/(sum_o_squares))*(mean_u_err_squared))
+
+        if(verbose and mjd_align_check):
+            print(targ_name_str.group(1), Time([result.group(1)+'T00:00:00.000000000'])[0].mjd  )
+        elif(verbose):
+            print(targ_name_str.group(1), result.group(1))
+            
+        if(q_u_check=='perc'):
+            if(verbose):
+                print("Pol D!!!", pol_d*100,u"\u00B1",pol_d_err*100 )
+                #print(np.mean(dats[list(dats.keys())[0]][0][1:]),u"\u00B1",np.std(dats[list(dats.keys())[0]][0][1:]))
+                means_arr.append(  pol_d*100   ) #mean of qs. Calculate PD
+                means_err_arr.append(pol_d_err*100) #std of list. 
+        elif(q_u_check=='nperc'):
+            if(verbose):
+                print("Pol D!!!", pol_d,u"\u00B1",pol_d_err)
+                #print(np.mean(dats[list(dats.keys())[0]][2][1:]),u"\u00B1",np.std(dats[list(dats.keys())[0]][2][1:]))
+                means_arr.append(pol_d)
+                means_err_arr.append(pol_d_err)
+            
+    t = Time(mjd_strs, format='isot', scale='utc')
+    
+    if(mjd_align_check):
+        for a in range(0, len(input_data)):
+            print(list(input_data[a].keys())[0], t[a], t.mjd[a])
+
+    fig, ax = plt.subplots()
+    markers, caps, bars = ax.errorbar(t.mjd, means_arr, yerr=means_err_arr, xerr =[0]*len(means_arr),
+            fmt='o', ecolor='blue',capsize=2, capthick=2)
+    plt.title(array_des_noms[0]+" Polarization Degree stability", fontsize=24)
+    if(plot_verbose):
+        for l in range(0, len(t.mjd)):
+            plt.text(t.mjd[l], means_arr[l], str(round(means_arr[l], 6))+u"\u00B1"+str(np.round(means_err_arr[l],4)), fontsize=24)
+    plt.yticks(fontsize = 22)
+    plt.xticks(fontsize = 22)
+    if(q_u_check=='q'):
+        plt.ylabel('q', fontsize=24)
+    elif(q_u_check=='u'):
+        plt.ylabel('u', fontsize=24)
+    plt.axhline(y=0, color = 'black')
+    plt.xlabel('MJD',fontsize=24)
+    plt.grid()
+
+    [bar.set_alpha(0.22) for bar in bars]
+    [cap.set_alpha(0.5) for cap in caps]
+    
+    if(sv_im != ''):
+        plt.savefig(sv_im,bbox_inches='tight',pad_inches=0.1 )
+
+    plt.show()    
+
+    """
+    print("Plot versus time!")
+    plt.errorbar(t.mjd, means_arr, yerr=means_err_arr, xerr =[0,0,0,0,0])
+    plt.title(q_u_check + " stability")
+    if(plot_verbose):
+        for l in range(0, len(t.mjd)):
+            plt.text(t.mjd[l], means_arr[l], str(round(means_arr[l], 6))+u"\u00B1"+str(np.round(means_err_arr[l],4)), fontsize=24)
+    if(q_u_check=='q'):
+        plt.ylabel('q', fontsize=24)
+    elif(q_u_check=='u'):
+        plt.ylabel('u', fontsize=24)
+    plt.xlabel('MJD')
+    plt.grid()
+    plt.show()
+    """
+
+
 def plot_q_u_stability(input_data, q_u_check, plot_verbose , mjd_align_check, verbose, sv_im):
     #MJD PLOT SHOULD BE ITS OWN FUNCTION AYE
     print("Plot q or u stability")
@@ -433,41 +622,78 @@ def plot_q_u_stability(input_data, q_u_check, plot_verbose , mjd_align_check, ve
         for a in range(0, len(input_data)):
             print(list(input_data[a].keys())[0], t[a], t.mjd[a])
             
-
-    #import matplotlib.pyplot as plt
-    #import numpy as np
-
-    #x = np.arange(0.1, 4, 0.5)
-    #y = np.exp(-x)
-
-    # example variable error bar values
-    #yerr = 0.1 + 0.2*np.sqrt(x)
-    #xerr = 0.1 + yerr
-
     fig, ax = plt.subplots()
     markers, caps, bars = ax.errorbar(t.mjd, means_arr, yerr=means_err_arr, xerr =[0]*len(means_arr),
             fmt='o', ecolor='blue',capsize=2, capthick=2)
+    
     plt.title(array_des_noms[0]+" "+q_u_check + " stability", fontsize=24)
     if(plot_verbose):
         for l in range(0, len(t.mjd)):
             plt.text(t.mjd[l], means_arr[l], str(round(means_arr[l], 6))+u"\u00B1"+str(np.round(means_err_arr[l],4)), fontsize=24)
+            
     plt.yticks(fontsize = 22)
     plt.xticks(fontsize = 22)
     if(q_u_check=='q'):
         plt.ylabel('q', fontsize=24)
+        plt.axhline(np.mean(means_arr), linestyle='dashed', alpha = 0.45 )
+        locs, labels = plt.yticks() 
+
+        plt.text(t.mjd[0],
+                 np.mean(means_arr) - (locs[1]-locs[0])/6 ,
+                 'Stokes q Instrumental Polarization:'+ str(np.round(np.mean(means_arr),4))+u"\u00B1"+str(np.round(np.mean(means_err_arr), 4  ) ),
+                 fontsize=24)
     elif(q_u_check=='u'):
         plt.ylabel('u', fontsize=24)
+        plt.axhline(np.mean(means_arr), linestyle='dashed', alpha = 0.45)
+        locs, labels = plt.yticks() 
+
+        plt.text(t.mjd[0],
+                 np.mean(means_arr) - (locs[1]-locs[0])/6,
+                 'Stokes u Instrumental Polarization:'+ str(np.round(np.mean(means_arr),4))+u"\u00B1"+str(np.round(np.mean(means_err_arr), 4)), 
+                 fontsize=24)
+        
     plt.axhline(y=0, color = 'black')
     plt.xlabel('MJD',fontsize=24)
     plt.grid()
-# loop through bars and caps and set the alpha value
+
     [bar.set_alpha(0.22) for bar in bars]
     [cap.set_alpha(0.5) for cap in caps]
     
     if(sv_im != ''):
         plt.savefig(sv_im,bbox_inches='tight',pad_inches=0.1 )
-
     plt.show()
+    
+    #Here is where you do the interpolate
+    
+    #bivariate spline interpolation
+    tck = interpolate.splrep(t.mjd, means_arr, s=0)
+    print("tck:", tck)
+    print("tck[0]:", tck[0])
+    print("tck[1]:", tck[1])
+    
+    #simple linear interpolation
+    f = interp1d(t.mjd, means_arr)
+    f2 = interp1d(t.mjd, means_arr, kind='cubic')
+    
+    #lets
+    #
+    plt.plot(tck[0], tck[1])
+    plt.errorbar(t.mjd, means_arr, yerr=means_err_arr, xerr =[0]*len(means_arr),
+            fmt='o', ecolor='blue',capsize=2, capthick=2)
+    plt.grid()
+    plt.show()
+    
+    print(f)
+    print(f2)
+    
+    plt.plot(f(t.mjd))
+    plt.plot(f2(t.mjd))
+    #plt.errorbar(t.mjd, means_arr, yerr=means_err_arr, xerr =[0]*len(means_arr),
+    #        fmt='o', ecolor='blue',capsize=2, capthick=2)
+    plt.grid()
+    plt.show()
+    
+    return(  [np.mean(means_arr) , np.mean(means_err_arr)]  )
 
     """
     print("Plot versus time!")
@@ -627,7 +853,7 @@ def q_n_u_stack_plot_v2( pol_data, sv_im_str ,pol_deg, launch_verb, key_verb):
             z_pol_us = z_pol_us + things[list(things.keys())[0]][2][1:]
             z_pol_ustds = z_pol_ustds + things[list(things.keys())[0]][3][1:]
         
-        elif('215806' in list(things.keys())[0] or 'oj287' in list(things.keys())[0] or 'hd204827' in list(things.keys())[0] or '251204' in list(things.keys())[0]):
+        elif('215806' in list(things.keys())[0] or '287' in list(things.keys())[0] or '204827' in list(things.keys())[0] or '251204' in list(things.keys())[0] or '64106' in list(things.keys())[0]):
             h_pol_qmeans.append(np.mean(things[list(things.keys())[0]][0][1:]))
             h_pol_umeans.append(np.mean(things[list(things.keys())[0]][2][1:]))
             high_pol_date_strs.append(list(things.keys())[0])
@@ -645,6 +871,7 @@ def q_n_u_stack_plot_v2( pol_data, sv_im_str ,pol_deg, launch_verb, key_verb):
         axs[0, 0].errorbar(target_qs, target_us, xerr=targ_qstds, yerr=targ_ustds, lw=0.75, fmt="o", color="r", alpha=0.1)
 
         axs[0, 0].grid()
+        axs[0, 0].set_title('Target')
         axs[0, 0].tick_params(axis='both', which='major', labelsize=20)
         axs[0, 0].set_ylabel('u', fontsize = 24)
         axs[0, 0].set_xlabel('q', fontsize = 24)
@@ -657,6 +884,7 @@ def q_n_u_stack_plot_v2( pol_data, sv_im_str ,pol_deg, launch_verb, key_verb):
         axs[1, 0].scatter(z_pol_qs,  z_pol_us, color = 'blue', alpha=0.11)
         axs[1, 0].errorbar(z_pol_qs,  z_pol_us, xerr=z_pol_qstds, yerr=z_pol_ustds, lw=0.75, fmt="o", color="blue", alpha=0.1)
         axs[1, 0].grid()
+        axs[1, 0].set_title('Zero Polarization Standard')
         axs[1, 0].tick_params(axis='both', which='major', labelsize=20)
         axs[1, 0].set_ylabel('u', fontsize = 24)
         axs[1, 0].set_xlabel('q', fontsize = 24)
@@ -669,6 +897,7 @@ def q_n_u_stack_plot_v2( pol_data, sv_im_str ,pol_deg, launch_verb, key_verb):
         axs[0, 1].errorbar(h_pol_qs,  h_pol_us, xerr=h_pol_qstds, yerr=h_pol_ustds, lw=0.75, fmt="o", color="green", alpha=0.1)        
         
         axs[0, 1].grid()
+        axs[0, 1].set_title('High Polarization Standard')
         axs[0, 1].tick_params(axis='both', which='major', labelsize=20)
         axs[0, 1].set_ylabel('u', fontsize = 24)
         axs[0, 1].set_xlabel('q', fontsize = 24)
@@ -692,6 +921,7 @@ def q_n_u_stack_plot_v2( pol_data, sv_im_str ,pol_deg, launch_verb, key_verb):
                 axs[1, 1].plot([0,h_pol_qmeans[z]], [0, h_pol_umeans[z]], 'k-', lw=1.75, alpha=0.4, linestyle = '--')
 
         axs[1, 1].grid()
+        axs[1, 1].set_title('All objects combined')
         axs[1, 1].tick_params(axis='both', which='major', labelsize=20)
         axs[1, 1].set_ylabel('u', fontsize = 24)
         axs[1, 1].set_xlabel('q', fontsize = 24)
@@ -822,7 +1052,7 @@ def q_n_u_stack_plot(target_data, zero_pol_std, high_pol_std, MJD_obs , name_arr
         plt.savefig(MJD_obs+" pol_scatter "+title,bbox_inches='tight',
                         pad_inches=0.1)        
         
-def calib_data(inp_data, instrumental_pol, verbose):
+def calib_data(inp_data, instrumental_pol, plt_show,verbose):
     """
     #Function that scatter plots q nad u
     #This thing just plots. It does not do anything fance such as compute mean blah
@@ -862,10 +1092,12 @@ def calib_data(inp_data, instrumental_pol, verbose):
     
     return zero_pol_calib_factor
     #Ideally you have to recreate the data just as it was on the other end.
+    #Work on the artefact
     """
     calibrated_product = cp(inp_data)
     
-    print("Function that takes in a dataset and a calibration points and subtracts the data") # calibration point an
+    print("Function that takes in a dataset and a calibration points and subtracts the data") #calibration point an
+    print("I am here!")
     if(verbose):
         print("Data (pre cal):", inp_data)
         print("Instrumental Polarization:", instrumental_pol) 
@@ -885,6 +1117,15 @@ def calib_data(inp_data, instrumental_pol, verbose):
     #    for k in range(0, len(       inp_data[list(inp_data[j].keys())[0]]      )):
     #        print("Replace Values")
     
+    #for j in range(0, len(inp_data)):
+    #    if(verbose):
+    #        print(inp_data[j])
+    #    print(  )
+        #for h in range(0, len(     inp_data[j][list(inp_data[j].keys())[0]][0][1:]   )):
+    
+    
+    
+    """
     for dats in inp_data:
         for h in range(0, len(   dats[list(dats.keys())[0]][0][1:]   )):
             if(verbose):
@@ -903,55 +1144,56 @@ def calib_data(inp_data, instrumental_pol, verbose):
         
         qs_err += dats[list(dats.keys())[0]][1][1:]
         us_err += dats[list(dats.keys())[0]][3][1:]
+    """
         
-    plt.scatter( qs_uncal , us_uncal) #orange 
-    plt.scatter( qs_cal, us_cal)   #blue
-    
-    
-    plt.scatter(qs_uncal , us_uncal)#, lw=0.75, fmt="o", alpha=0.9)
-    plt.scatter(qs_cal , us_cal)
-    #plt.errorbar(qs_cal, us_cal, xerr=qs_err, yerr=us_err, lw=0.75, fmt="o", alpha=0.9)
-    plt.title("Calibrated Pol Scatter")        
-    plt.yticks(fontsize = 22)
-    plt.xticks(fontsize = 22)        
-    plt.ylabel('u', fontsize = 24)
-    plt.xlabel('q', fontsize = 24)
-    plt.axhline(y=0, color = 'black')
-    plt.axvline(x=0, color = 'black')
-    plt.grid()
-    plt.show()
-    
-    plt.errorbar(qs_uncal , us_uncal, xerr=qs_err, yerr=us_err, lw=0.75, fmt="o", alpha=0.9)
-    plt.errorbar(qs_cal, us_cal, xerr=qs_err, yerr=us_err, lw=0.75, fmt="o", alpha=0.9)
-    plt.title("Calibrated Pol Scatter")        
-    plt.yticks(fontsize = 22)
-    plt.xticks(fontsize = 22)        
-    plt.ylabel('u', fontsize = 24)
-    plt.xlabel('q', fontsize = 24)
-    plt.axhline(y=0, color = 'black')
-    plt.axvline(x=0, color = 'black')
-    plt.grid()
-    plt.show()
-    
-    #
-    
-    fig, ax = plt.subplots()
-    markers, caps, bars = ax.errorbar(qs_uncal , us_uncal, xerr=qs_err, yerr=us_err,
-            fmt='o', ecolor='blue',capsize=1, capthick=1)
-    markers, caps, bars = ax.errorbar(qs_cal, us_cal, xerr=qs_err, yerr=us_err,
-            fmt='o', ecolor='orange',capsize=1, capthick=1)
-    plt.title("Calibrated Pol Scatter", fontsize=24)
-    plt.yticks(fontsize = 22)
-    plt.xticks(fontsize = 22)
-    plt.axhline(y=0, color = 'black')
-    plt.axvline(x=0, color = 'black')
+        
+        
+    if(plt_show):
+        plt.scatter( qs_uncal , us_uncal) #orange 
+        plt.scatter( qs_cal, us_cal)   #blue
 
-    plt.grid()
-    [bar.set_alpha(0.1) for bar in bars]
-    [cap.set_alpha(0.95) for cap in caps]
-    plt.show()
-    #if(sv_im != ''):
-    #    plt.savefig(sv_im,bbox_inches='tight',pad_inches=0.1 )
+        plt.scatter(qs_uncal , us_uncal)#, lw=0.75, fmt="o", alpha=0.9)
+        plt.scatter(qs_cal , us_cal)
+        #plt.errorbar(qs_cal, us_cal, xerr=qs_err, yerr=us_err, lw=0.75, fmt="o", alpha=0.9)
+        plt.title("Calibrated Pol Scatter")        
+        plt.yticks(fontsize = 22)
+        plt.xticks(fontsize = 22)        
+        plt.ylabel('u', fontsize = 24)
+        plt.xlabel('q', fontsize = 24)
+        plt.axhline(y=0, color = 'black')
+        plt.axvline(x=0, color = 'black')
+        plt.grid()
+        plt.show()
+
+        plt.errorbar(qs_uncal , us_uncal, xerr=qs_err, yerr=us_err, lw=0.75, fmt="o", alpha=0.9)
+        plt.errorbar(qs_cal, us_cal, xerr=qs_err, yerr=us_err, lw=0.75, fmt="o", alpha=0.9)
+        plt.title("Calibrated Pol Scatter")        
+        plt.yticks(fontsize = 22)
+        plt.xticks(fontsize = 22)        
+        plt.ylabel('u', fontsize = 24)
+        plt.xlabel('q', fontsize = 24)
+        plt.axhline(y=0, color = 'black')
+        plt.axvline(x=0, color = 'black')
+        plt.grid()
+        plt.show()
+
+        fig, ax = plt.subplots()
+        markers, caps, bars = ax.errorbar(qs_uncal , us_uncal, xerr=qs_err, yerr=us_err,
+                fmt='o', ecolor='blue',capsize=1, capthick=1)
+        markers, caps, bars = ax.errorbar(qs_cal, us_cal, xerr=qs_err, yerr=us_err,
+                fmt='o', ecolor='orange',capsize=1, capthick=1)
+        plt.title("Calibrated Pol Scatter", fontsize=24)
+        plt.yticks(fontsize = 22)
+        plt.xticks(fontsize = 22)
+        plt.axhline(y=0, color = 'black')
+        plt.axvline(x=0, color = 'black')
+
+        plt.grid()
+        [bar.set_alpha(0.1) for bar in bars]
+        [cap.set_alpha(0.95) for cap in caps]
+        plt.show()
+        #if(sv_im != ''):
+        #    plt.savefig(sv_im,bbox_inches='tight',pad_inches=0.1 )
 
 
     
