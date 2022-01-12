@@ -29,7 +29,7 @@ Steps:
 
 ![XL1n2_combined](https://github.com/coderXmachina2/Suhora_polarimety/blob/main/github_imgs/Excels_1_and_2_combined.PNG)
 
-6. Visualize Stokes parameters. Full plot and single plot options are available.
+6. Visualize Stokes parameters. Full plot and single plot options are available. Full scatter and mean scatter options are available.
 
 ![master_pol](https://github.com/coderXmachina2/Suhora_polarimety/blob/main/github_imgs/master_plot_polarimetry.png)
 
