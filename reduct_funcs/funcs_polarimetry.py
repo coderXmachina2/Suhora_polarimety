@@ -464,7 +464,7 @@ def plot_PA_stability(input_data, q_u_check, plot_verbose , mjd_align_check, ver
     plt.title(array_des_noms[0]+" Position Angle stability", fontsize=24)
     if(plot_verbose):
         for l in range(0, len(t.mjd)):
-            plt.text(t.mjd[l], means_arr[l], str(round(means_arr[l], 6))+u"\u00B1"+str(np.round(means_err_arr[l],4)), fontsize=24)
+            plt.text(t.mjd[l], means_arr[l], str(round(means_arr[l], 2))+u"\u00B1"+str(np.round(means_err_arr[l],4)), rotation = 45, fontsize=24)
     plt.yticks(fontsize = 22)
     plt.xticks(fontsize = 22)
     if(q_u_check=='q'):
@@ -545,7 +545,7 @@ def plot_PD_stability(input_data, q_u_check, plot_verbose , mjd_align_check, ver
     plt.title(array_des_noms[0]+" Polarization Degree stability", fontsize=24)
     if(plot_verbose):
         for l in range(0, len(t.mjd)):
-            plt.text(t.mjd[l], means_arr[l], str(round(means_arr[l], 6))+u"\u00B1"+str(np.round(means_err_arr[l],4)), fontsize=24)
+            plt.text(t.mjd[l], means_arr[l], str(round(means_arr[l], 2))+u"\u00B1"+str(np.round(means_err_arr[l],4)), fontsize=24)
     plt.yticks(fontsize = 22)
     plt.xticks(fontsize = 22)
     if(q_u_check=='q'):
@@ -711,7 +711,10 @@ def plot_q_u_stability(input_data, q_u_check, plot_verbose , mjd_align_check, ve
     plt.show()
     """
 
-def q_n_u_single_plot_v1(pol_data, plot_c, sv_im_str, MJD_arg ,pol_deg, only_means ,key_verb, sv_im):
+def q_n_u_single_plot_v1(pol_data, plot_c, sv_im_str,  sv_im,MJD_arg ,pol_deg, only_means ,key_verb):
+    """
+    #please document. Thanks past me...
+    """
     #data input, plot color, save image string, arguement for MJD (boolean), polaraization degree draw a line, launch verb (redundant)
     #key_verb is for opennig text
     
@@ -757,8 +760,8 @@ def q_n_u_single_plot_v1(pol_data, plot_c, sv_im_str, MJD_arg ,pol_deg, only_mea
     t = Time(mjd_strs, format='isot', scale='utc')
     
     if(only_means):
-        plt.scatter(targ_qmeans, targ_umeans, alpha=0.9)
-        plt.errorbar(targ_qmeans, targ_umeans, xerr=targ_qmeans_err, yerr=targ_umeans_err, lw=0.75, fmt="o", alpha=0.9)
+        plt.scatter(targ_qmeans, targ_umeans, alpha=0.9, color = plot_c,)
+        plt.errorbar(targ_qmeans, targ_umeans, xerr=targ_qmeans_err, yerr=targ_umeans_err, color = plot_c, lw=0.75, fmt="o", alpha=0.9)
     else:
         plt.scatter(target_qs, target_us, color = plot_c, alpha=0.11)
         plt.errorbar(target_qs, target_us, xerr=targ_qstds, yerr=targ_ustds, lw=0.75, fmt="o", color=plot_c, alpha=0.1)
@@ -875,7 +878,10 @@ def q_n_u_stack_plot_v2( pol_data, sv_im_str ,pol_deg, launch_verb, key_verb):
         axs[0, 0].tick_params(axis='both', which='major', labelsize=20)
         axs[0, 0].set_ylabel('u', fontsize = 24)
         axs[0, 0].set_xlabel('q', fontsize = 24)
-
+        axs[0, 0].axhline(y=0, color = 'black')
+        axs[0, 0].axvline(x=0, color = 'black')
+        
+        
         if(pol_deg):
             for z in range(0, len(targ_qmeans)):
                 axs[0, 0].plot([0,targ_qmeans[z]], [0, targ_umeans[z]], 'k-', lw=1.75, alpha=0.4, linestyle = '--')
@@ -888,6 +894,8 @@ def q_n_u_stack_plot_v2( pol_data, sv_im_str ,pol_deg, launch_verb, key_verb):
         axs[1, 0].tick_params(axis='both', which='major', labelsize=20)
         axs[1, 0].set_ylabel('u', fontsize = 24)
         axs[1, 0].set_xlabel('q', fontsize = 24)
+        axs[1, 0].axhline(y=0, color = 'black')
+        axs[1, 0].axvline(x=0, color = 'black')
         if(pol_deg):
             for z in range(0, len(z_pol_qmeans)):
                 axs[1, 0].plot([0,z_pol_qmeans[z]], [0, z_pol_umeans[z]], 'k-', lw=1.75, alpha=0.4, linestyle = '--')
@@ -901,6 +909,8 @@ def q_n_u_stack_plot_v2( pol_data, sv_im_str ,pol_deg, launch_verb, key_verb):
         axs[0, 1].tick_params(axis='both', which='major', labelsize=20)
         axs[0, 1].set_ylabel('u', fontsize = 24)
         axs[0, 1].set_xlabel('q', fontsize = 24)
+        axs[0, 1].axhline(y=0, color = 'black')
+        axs[0, 1].axvline(x=0, color = 'black')
         if(pol_deg):
             for z in range(0, len(h_pol_qmeans)):
                 axs[0, 1].plot([0,h_pol_qmeans[z]], [0, h_pol_umeans[z]], 'k-', lw=1.75, alpha=0.4, linestyle = '--')
@@ -925,6 +935,8 @@ def q_n_u_stack_plot_v2( pol_data, sv_im_str ,pol_deg, launch_verb, key_verb):
         axs[1, 1].tick_params(axis='both', which='major', labelsize=20)
         axs[1, 1].set_ylabel('u', fontsize = 24)
         axs[1, 1].set_xlabel('q', fontsize = 24)
+        axs[1, 1].axhline(y=0, color = 'black')
+        axs[1, 1].axvline(x=0, color = 'black')
 
         fig.tight_layout()
         
@@ -1094,7 +1106,7 @@ def calib_data(inp_data, instrumental_pol, plt_show,verbose):
     #Ideally you have to recreate the data just as it was on the other end.
     #Work on the artefact
     """
-    calibrated_product = cp(inp_data)
+    cal_prod = cp(inp_data) #I have copied the data
     
     print("Function that takes in a dataset and a calibration points and subtracts the data") #calibration point an
     print("I am here!")
@@ -1110,6 +1122,16 @@ def calib_data(inp_data, instrumental_pol, plt_show,verbose):
         
     qs_cal = []
     us_cal = []
+    
+    print("Iterate through calibrated product:")
+    
+    for k in range(0, len(cal_prod)):
+        print(cal_prod[k].keys())
+        print(cal_prod[k][list(cal_prod[k].keys())[0]]) #
+        print("Len of that things. Expectation 4:", len(cal_prod[k][list(cal_prod[k].keys())[0]]    ))
+        for z in range(1, len(cal_prod[k][list(cal_prod[k].keys())[0]][0][:])):
+            print(cal_prod[k][list(cal_prod[k].keys())[0]][0][z])
+            
     
     #rewrite
     #for j in range(0, len(inp_data)):
@@ -1194,10 +1216,7 @@ def calib_data(inp_data, instrumental_pol, plt_show,verbose):
         plt.show()
         #if(sv_im != ''):
         #    plt.savefig(sv_im,bbox_inches='tight',pad_inches=0.1 )
-
-
-    
-        
+            
 
 #Per filter
     

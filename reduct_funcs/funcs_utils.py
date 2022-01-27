@@ -8,6 +8,7 @@ import xlsxwriter
 import importlib
 import re
 import numpy as np
+from copy import deepcopy as cp
 
 from astropy.time import Time
 from xlwt import Workbook
@@ -349,11 +350,57 @@ def data_loader():
     ###
     
     ##########
-    #2020-04-22
+    #2020-04-23
+    
+    zero_pol_std_04_23 = funcs_polarimetry.load_pol_data("./stats/2020-04-23/pol_std/HD212311/master_2020-04-23_hd212311_P1-P3R60-120_mac_comb.xlsx", False)
     
     high_pol_std_04_23 = funcs_polarimetry.load_pol_data("./stats/2020-04-23/pol_std/BD64106/master_2020-04-23_bd64106_P1-P3R0-60_mac_comb.xlsx", False)
+    high_pol_std_04_23_02 = funcs_polarimetry.load_pol_data("./stats/2020-04-23/pol_std/HD215806/master_2020-04-23_hd215806_P1-P3R120-180_mac_comb_corr.xlsx", False)
+    high_pol_std_04_23_03 = funcs_polarimetry.load_pol_data("./stats/2020-04-23/pol_std/OJ287/master_2020-04-23_oj287_P1-P3R229-249_mac_comb.xlsx", False)
+
+    target_data_04_23 = funcs_polarimetry.load_pol_data("./stats/2020-04-23/target/EE_Cep/master_2020-04-23_eecep_P1-P3R320-410_mac_comb.xlsx", False)
     
     ret_list_high_pol.append(high_pol_std_04_23)
+    ret_list_high_pol.append(high_pol_std_04_23_02)
+    ret_list_high_pol.append(high_pol_std_04_23_03)
+    ret_list_zero_pol.append(zero_pol_std_04_23)
+    
+    ret_list_target.append(target_data_04_23)
+    
+    ##########
+    #2020-04-27
+    #The bad batch
+    
+    zero_pol_std_04_27 = funcs_polarimetry.load_pol_data("./stats/2020-04-27/pol_std/HD212311/master_2020-04-27_HD212311_P1-P3R0-80_mac_comb_corr.xlsx", False)
+    high_pol_std_04_27 = funcs_polarimetry.load_pol_data("./stats/2020-04-27/pol_std/HD215806/master_2020-04-27_HD215806_P1-P3R80-160_mac_comb.xlsx", False)
+    high_pol_std_04_27_02 = funcs_polarimetry.load_pol_data("./stats/2020-04-27/pol_std/OJ287/master_2020-04-27_OJ287_P1-P3R160-172_mac_comb_corr.xlsx", False)
+
+    target_data_04_27 = funcs_polarimetry.load_pol_data("./stats/2020-04-27/target/EE_Cep/master_2020-04-27_EECep_P1-P3R0-60_mac_comb_corr.xlsx", False)
+        
+    ret_list_high_pol.append(high_pol_std_04_27)
+    ret_list_high_pol.append(high_pol_std_04_27_02)
+    #ret_list_high_pol.append(high_pol_std_04_23_03)
+    ret_list_zero_pol.append(zero_pol_std_04_27)
+    
+    ret_list_target.append(target_data_04_27)
+    
+    ##########
+    #2020-04-28
+    #The OK batch
+    zero_pol_std_04_28 = funcs_polarimetry.load_pol_data("./stats/2020-04-28/pol_std/HD212311/master_2020-04-28_hd212311_P1-P3R60-120_mac_comb.xlsx", False)
+
+    high_pol_std_04_28 = funcs_polarimetry.load_pol_data("./stats/2020-04-28/pol_std/BD64106/master_2020-04-28_bd64106_P1-P3R0-60_mac_comb.xlsx", False) 
+    high_pol_std_04_28_02 = funcs_polarimetry.load_pol_data("./stats/2020-04-28/pol_std/HD215806/master_2020-04-28_hd215806_P1-P3R120-180_mac_comb_corr.xlsx", False)
+    high_pol_std_04_28_03 = funcs_polarimetry.load_pol_data("./stats/2020-04-28/pol_std/OJ287/master_2020-04-28_oj287_P1-P3R215-243_mac_comb_corr.xlsx", False)
+
+    target_data_04_28 = funcs_polarimetry.load_pol_data("./stats/2020-04-28/target/EE_Cep/master_2020-04-28_eecep_P1-P3R200-270_mac_comb_corr.xlsx", False)
+    
+    ret_list_high_pol.append(high_pol_std_04_28)
+    ret_list_high_pol.append(high_pol_std_04_28_02)
+    ret_list_high_pol.append(high_pol_std_04_28_03)
+    ret_list_zero_pol.append(zero_pol_std_04_28)
+    
+    ret_list_target.append(target_data_04_28)
     
     
     #For now let 07_29 be the last batch of data for now
@@ -391,6 +438,16 @@ def make_dir(directory_path ):
         with gzip.open(archives, 'rb') as f_in:
             with open( archives[:-3], 'wb') as f_out:
                 shutil.copyfileobj(f_in, f_out)
+                
+def outlier_removal(inp_data, q_lim, u_lim):
+    print("Specify qlim and ulim to reject scatter outliers")
+    
+    outlier_rejected_data = cp(inp_data)
+    ###
+    #Do some outlier rejection
+    ###
+    
+    return outlier_rejected_data
                 
 def my_quadrature_compute(list_of_errors):
     """
