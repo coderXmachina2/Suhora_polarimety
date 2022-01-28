@@ -23,7 +23,7 @@ Steps:
 
 ![RTP_2](https://github.com/coderXmachina2/Suhora_polarimety/blob/main/github_imgs/Run_the_pipe_2.png)
 
-4. Perform computation of normalized Stokes parameters q and u from source counts based on equations from Ramanprakash et al. 2019 where q = (I<sub>0</sub>-I<sub>90</sub>)/(I<sub>0</sub>+I<sub>90</sub>) and u = (I<sub>45</sub>-I<sub>135</sub>)/(I<sub>45</sub>+I<sub>135</sub>) 
+4. Perform computation of normalized Stokes parameters q and u from source counts based on equations from Ramanprakash et al. 2019 where q = (I<sub>0</sub>-I<sub>90</sub>)/(I<sub>0</sub>+I<sub>90</sub>) and u = (I<sub>45</sub>-I<sub>135</sub>)/(I<sub>45</sub>+I<sub>135</sub>). As beautiful as the images are they all end up as a table full of numbers. And that is where the true beauty lies.
 
 ![XL1n2](https://github.com/coderXmachina2/Suhora_polarimety/blob/main/github_imgs/Excels_1_and_2.PNG)
 
