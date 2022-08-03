@@ -8,162 +8,13 @@ import xlsxwriter
 import importlib
 import re
 import numpy as np
-import matplotlib.pyplot as plt
-import xlwt
-import xlsxwriter
-
 from copy import deepcopy as cp
+
 from astropy.time import Time
 from xlwt import Workbook
-
 from reduct_funcs import funcs_polarimetry
 importlib.reload(funcs_polarimetry)
 
-def F_SCOTT_FITS_CHECKER(data_str, param_check, verb_arg):
-    
-    #Takes in a datastring
-    
-    load_data = astropy.io.fits.open(data_str)
-    if(verb_arg):
-        print(data_str, param_check, load_data[0].header[param_check])
-    
-    return (load_data[0].header[param_check])
-
-def make_set_list(s_query, param_check, verb_arg, verb_arg_MJD):
-    
-    #Takes in a string. Long string
-
-    master_list_device = []
-    data_dict = {}
-    
-    list_MJDs = [word for word in glob.glob('./files_sorted/*') if len(word) >= 25 ]
-
-    for MJDs in list_MJDs[:]:  #For each MJD
-        if(verb_arg_MJD):
-            print(MJDs, MJDs[15:])
-        mjd_list = []
-
-        target = glob.glob(MJDs +'/' + s_query  + '/*')#Get all the data
-        for targs in target:
-            y = F_SCOTT_FITS_CHECKER(target[0], 'DEVICE', verb_arg) #Get the device. You cant call it y
-            master_list_device.append(y) #and put into master list
-            mjd_list.append(y)
-            
-        #Append here:
-        #Append here:
-        data_dict.update({MJDs[15:]:mjd_list})
-
-    return(master_list_device, data_dict)
-
-def date_split(return_d):
-    c_z = 0
-    dnew = {}
-    for key in return_d[1]:
-
-        print("Date:", key) #
-        unique_labels, unique_counts = np.unique(return_d[1][key], return_counts=True)
-        for l in range(0 , len(unique_labels)):
-            print("Camera:", unique_labels[l])
-            print("Count:" , unique_counts[l])
-        c_z += unique_counts
-        print("\n")   
-
-    print(c_z)
-
-def correct_time(Starg, verbose_t, verbose_u):
-    long_list = []
-    dict_my = {}
-    dict_mjd = {}
-    c = 0
-    
-    list_MJDs = [word for word in glob.glob('./files_sorted/*') if len(word) >= 25 ] #It looks through files sorted
-    
-    for MJDs in list_MJDs[:]: #The big loop. Does for all.
-        mjd_list = []    
-        tot_exp_time = [ ]
-        if(Starg == 'EECEP'):
-            target = glob.glob(MJDs +'/' + 'ee_cep'  + '/*') #Get all the EECEP FITS data            
-        elif(Starg == 'G191'):
-            target = glob.glob(MJDs +'/' + 'pol_std'  + '/*') #Get all the 191 FITS data
-            if(verbose_u):
-                print('Dis target:', target)
-            c_t = target
-            nwtarget = []
-            for things in target:
-                if '191' in things:
-                    nwtarget.append(things)
-            target = nwtarget
-            if(verbose_t):
-                print("Total pol_stds:",len(c_t), "\n", 
-                      "Total G191B2B:", len(nwtarget),len(target), "Percentage is 191:", target/len(c_t)  )
-        elif(Starg == '2158'):
-            target = glob.glob(MJDs +'/' + 'pol_std'  + '/*') #Get all the 191 FITS data
-            
-            if(verbose_u):
-                print('Dis target:', target)
-            
-            c_t = target
-            nwtarget = []
-            for things in target:
-                if '2158' in things:
-                    nwtarget.append(things)
-            target = nwtarget
-            if(verbose_t):
-                print("Total pol_stds:",len(c_t), "\n", 
-                      "Total G191B2B:", len(nwtarget),len(target), "Percentage is 191:", target/len(c_t))                
-        elif(Starg == '64106'):
-            target = glob.glob(MJDs +'/' + 'pol_std'  + '/*') #Get all the 191 FITS data
-            
-            if(verbose_u):
-                print('Dis target:', target)
-            
-            c_t = target
-            nwtarget = []
-            for things in target:
-                if '64106' in things:
-                    nwtarget.append(things)
-            target = nwtarget
-            if(verbose_t):
-                print("Total pol_stds:",len(c_t), "\n", 
-                      "Total G191B2B:", len(nwtarget),len(target), "Percentage is 191:", target/len(c_t)  )
-                
-        print(c, "Day:" , MJDs[len('./files_sorted\\'):], len(target), "FITS files = ", len(target)/2 , "q n u points" )
-        #IT searches through all the files sorted
-
-        for k in range(0, len(target)):
-            #Openning will take time ofcourse
-            met = astropy.io.fits.open(target[k])[0].header['DATE-OBS']+'T'+astropy.io.fits.open(target[k])[0].header['TIME-OBS']
-            exptime = astropy.io.fits.open(target[k])[0].header['EXPTIME']
-            t = Time(met, format='isot', scale='utc')
-
-            if(verbose_t):
-                print("Exposure time:", astropy.io.fits.open(target[k])[0].header['EXPTIME']) 
-                print("FITS JD TIME:", astropy.io.fits.open(target[k])[0].header['JD'])                   
-                print("Calculated JD TIME:", t.jd)
-                print("Calculated MJD TIME:", t.mjd, "\n")
-
-            long_list.append(t.mjd)
-            tot_exp_time.append(exptime)
-            mjd_list.append(t.mjd)
-
-        dict_my.update({MJDs[15:]:mjd_list})
-        dict_mjd.update({MJDs[15:]:tot_exp_time}) #it doent have to be 
-        c+=1
-
-    corr_dict = {} #This gets returned
-    mjd_coo = {}
-
-    c = 0
-    
-    for keyes in dict_my.keys():
-        corr_dict.update({keyes: [np.median(np.sort(dict_my[keyes])) , np.std(dict_my[keyes])]  })
-        if(verbose_t): #this is kind of like a final summary
-            print(c, "Date:", keyes, "Time center:" , np.median(np.sort(dict_my[keyes])) ,u"\u00B1", np.std(dict_my[keyes]))
-        c+=1
-        
-    return (corr_dict, dict_mjd)
-    
-    
 def combine_excels(excel_1, excel_2, sv_out , MJD, targ_obj, obs_filt ,strt_ind, end_ind):
     """
     Function that takes in two excel scripts and combines them into the usual 1
@@ -208,14 +59,12 @@ def combine_excels(excel_1, excel_2, sv_out , MJD, targ_obj, obs_filt ,strt_ind,
     worksheet.write('X1', 'target 2 y center')
     worksheet.write('Y1', 'target 2 counts')
     worksheet.write('Z1', 'target 2 error')
-
+    
     worksheet.write('AA1', 'q')
     worksheet.write('AB1', 'q error')
     worksheet.write('AC1', 'u')
     worksheet.write('AD1', 'u error')
-    
-    #Just calc. Previously not calculated but we should now calculate anyway
-    worksheet.write('AE1', 'PD') 
+    worksheet.write('AE1', 'PD')
     worksheet.write('AF1', 'PD error')
     worksheet.write('AG1', 'PA')
     worksheet.write('AH1', 'PA error')
@@ -225,8 +74,7 @@ def combine_excels(excel_1, excel_2, sv_out , MJD, targ_obj, obs_filt ,strt_ind,
     
     sheet_1 = wb_1.sheet_by_index(0)
     sheet_2 = wb_2.sheet_by_index(0)
-    
-    #This reokucates
+       
     for u in range(1, np.min([sheet_1.nrows,   sheet_2.nrows      ])):
         for x in range(0, 13):
             worksheet.write(u, x, sheet_1.cell_value(rowx=u, colx=x))
@@ -248,10 +96,6 @@ def combine_excels(excel_1, excel_2, sv_out , MJD, targ_obj, obs_filt ,strt_ind,
         p_b = (sheet_1.cell_value(rowx=u, colx=7) + sheet_1.cell_value(rowx=u, colx=11))**4
         p_ans = np.sqrt(p_a/p_b)
         
-        #Then do PD
-        
-        #Then do PA
-        
         worksheet.write(u, 28, (sheet_1.cell_value(rowx=u, colx=7)-sheet_1.cell_value(rowx=u, colx=11))/(sheet_1.cell_value(rowx=u, colx=7)+sheet_1.cell_value(rowx=u, colx=11))) #write q, q_err
         worksheet.write(u, 29, p_ans  ) #write q, q_err
     
@@ -260,10 +104,6 @@ def combine_excels(excel_1, excel_2, sv_out , MJD, targ_obj, obs_filt ,strt_ind,
     workbook.close() #I guess this writes the thing
 
 def autoloader(verb_arg):
-    """
-    #Not working. 31/07/2021. Still not working.
-    """
-    
     if(verb_arg):
         print("That old way of doing things sucked")
         print("This is the way\n")
@@ -312,71 +152,6 @@ def autoloader(verb_arg):
                 #if 'g191b2b' in sha or 'hd212311' in sha:
                 #print("Low Polarization standard:", sha)
 
-    return (ret_list_target, ret_list_zero_pol, ret_list_high_pol)
-    
-def sample_data_loader():
-    #jus load me a sample of the newly corrected shit
-    ret_list_zero_pol = []
-    ret_list_high_pol = []
-    ret_list_target = []
-    
-    print("Load a sample of excel data") #One string the path is everything before master. the filename is after.
-    
-    #2020_03_05
-    zero_pol_std_03_05 = funcs_polarimetry.load_pol_data("./stats/GRN_03_method_check/master_2020-03-05_g191b2b_P1-P3R0-46_mac_comb.xlsx", False)
-    
-    ret_list_zero_pol.append(zero_pol_std_03_05)
-    
-    #2020_03_14
-    zero_pol_std_03_14 = funcs_polarimetry.load_pol_data("./stats/GRN_03_method_check/master_2020-03-14_g191b2b_P1-P3R0-60_mac_comb.xlsx", False)
-    
-    ret_list_zero_pol.append(zero_pol_std_03_14)
-    
-    #2020_03_15
-    zero_pol_std_03_15 = funcs_polarimetry.load_pol_data("./stats/GRN_03_method_check/master_2020-03-15_G191B2B_P1-P3R0-40_mac_comb.xlsx", False)
-    
-    ret_list_zero_pol.append(zero_pol_std_03_15)
-    
-    #2020_03_26
-    zero_pol_std_03_26 = funcs_polarimetry.load_pol_data("./stats/GRN_03_method_check/master_2020-03-26_g191b2b_P1-P3R0-30_mac_comb.xlsx", False)
-    
-    ret_list_zero_pol.append(zero_pol_std_03_26)
-    
-    #2020_04_16
-    zero_pol_std_04_16 = funcs_polarimetry.load_pol_data("./stats/GRN_03_method_check/master_2020-04-16_g191b2b_P1-P3R62-134_mac_comb.xlsx", False)
-    
-    ret_list_zero_pol.append(zero_pol_std_04_16)
-    
-    #2020_05_01
-    zero_pol_std_05_01 = funcs_polarimetry.load_pol_data("./stats/GRN_03_method_check/master_2020-05-01_g191b2b_P1-P3R102-126_mac_comb.xlsx", False)
-    
-    ret_list_zero_pol.append(zero_pol_std_05_01)
-    
-    #2020_05_04
-    zero_pol_std_05_04 = funcs_polarimetry.load_pol_data("./stats/GRN_03_method_check/master_2020-05-04_g191b2b_P1-P3R24-44_mac_comb.xlsx", False)
-    
-    ret_list_zero_pol.append(zero_pol_std_05_04)
-    
-    #2020_07_29
-    target_data_07_29 = funcs_polarimetry.load_pol_data("./stats/GRN_EE_Cep_Off_Eclipse/master/master_2020-07-29_eecep_P1-P3R360-484_mac_comb.xlsx", False)
-    
-    ret_list_target.append(target_data_07_29)
-    
-    #2020_07_25
-    target_data_08_25 = funcs_polarimetry.load_pol_data("./stats/GRN_EE_Cep_Off_Eclipse/master/master_2020-08-25_eecep_P1-P3R388-534_mac_comb.xlsx", False)
-    
-    ret_list_target.append(target_data_07_29)
-    
-    #2020_09_08
-    target_data_09_08 = funcs_polarimetry.load_pol_data("./stats/GRN_EE_Cep_Off_Eclipse/master/master_2020-09-08_eecep_P1-P3R212-332_mac_comb.xlsx", False)
-    
-    ret_list_target.append(target_data_07_29)
-    
-    #2020_09_22
-    target_data_09_22 = funcs_polarimetry.load_pol_data("./stats/GRN_EE_Cep_Off_Eclipse/master/master_2020-09-22_eecep_P1-P3R200-320_mac_comb.xlsx", False)
-    
-    ret_list_target.append(target_data_07_29)
-    
     return (ret_list_target, ret_list_zero_pol, ret_list_high_pol)
     
 def data_loader():
@@ -458,7 +233,7 @@ def data_loader():
     zero_pol_std_03_26 = funcs_polarimetry.load_pol_data("./stats/2020-03-26/pol_std/G191B2B/master_2020-03-26_g191b2b_P1-P3R0-30_combined_corr.xlsx", False )
     zero_pol_std_03_26_02 = funcs_polarimetry.load_pol_data("./stats/2020-03-26/pol_std/HD212311/master_2020-03-26_hd212311_P1-R90-130_combined_corr.xlsx", False)
     
-    high_pol_std_03_26 = funcs_polarimetry.load_pol_data("./stats/2020-03-26/pol_std/oj287/master_2020-03-26_oj287_P1-P3R258-296_comb_corr.xlsx",False)
+    high_pol_std_03_26 = funcs_polarimetry.load_pol_data("./stats/2020-03-26/pol_std/oj287master_2020-03-26_oj287_P1-P3R258-296_comb_corr.xlsx",False)
     high_pol_std_03_26_02 = funcs_polarimetry.load_pol_data("./stats/2020-03-26/pol_std/HD204827/master_2020-03-26_hd204827_P1-P3R60-90_combined_corr.xlsx" , False)
     high_pol_std_03_26_03 = funcs_polarimetry.load_pol_data("./stats/2020-03-26/pol_std/HD215806/master_2020-03-26_HD215806_P1-P3R40-109_mac_comb_corr.xlsx", False)
     high_pol_std_03_26_04 = funcs_polarimetry.load_pol_data("./stats/2020-03-26/pol_std/HD251204/master_2020-03-26_hd251204_P1-P3R40-109_mac_comb.xlsx", False)
@@ -490,13 +265,6 @@ def data_loader():
     ret_list_target.append(target_data_04_01)
     
     ##########
-    #2020-04-02
-    
-    target_data_04_02 = funcs_polarimetry.load_pol_data("./stats/2020-04-02/target/EE_Cep/master_2020-04-02_eecep_P1-P3R180-230_mac_comb.xlsx", False)
-    
-    ret_list_target.append(target_data_04_02)
-    
-    ##########
     #2020-04-04
 
     target_data_04_04 = funcs_polarimetry.load_pol_data("./stats/2020-04-04/target/EE_Cep_test_x/master_2020-04-04_EE Cep_P1-P3R0-46_mac_comb_corr.xlsx", False)
@@ -510,7 +278,7 @@ def data_loader():
     
     zero_pol_std_04_05 = funcs_polarimetry.load_pol_data("./stats/2020-04-05/pol_std/HD212311/master_2020-04-05_HD212311_P1-P3R0-40_mac_comb_corr.xlsx", False)
     
-    high_pol_std_04_05 = funcs_polarimetry.load_pol_data("./stats/2020-04-05/pol_std/HD215806/master_2020-04-05_hd215806_P1-P3R40-160_mac_comb.xlsx", False)
+    high_pol_std_04_05 = funcs_polarimetry.load_pol_data("./stats/2020-04-05/pol_std/HD215806/master_2020-04-05_HD215806_P1-P3R40-109_mac_comb_corr.xlsx", False)
     
     ret_list_target.append(target_data_04_05)
     
@@ -567,8 +335,8 @@ def data_loader():
     ret_list_target.append(target_data_04_08)
     
     ret_list_zero_pol.append(zero_pol_std_04_08)
-    
     ret_list_high_pol.append(high_pol_std_04_08)
+    
     ret_list_high_pol.append(high_pol_std_04_08_02)
     
     ##########
@@ -684,14 +452,13 @@ def data_loader():
     high_pol_std_04_23 = funcs_polarimetry.load_pol_data("./stats/2020-04-23/pol_std/BD64106/master_2020-04-23_bd64106_P1-P3R0-60_mac_comb.xlsx", False)
     high_pol_std_04_23_02 = funcs_polarimetry.load_pol_data("./stats/2020-04-23/pol_std/HD215806/master_2020-04-23_hd215806_P1-P3R120-180_mac_comb_corr.xlsx", False)
     high_pol_std_04_23_03 = funcs_polarimetry.load_pol_data("./stats/2020-04-23/pol_std/OJ287/master_2020-04-23_oj287_P1-P3R229-249_mac_comb.xlsx", False)
-        
-    ret_list_zero_pol.append(zero_pol_std_04_23)
-    
-    ret_list_target.append(target_data_04_23)
     
     ret_list_high_pol.append(high_pol_std_04_23)
     ret_list_high_pol.append(high_pol_std_04_23_02)
     ret_list_high_pol.append(high_pol_std_04_23_03)
+    ret_list_zero_pol.append(zero_pol_std_04_23)
+    
+    ret_list_target.append(target_data_04_23)
     
     ##########
     #2020-04-27
@@ -702,30 +469,28 @@ def data_loader():
     high_pol_std_04_27_02 = funcs_polarimetry.load_pol_data("./stats/2020-04-27/pol_std/OJ287/master_2020-04-27_OJ287_P1-P3R160-172_mac_comb_corr.xlsx", False)
 
     target_data_04_27 = funcs_polarimetry.load_pol_data("./stats/2020-04-27/target/EE_Cep/master_2020-04-27_EECep_P1-P3R0-60_mac_comb_corr.xlsx", False)
-
-    ret_list_target.append(target_data_04_27)
-    
-    ret_list_zero_pol.append(zero_pol_std_04_27)
-    
+        
     ret_list_high_pol.append(high_pol_std_04_27)
     ret_list_high_pol.append(high_pol_std_04_27_02)
-        
+
+    ret_list_zero_pol.append(zero_pol_std_04_27)
+    
+    ret_list_target.append(target_data_04_27)
+    
     ##########
     #2020-04-28
     #The OK batch
-    
-    target_data_04_28 = funcs_polarimetry.load_pol_data("./stats/2020-04-28/target/EE_Cep/master_2020-04-28_eecep_P1-P3R200-270_mac_comb_corr.xlsx", False)
-    
     zero_pol_std_04_28 = funcs_polarimetry.load_pol_data("./stats/2020-04-28/pol_std/HD212311/master_2020-04-28_hd212311_P1-P3R60-120_mac_comb.xlsx", False)
 
     high_pol_std_04_28 = funcs_polarimetry.load_pol_data("./stats/2020-04-28/pol_std/BD64106/master_2020-04-28_bd64106_P1-P3R0-60_mac_comb.xlsx", False) 
     high_pol_std_04_28_02 = funcs_polarimetry.load_pol_data("./stats/2020-04-28/pol_std/HD215806/master_2020-04-28_hd215806_P1-P3R120-180_mac_comb_corr.xlsx", False)
     high_pol_std_04_28_03 = funcs_polarimetry.load_pol_data("./stats/2020-04-28/pol_std/OJ287/master_2020-04-28_oj287_P1-P3R215-243_mac_comb_corr.xlsx", False)
+
+    target_data_04_28 = funcs_polarimetry.load_pol_data("./stats/2020-04-28/target/EE_Cep/master_2020-04-28_eecep_P1-P3R200-270_mac_comb_corr.xlsx", False)
     
     ret_list_target.append(target_data_04_28)
     
     ret_list_zero_pol.append(zero_pol_std_04_28)
-    
     ret_list_high_pol.append(high_pol_std_04_28)
     ret_list_high_pol.append(high_pol_std_04_28_02)
     ret_list_high_pol.append(high_pol_std_04_28_03)
@@ -733,17 +498,17 @@ def data_loader():
     ##########
     #2020-04-30
 
-    target_data_04_30 = funcs_polarimetry.load_pol_data("./stats/2020-04-30/target/EE_Cep/master_2020-04-30_eecep_P1-P3R80-110_mac_comb.xlsx", False)
-    
     zero_pol_std_04_30 = funcs_polarimetry.load_pol_data("./stats/2020-04-30/pol_std/HD212311/master_2020-04-30_hd212311_P1-P3R0-48_mac_comb.xlsx", False)
 
     high_pol_std_04_30 = funcs_polarimetry.load_pol_data("./stats/2020-04-30/pol_std/HD215806/master_2020-04-30_hd215806_P1-P3R48-78_mac_comb_corr.xlsx", False) 
 
-    ret_list_target.append(target_data_04_30)
-    
+    target_data_04_30 = funcs_polarimetry.load_pol_data("./stats/2020-04-30/target/EE_Cep/master_2020-04-30_eecep_P1-P3R80-110_mac_comb.xlsx", False)
+
     ret_list_zero_pol.append(zero_pol_std_04_30)
     
     ret_list_high_pol.append(high_pol_std_04_30)
+
+    ret_list_target.append(target_data_04_30)
     
     ##########
     #2020-05-01
@@ -766,94 +531,21 @@ def data_loader():
     ret_list_target.append(target_data_05_01)
     
     ##########
+    #save this
     #2020-05-04
     
-    target_data_05_04 = funcs_polarimetry.load_pol_data("./stats/2020-05-04/target/EE_Cep/master_2020-05-04_eecep_P1-P3R140-204_mac_comb.xlsx", False)
+    high_pol_std_05_04 = funcs_polarimetry.load_pol_data("./stats/2020-05-04/pol_std/BD64106/master_2020-05-04_bd64106_P1-P3R0-24_mac_comb.xlsx", False)
     
     high_pol_std_05_04 = funcs_polarimetry.load_pol_data("./stats/2020-05-04/pol_std/BD64106/master_2020-05-04_bd64106_P1-P3R0-24_mac_comb.xlsx", False)
-    high_pol_std_05_04_02 = funcs_polarimetry.load_pol_data("./stats/2020-05-04/pol_std/HD215806/master_2020-05-04_hd215806_P1-P3R104-164_mac_comb_corr.xlsx", False)
-    high_pol_std_05_04_03 = funcs_polarimetry.load_pol_data("./stats/2020-05-04/pol_std/OJ287/master_2020-05-04_oj287_P1-P3R243-265_mac_comb.xlsx", False)
     
-    zero_pol_std_05_04 = funcs_polarimetry.load_pol_data("./stats/2020-05-04/pol_std/G191B2B/master_2020-05-04_g191b2b_P1-P3R24-44_mac_comb_x.xlsx", False)
-    zero_pol_std_05_04_02 = funcs_polarimetry.load_pol_data("./stats/2020-05-04/pol_std/HD212311/master_2020-05-04_hd212311_P1-P3R44-104_mac_comb_corr.xlsx", False)
+    high_pol_std_05_04 = funcs_polarimetry.load_pol_data("./stats/2020-05-04/pol_std/BD64106/master_2020-05-04_bd64106_P1-P3R0-24_mac_comb.xlsx", False)
+    
+    zero_pol_std_05_04 = funcs_polarimetry.load_pol_data("./stats/2020-05-04/pol_std/G191B2B/master_2020-05-04_g191b2b_P1-P3R24-44_mac_comb.xlsx", False)
     
     ret_list_high_pol.append(high_pol_std_05_04)
-    ret_list_high_pol.append(high_pol_std_05_04_02)
-    ret_list_high_pol.append(high_pol_std_05_04_03)
     
     ret_list_zero_pol.append(zero_pol_std_05_04)
-    ret_list_zero_pol.append(zero_pol_std_05_04_02)
-    
-    ret_list_target.append(target_data_05_04)
-    
-    ##########
-    #2020-05-06
-    
-    target_data_05_06 = funcs_polarimetry.load_pol_data("./stats/2020-05-06/target/EE_Cep/master_2020-05-06_eecep_P1-P3R100-168_mac_comb_corr_x.xlsx", False)
-    
-    zero_pol_std_05_06 = funcs_polarimetry.load_pol_data("./stats/2020-05-06/pol_std/HD212311/master_2020-05-06_hd212311_P1-P3R0-50_mac_comb_corr.xlsx", False)
-    
-    high_pol_std_05_06 = funcs_polarimetry.load_pol_data("./stats/2020-05-06/pol_std/HD215806/master_2020-05-06_hd215806_P1-P3R50-134_mac_comb_corr.xlsx", False)
-    
-    
-    ret_list_high_pol.append(high_pol_std_05_06)
-    
-    ret_list_zero_pol.append(zero_pol_std_05_06)
-    
-    ret_list_target.append(target_data_05_06)
-    
-    ##########
-    #2020-05-12
-    
-    target_data_05_12 = funcs_polarimetry.load_pol_data("./stats/2020-05-12/target/EE_Cep/master_2020-05-12_eecep_P1-P3R108-154_mac_comb_corr.xlsx", False)
-    
-    zero_pol_std_05_12 = funcs_polarimetry.load_pol_data("./stats/2020-05-12/pol_std/HD212311/master_2020-05-12_hd212311_P1-P3R86-216_mac_comb_corr.xlsx", False)
-    
-    high_pol_std_05_12 = funcs_polarimetry.load_pol_data("./stats/2020-05-12/pol_std/BD64106/master_2020-05-12_bd64106_P1-P3R0-85_mac_comb_corr.xlsx", False)
-    high_pol_std_05_12_02 = funcs_polarimetry.load_pol_data("./stats/2020-05-12/pol_std/HD215806/master_2020-05-12_hd215806_P1-P3R216-350_mac_comb_corr.xlsx", False)
-    high_pol_std_05_12_03 = funcs_polarimetry.load_pol_data("./stats/2020-05-12/pol_std/oj287/master_2020-05-12_oj287_P1-P3R409-429_mac_comb_corr.xlsx", False)
-    
-    
-    ret_list_high_pol.append(high_pol_std_05_12)
-    ret_list_high_pol.append(high_pol_std_05_12_02)
-    ret_list_high_pol.append(high_pol_std_05_12_03)
-    
-    ret_list_zero_pol.append(zero_pol_std_05_12)
-    
-    ret_list_target.append(target_data_05_12)
-    
-    ##########
-    #2020-05-14
-    #Target needs to be corrected
-    
-    target_data_05_14 = funcs_polarimetry.load_pol_data("./stats/2020-05-14/target/EE_Cep/master_2020-05-14_eecep_P1-P3R108-156_mac_comb_corr.xlsx", False)
-    
-    high_pol_std_05_14 = funcs_polarimetry.load_pol_data("./stats/2020-05-14/pol_std/BD64106/master_2020-05-14_bd64106_P1-P3R0-80_mac_comb.xlsx", False)
-    high_pol_std_05_14_02 = funcs_polarimetry.load_pol_data("./stats/2020-05-14/pol_std/HD215806/master_2020-05-14_hd215806_P1-P3R252-348_mac_comb_corr.xlsx", False)
-    
-    zero_pol_std_05_14 = funcs_polarimetry.load_pol_data("./stats/2020-05-14/pol_std/HD212311/master_2020-05-14_hd212311_P1-P3R80-252_mac_comb_corr.xlsx", False)
-    
-    ret_list_target.append(target_data_05_14)
-    
-    ret_list_high_pol.append(high_pol_std_05_14)
-    ret_list_high_pol.append(high_pol_std_05_14_02)
-    
-    ret_list_zero_pol.append(zero_pol_std_05_14)
-    
-    ##########
-    #2020-05-20
-    
-    target_data_05_20 = funcs_polarimetry.load_pol_data("./stats/2020-05-20/target/EE_Cep/master_2020-05-20_eecep_P1-P3R112-160_mac_comb_corr.xlsx", False)
-    
-    ret_list_target.append(target_data_05_20)
-    
-    ##########
-    #2020-06-03
-    
-    target_data_06_03 = funcs_polarimetry.load_pol_data("./stats/2020-06-03/target/EE_Cep/master_2020-06-03_eecep_P1-P3R104-154_mac_comb_corr.xlsx", False)
-    
-    ret_list_target.append(target_data_06_03)
-
+ 
     ##########
     #2020-07-29
     #For now let 07_29 be the last batch of data for now
@@ -865,86 +557,18 @@ def data_loader():
     ret_list_target.append(target_data_07_29)
     ret_list_zero_pol.append(zero_pol_std_07_29)
     ret_list_high_pol.append(high_pol_std_07_29)
-    
-    ##########
-    #2020-08-25
-    
-    target_data_08_25 = funcs_polarimetry.load_pol_data("./stats/2020-08-25/target/EE_Cep/master_2020-08-25_eecep_P1-P3R388-534_mac_comb.xlsx", False)
-    
-    ret_list_target.append(target_data_08_25)
-    
-    ##########
-    #2020-09-08
-    
-    target_data_09_08 = funcs_polarimetry.load_pol_data("./stats/2020-09-08/target/EE_Cep/master_2020-09-08_eecep_P1-P3R212-332_mac_comb.xlsx", False)
-    
-    ret_list_target.append(target_data_09_08)
-    
-    ##########
-    #2020-09-22
-    
-    target_data_09_22 = funcs_polarimetry.load_pol_data("./stats/2020-09-22/target/EE_Cep/master_2020-09-22_eecep_P1-P3R200-317_mac_comb.xlsx", False)
-    
-    ret_list_target.append(target_data_09_22)
-    
-    ##########
-    #2020-10-08
-    
-    target_data_10_08 = funcs_polarimetry.load_pol_data("./stats/2020-10-08/target/EE_Cep/master_2020-10-08_eecep_P1-P3R72-124_mac_comb.xlsx", False)
-    
-    ret_list_target.append(target_data_10_08)
-    
-    ##########
-    #2020-10-28
-    
-    target_data_10_28 = funcs_polarimetry.load_pol_data("./stats/2020-10-28/target/EE_Cep/master_2020-10-28_eecep_P1-P3R216-352_mac_comb.xlsx", False)
-    
-    ret_list_target.append(target_data_10_28)
-    
-    #2021 = 0.2 phase where NIR shenanigans were thought to happen.
-    #######################################################################################
-    #######################################################################################
-    #######################################################################################
-    #2021-04-06
-    
-    target_data_04_06 = funcs_polarimetry.load_pol_data("./stats/2021-04-06/target/EE_Cep/master_2021-04-06_eecep_P1-P3R100-168_mac_comb_corr.xlsx", False)
-    
-    ret_list_target.append(target_data_04_06)
-    
-    ##########
-    #2021-05-05
-    
-    target_data_05_05 = funcs_polarimetry.load_pol_data("./stats/2021-05-05/target/EE_Cep/master_2021-05-05_eecep_P1-P3R212-284_mac_comb_corr.xlsx", False)
-    
-    ret_list_target.append(target_data_05_05)
-    
-    ##########
-    #2021-05-20
-    
-    target_data_05_20 = funcs_polarimetry.load_pol_data("./stats/2021-05-20/target/EE_Cep/master_2021-05-20_eecep_P1-P3R212-284_mac_comb_corr.xlsx", False)
-    
-    ret_list_target.append(target_data_05_20)
-    
-    ##########
-    #2021-05-25
-    
-    target_data_05_25 = funcs_polarimetry.load_pol_data("./stats/2021-05-25/target/EE_Cep/master_2021-05-25_eecep_P1-P3R260-340_mac_comb_corr.xlsx", False)
-    
-    ret_list_target.append(target_data_05_25)
-    
 
     return (ret_list_target, ret_list_zero_pol, ret_list_high_pol)
     
-def filter_data(pol_data, filter_strings, verb_arg):
+def filter_data(pol_data, filter_strings):
     TOI_list = []
 
     for targs in pol_data:
         for filt_strings in filter_strings:
             if filt_strings in list(targs.keys())[0]:# or '191b2b' in list(targs.keys())[0]:
                 TOI_list.append(targs)
-
-    if(verb_arg):
-        print("Returned", len(TOI_list), "results")
+                
+    print("Returned", len(TOI_list), "results")
                 
     return(TOI_list)
     
@@ -1019,35 +643,3 @@ def print_list(MJD, f_list):
         astropy.io.fits.open(f_list[i])[0].header['FILTER'],
         astropy.io.fits.open(f_list[i])[0].header['EXPTIME'],
         astropy.io.fits.open(f_list[i])[0].header['OBJECT'])
-        
-def data_to_excel(data_struct, obj_name ,who_am_i):
-    """
-    #It takes in the val array and the the error array
-    """
-    #print("Translate this data to excel:", who_am_i)
-    #print("Data structure:",data_struct)
-    #for o in range(0, len(data_struct[0])):
-    #    print(data_struct[0][o], data_struct[1][o], data_struct[2][o])
-    #write_this = [    ]
-    
-    workbook = xlsxwriter.Workbook('./tstats/'+ who_am_i  +'.xlsx')
-    worksheet = workbook.add_worksheet()
-    worksheet.write('A1', 'MJD')
-    worksheet.write('B1', 'Adam '+who_am_i+' val')
-    worksheet.write('C1', 'Adam '+who_am_i+' error')
-    
-    #Look through that shit here:
-    row = 1
-    column = 0
-    
-    for l in range(0, len(data_struct[0])):
-        write_this = [data_struct[0][l], data_struct[1][l], data_struct[2][l]]
-    
-        for item in write_this:
-            worksheet.write(row, column, item)
-            column += 1
-        
-        column = 0
-        row += 1 #This row 
-    
-    workbook.close()

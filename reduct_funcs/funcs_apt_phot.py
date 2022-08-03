@@ -153,10 +153,12 @@ def apt_phot_local_bkg_sub(fits_data_1, search_offset, search_array, positions, 
     return phot_table
 
 def solve_apt(combine_target, trial_radii,verbose):
+    """
+    #So, Tries different aperture size.
+    """
+    
     knees = []
 
-    #print(combine_target, trial_radii)
-    #print("Your machine finna break")
     for x in range(0, len(combine_target)):
         #print(x)
         kn = KneeLocator(trial_radii, 

@@ -7,6 +7,7 @@ import numpy as np
 import astropy
 import math
 import xlrd
+import re
 import re 
 import matplotlib.pyplot as plt
 import pickle
@@ -39,6 +40,7 @@ def source_peak_finder_pol_std(fits_data_1, siegma, search_array, trim, plot_pea
     
     #How did you parse that sum bitch?
     """
+    #Some things that hold data
     x_peak = []
     y_peak = []
     peak_val =[]
@@ -48,11 +50,13 @@ def source_peak_finder_pol_std(fits_data_1, siegma, search_array, trim, plot_pea
     peak_interest = []
     index_x = []
 
+    #First layer thresholding
     mean, median, std = sigma_clipped_stats(fits_data_1[0].data, sigma=siegma) #searches the whole image
     first_threshold = median + (10. * std)
     tbl = find_peaks(fits_data_1[0].data, first_threshold, box_size=40)
     tbl['peak_value'].info.format = '%.3g'  #format threshold
     
+    #stripper
     for things in tbl:
         x_peak.append(things['x_peak'])
         y_peak.append(things['y_peak'])
@@ -69,7 +73,7 @@ def source_peak_finder_pol_std(fits_data_1, siegma, search_array, trim, plot_pea
            x_peak[i] > 512-search_array[2] and 
            x_peak[i] < 512+search_array[3]):
             x_interest.append(x_peak[i])
-            y_interest.append(y_peak[i])
+            y_interest.append(y_peak[i])#theres this really bright pixel off to the side
             peak_interest.append(peak_val[i])
             index_x.append(i)
     
@@ -84,14 +88,17 @@ def source_peak_finder_pol_std(fits_data_1, siegma, search_array, trim, plot_pea
             
     second_threshold = np.mean(sub_sample)+5*np.std(sub_sample) #This thing becomes nan and shit is fucked
     if math.isnan(second_threshold):
-        second_threshold = 50 
+        second_threshold = 50 #if it is nan then we set to some threshold. Sometimes that shit is so faint that not even the 
+                               #manual threshold can get a fix on it
+        
+    #second_threshold = some hard coded value. I just want coordinates!
     
     for z in range(0, len(peak_interest)):
         if(peak_interest[z] > second_threshold): #then this becomes nan and shit is truly fucked
             x_targ.append(x_interest[z])
             y_targ.append(y_interest[z])
             peak_targ.append(peak_interest[z])
-
+    #Output
     if(plot_peaks):
         plt.plot(peak_val[:])
         plt.title("Flux peaks")
@@ -153,12 +160,14 @@ def check_pol_std():
     print("High Pol standard:", high_pol_std, "\n")
     print("Low Pol standard:", low_pol_std, "\n")
     
+#def load_pol_data(path, f_name, verbose):
 def load_pol_data(in_str, verbose):
     """
     #This should return a dictioanary with the key being a date.
     #
     """
     
+    #Parse it top layer first...
     path_s = re.search('(.*)master_', in_str) #squared away
     f_name_s = re.search('master_(.*)', in_str)
     
@@ -189,8 +198,9 @@ def load_pol_data(in_str, verbose):
         u_arr.append(sheet.cell_value(j, 28))
         u_err_arr.append(sheet.cell_value(j, 29))
         
-    ret_dict = {result_MJD.group(1)+"_"+ result_obj.group(1): (q_arr,  q_err_arr, u_arr, u_err_arr)} 
-    
+    ret_dict = {result_MJD.group(1)+"_"+ result_obj.group(1): (q_arr,  q_err_arr, u_arr, u_err_arr)} #inside the plotting script
+    #pare the left side of the _ as MJD and the right side as the target.
+    #the you just plot for each
     return ret_dict
 
 #Not used so much
@@ -214,7 +224,7 @@ def calc_pd2(input_data, plot_title, plot_c,sv_im_str ,perc_arg ,calc_pd_verbose
         array_des_nom.append(targ_name_str.group(1))
         array_des_dates.append(result.group(1))
         
-        mjd_strs.append(result.group(1)+'T00:00:00.000000000') 
+        mjd_strs.append(result.group(1)+'T00:00:00.000000000') #So this is the problem. Everything right of T is in principle not 0.
         
         mean_q_squared = np.mean(dats[list(dats.keys())[0]][0][1:])**2
         mean_u_squared = np.mean(dats[list(dats.keys())[0]][2][1:])**2
@@ -224,10 +234,22 @@ def calc_pd2(input_data, plot_title, plot_c,sv_im_str ,perc_arg ,calc_pd_verbose
         
         sum_o_squares = mean_q_squared + mean_u_squared
         
+        #B2 = q = mean of q
+        #C2 = q error = stq(q_list)
+        #D2 = u = mean of u
+        #E2 = u error =  std(u_list)
         pol_d = math.sqrt(sum_o_squares)
-
+        #MATH
+        #For RINGO Slowikoska et al 2016
+        
+        #Is there an error here?
+        #At least we know its a fucking problem. That you had made a mistake. That you didn't key in the numbers correctly.
+        #No lemme see those error bars shrunk!
         pol_d_err  = math.sqrt( ((mean_q_squared)/(sum_o_squares))*(mean_q_err_squared)+ ((mean_u_squared)/(sum_o_squares))*(mean_u_err_squared))
-                
+        
+        #recalculate it in parts
+        #pol_d_err_recalc =  math.sqrt(                                                    )
+        
         if(perc_arg):
             if(calc_pd_verbose):
                 print(targ_name_str.group(1), "MJD:", result.group(1), pol_d*100, u"\u00B1",  pol_d_err*100)
@@ -403,7 +425,7 @@ def calc_pa(target_data, zero_pol_std, high_pol_std, name_array):
 
 ######## An Experiment
 
-def EECep_stacked_based(target_data_PD, target_data_PA, MJD_L_cutoff , MJD_cutoff, point_MJD , lc, verb_t, mark_td, mark_t, true_pa, title_t):
+def EECep_stacked_based(target_data_PD, target_data_PA, MJD_L_cutoff , MJD_cutoff, point_MJD , lc, verb_t, mark_td, mark_t):
     file1 = open('./EE_Cep_light_curve/ee_cep_small_our_obs.txt', 'r')
     ee_lines = file1.readlines()
     
@@ -460,13 +482,7 @@ def EECep_stacked_based(target_data_PD, target_data_PA, MJD_L_cutoff , MJD_cutof
     fig = plt.figure(figsize=(36, 12))
     gs = fig.add_gridspec(3, hspace=0)
     axs = gs.subplots(sharex=True, sharey=False)
-    
-    if(true_pa):
-        if(title_t):
-            fig.suptitle('Polarization degree (PD), true Position angle (PA) and EE CEP light curve', fontsize=32)    
-    else:
-        if(title_t):
-            fig.suptitle('Polarization degree (PD), Position angle (PA) and EE CEP light curve', fontsize=32)
+    fig.suptitle('Polarization degree (PD), Position angle (PA) and EE CEP light curve', fontsize=32)
     
     #We should include last plot also 
     if(MJD_cutoff >= 59354.9925 ):#include
@@ -484,13 +500,10 @@ def EECep_stacked_based(target_data_PD, target_data_PA, MJD_L_cutoff , MJD_cutof
         [cap.set_alpha(0.72) for cap in caps]
         
         axs[0].set_ylabel('PD, (%)', fontsize=32)
+        #axs[0].set_yticklabels(fontsize=28)
         axs[0].tick_params(axis="y", labelsize=28)
-        
-        if(true_pa):
-            axs[1].set_ylabel('true PA, ('+u'\N{DEGREE SIGN}'+')', fontsize=32)
-        else:
-            axs[1].set_ylabel('PA, ('+u'\N{DEGREE SIGN}'+')', fontsize=32)
-            
+        axs[1].set_ylabel('PA, ('+u'\N{DEGREE SIGN}'+')', fontsize=32)
+        #axs[1].set_yticklabels(fontsize=28)
         axs[1].tick_params(axis="y", labelsize=28)
         
     else:       
@@ -498,7 +511,12 @@ def EECep_stacked_based(target_data_PD, target_data_PA, MJD_L_cutoff , MJD_cutof
             
         markers, caps, bars = axs[1].errorbar(target_data_PA[2][index_L_cutt[4]:index_cutt[4]].mjd, target_data_PA[0][index_L_cutt[4]:index_cutt[4]], yerr=target_data_PA[1][index_L_cutt[4]:index_cutt[4]], xerr =[0]*len(target_data_PA[0][index_L_cutt[4]:index_cutt[4]]), color='black', fmt=mark_td, markersize=16, capsize=10, capthick=5, label='PA')
         axs[0].grid()
-        axs[1].grid()       
+        axs[1].grid()
+        
+        #axs[0].ylabel()
+        #axs[1].ylabel()
+        #set_xticklabels  
+        
          
         axs[0].set_ylabel('PD, (%)', fontsize=32)
         axs[0].tick_params(axis="y", labelsize=28)
@@ -533,10 +551,8 @@ def EECep_stacked_based(target_data_PD, target_data_PA, MJD_L_cutoff , MJD_cutof
     fig.tight_layout()
     plt.show()
 
-def EECep_light_curve_based(target_data, MJD_L_cutoff , MJD_cutoff, point_MJD , lc, verb_t, mark_t ,txt_arg, true_pa, title_t):
-    print("Reading:", 'ee_cep_2014.txt')
-    file1 = open('./EE_Cep_light_curve/ee_cep_2014.txt', 'r')
-    #file1 = open('./EE_Cep_light_curve/ee_cep_small_our_obs.txt', 'r')
+def EECep_light_curve_based(target_data, MJD_L_cutoff , MJD_cutoff, point_MJD , lc, verb_t, mark_t ,txt_arg):
+    file1 = open('./EE_Cep_light_curve/ee_cep_small_our_obs.txt', 'r')
     ee_lines = file1.readlines()
     
     if(verb_t):
@@ -617,19 +633,12 @@ def EECep_light_curve_based(target_data, MJD_L_cutoff , MJD_cutoff, point_MJD , 
     
     if(txt_arg == 'PD'):
         if(lc):
-            if(title_t):
-                ax1.set_title("EE Cep light curve and Polarization Degree ("+txt_arg+")", fontsize=32)
+            ax1.set_title("EE Cep light curve and Polarization Degree ("+txt_arg+")", fontsize=32)
         else:
-            if(title_t):
-                ax1.set_title("EE Cep light curve ", fontsize=32)
+            ax1.set_title("EE Cep light curve ", fontsize=32)
     elif(txt_arg == 'PA'):
         if(lc):
-            if(true_pa):
-                if(title_t):
-                    ax1.set_title("EE Cep light curve and true Position Angle ("+txt_arg+")", fontsize=32)
-            else:
-                if(title_t):
-                    ax1.set_title("EE Cep light curve and Position Angle ("+txt_arg+")", fontsize=32)
+            ax1.set_title("EE Cep light curve and Position Angle ("+txt_arg+")", fontsize=32)
         else:
             ax1.set_title("EE Cep light curve ", fontsize=32)
         
@@ -639,7 +648,11 @@ def EECep_light_curve_based(target_data, MJD_L_cutoff , MJD_cutoff, point_MJD , 
     if(lc):
         ax2 = ax1.twinx()
 
-        if(txt_arg == 'PD'):              
+        if(txt_arg == 'PD'):  
+            #print("What are these?", len(target_data[2][index_L_cutt[4]:index_cutt[4]].mjd),   len(target_data[0][index_L_cutt[4]:index_cutt[4]])     ) #len(   ))
+            #print("Thats what I thought. Its getting cutt off prematurely. Nothing is inherently wrong with it.")
+            #print("Limits:", index_L_cutt[4], index_cutt[4]) #lets just write an excetion for it
+            
             if(MJD_cutoff >= 59354.9925 ):#include
                 markers, caps, bars = ax2.errorbar(target_data[2][index_L_cutt[4]:index_cutt[4]+1].mjd, target_data[0][index_L_cutt[4]:index_cutt[4]+1], yerr=target_data[1][index_L_cutt[4]:index_cutt[4]+1], xerr =[0]*len(target_data[0][index_L_cutt[4]:index_cutt[4]+1]), color='black' ,fmt=mark_t, markersize=16, capsize=10, capthick=5, label='PD')
             else:
@@ -655,10 +668,7 @@ def EECep_light_curve_based(target_data, MJD_L_cutoff , MJD_cutoff, point_MJD , 
             ax2.set_ylabel('PD, (%)', fontsize=32)
             plt.yticks(fontsize=28)
         elif(txt_arg == 'PA'):
-            if(true_pa):
-                ax2.set_ylabel('true PA, ('+u'\N{DEGREE SIGN}'+')', fontsize=32)
-            else:
-                ax2.set_ylabel('PA, ('+u'\N{DEGREE SIGN}'+')', fontsize=32)
+            ax2.set_ylabel('PA, ('+u'\N{DEGREE SIGN}'+')', fontsize=32)
             plt.yticks(fontsize=28)
 
         if(point_MJD):
@@ -680,26 +690,15 @@ def EECep_light_curve_based(target_data, MJD_L_cutoff , MJD_cutoff, point_MJD , 
     fig.tight_layout()
     plt.show()
 
-def calc_PA_stability(input_data, q_u_check, sv_im, plot_verbose , mjd_align_check, verbose,  to_excel, corr_MJD, targ_corr_MJD, PA_shif):
+def calc_PA_stability(input_data, q_u_check, sv_im, plot_verbose , mjd_align_check, verbose,  to_excel,corr_MJD ):
     #that verbose thing
     #MJD PLOT SHOULD BE ITS OWN FUNCTION AYE
     print("Calc Position Angle stability")
     
     if( corr_MJD ):
-        #correcting_MJD
-        if(targ_corr_MJD=='EECEP'):
-            with open('MJD_corr_pix.pickle', 'rb') as fid: #This is saved in pickle
-                corr_da = pickle.load(fid)
-        elif(targ_corr_MJD=='bd64'):
-            with open('MJD_corr_64106.pickle', 'rb') as fid: #This is saved in pickle
-                corr_da = pickle.load(fid)
-        elif(targ_corr_MJD=='g191'):
-            with open('MJD_corr_G191.pickle', 'rb') as fid: #This is saved in pickle
-                corr_da = pickle.load(fid)            
-        elif(targ_corr_MJD=='215806'):
-            with open('MJD_corr_hd215806.pickle', 'rb') as fid: #This is saved in pickle
-                corr_da = pickle.load(fid)
-            
+        with open('MJD_corr_pix.pickle', 'rb') as fid: #This is saved in pickle
+            corr_da = pickle.load(fid)
+
     means_arr = []
     means_err_arr = []
     array_des_dates = []
@@ -749,7 +748,7 @@ def calc_PA_stability(input_data, q_u_check, sv_im, plot_verbose , mjd_align_che
             if(verbose):
                 print("Pol PA:", pol_pa*(180/3.142),u"\u00B1",pol_pa*(180/3.142) )
 
-            means_arr.append(  pol_pa*(180/3.142)   ) #mean of qs. Calculate PA. PA SJift.
+            means_arr.append(  pol_pa*(180/3.142)   ) #mean of qs. Calculate PD
             means_err_arr.append(pol_pa_err*(180/3.142)) #std of list. 
         elif(q_u_check=='rad'):
             if(verbose):
@@ -772,10 +771,6 @@ def calc_PA_stability(input_data, q_u_check, sv_im, plot_verbose , mjd_align_che
         #print(type(t.mjd))
         #print(len(t.mjd))         
     
-    if(PA_shif):
-        print("Shifting PA...")
-        means_arr= np.array(means_arr) + 40
-    
     if(mjd_align_check):
         for a in range(0, len(input_data)):
             print(list(input_data[a].keys())[0], t[a], t.mjd[a])
@@ -785,24 +780,13 @@ def calc_PA_stability(input_data, q_u_check, sv_im, plot_verbose , mjd_align_che
             
     return(means_arr, means_err_arr, t)
 
-def calc_PD_stability(input_data, q_u_check, sv_im, plot_verbose , mjd_align_check, verbose, to_excel, corr_MJD, targ_corr_MJD):
+def calc_PD_stability(input_data, q_u_check, sv_im, plot_verbose , mjd_align_check, verbose, to_excel, corr_MJD):
     #MJD PLOT SHOULD BE ITS OWN FUNCTION AYE
     print("Calc Polarization Degree stability")
     
     if( corr_MJD ):
-        #correcting_MJD
-        if(targ_corr_MJD=='EECEP'):
-            with open('MJD_corr_pix.pickle', 'rb') as fid: #This is saved in pickle
-                corr_da = pickle.load(fid)
-        elif(targ_corr_MJD=='bd64'):
-            with open('MJD_corr_64106.pickle', 'rb') as fid: #This is saved in pickle
-                corr_da = pickle.load(fid)
-        elif(targ_corr_MJD=='g191'):
-            with open('MJD_corr_G191.pickle', 'rb') as fid: #This is saved in pickle
-                corr_da = pickle.load(fid)            
-        elif(targ_corr_MJD=='215806'):
-            with open('MJD_corr_hd215806.pickle', 'rb') as fid: #This is saved in pickle
-                corr_da = pickle.load(fid)
+        with open('MJD_corr_pix.pickle', 'rb') as fid:
+            corr_da = pickle.load(fid)
     
     means_arr = []
     means_err_arr = []
@@ -965,7 +949,6 @@ def plot_pol_stab(MJD_track, obj_pol, obj_pol_err,  toggle , plot_what):
 def plot_pol_stab_doobly(MJD_track_PD, MJD_track_PA, obj_pol_PD, obj_pol_PA, obj_pol_PD_err, obj_pol_PA_err, icon_pd, icon_pa, toggle):
     fig, ax1 = plt.subplots(figsize=(36, 12))
     
-    #x value, y value, y error, xerror
     markers, caps, bars = ax1.errorbar(MJD_track_PD.value, obj_pol_PD, yerr=obj_pol_PD_err, xerr =[0]*len(obj_pol_PD), fmt=icon_pd, markersize=32, capsize=10, capthick=5, color = 'blue', label='PD')
 
     plt.xticks(fontsize=24)
@@ -1160,7 +1143,7 @@ def plot_q_u_stability(input_data, q_u_check, sv_im, plot_verbose , mjd_align_ch
     plt.show()
     """
 
-def q_n_u_single_plot_v1(pol_data, plot_c, sv_im_str,  sv_im, MJD_arg ,pol_deg, only_means, to_excel, retrun_plotelems,key_verb):
+def q_n_u_single_plot_v1(pol_data, plot_c, sv_im_str,  sv_im, MJD_arg ,pol_deg, only_means, to_excel, key_verb):
     """
     #please document. Thanks past me...
     #If only means then only the means
@@ -1253,10 +1236,6 @@ def q_n_u_single_plot_v1(pol_data, plot_c, sv_im_str,  sv_im, MJD_arg ,pol_deg, 
         plt.savefig(sv_im,bbox_inches='tight',pad_inches=0.1 )
     
     plt.show()
-    
-    #pls return what you plot. Thank you.
-    if(retrun_plotelems):
-        return( targ_qmeans, targ_qmeans_err, targ_umeans, targ_umeans_err)
     
 def q_n_u_stack_plot_v2( pol_data, sv_im_str ,pol_deg, launch_verb, key_verb):
     """
