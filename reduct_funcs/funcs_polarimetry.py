@@ -404,7 +404,8 @@ def calc_pa(target_data, zero_pol_std, high_pol_std, name_array):
 ######## An Experiment
 
 def EECep_stacked_based(target_data_PD, target_data_PA, MJD_L_cutoff , MJD_cutoff, point_MJD , lc, verb_t, mark_td, mark_t, true_pa, title_t):
-    file1 = open('./EE_Cep_light_curve/ee_cep_small_our_obs.txt', 'r')
+    #print("Hello I am being printed. What is up with your arguements")
+    file1 = open('./EE_Cep_light_curve/ee_cep_big_dump.txt', 'r')
     ee_lines = file1.readlines()
     
     B_arr = []
@@ -437,7 +438,7 @@ def EECep_stacked_based(target_data_PD, target_data_PA, MJD_L_cutoff , MJD_cutof
     t_i = Time(I_JD , format='jd', scale='utc')
         
     color_arr = [B_arr, V_arr, R_arr, I_arr]
-    mjd_arr_k = [t_b, t_v, t_r, t_i, target_data_PD[2]]
+    mjd_arr_k = [t_b, t_v, t_r, t_i, target_data_PD[2]] #Which is just the time array
         
     #originals
     c_arr = ['blue',  'green',  'red', 'purple']
@@ -503,7 +504,7 @@ def EECep_stacked_based(target_data_PD, target_data_PA, MJD_L_cutoff , MJD_cutof
         axs[0].set_ylabel('PD, (%)', fontsize=32)
         axs[0].tick_params(axis="y", labelsize=28)
         axs[1].set_ylabel('PA, ('+u'\N{DEGREE SIGN}'+')', fontsize=32)
-        axs[1].set_yticklabels(fontsize=28)
+        #axs[1].set_yticklabels(fontsize=28) #Disabled for debugging
         axs[1].tick_params(axis="y", labelsize=28)
 
     for ka in range(0, len(mjd_arr_k)-1): #this is a recursive call. Just recursive call the third plot
@@ -688,16 +689,16 @@ def calc_PA_stability(input_data, q_u_check, sv_im, plot_verbose , mjd_align_che
     if( corr_MJD ):
         #correcting_MJD
         if(targ_corr_MJD=='EECEP'):
-            with open('MJD_corr_pix.pickle', 'rb') as fid: #This is saved in pickle
+            with open('./data_pickles/MJD_corr_pix.pickle', 'rb') as fid: #This is saved in pickle
                 corr_da = pickle.load(fid)
         elif(targ_corr_MJD=='bd64'):
-            with open('MJD_corr_64106.pickle', 'rb') as fid: #This is saved in pickle
+            with open('./data_pickles/MJD_corr_64106.pickle', 'rb') as fid: #This is saved in pickle
                 corr_da = pickle.load(fid)
         elif(targ_corr_MJD=='g191'):
-            with open('MJD_corr_G191.pickle', 'rb') as fid: #This is saved in pickle
+            with open('./data_pickles/MJD_corr_G191.pickle', 'rb') as fid: #This is saved in pickle
                 corr_da = pickle.load(fid)            
         elif(targ_corr_MJD=='215806'):
-            with open('MJD_corr_hd215806.pickle', 'rb') as fid: #This is saved in pickle
+            with open('./data_pickles/MJD_corr_hd215806.pickle', 'rb') as fid: #This is saved in pickle
                 corr_da = pickle.load(fid)
             
     means_arr = []
@@ -792,16 +793,16 @@ def calc_PD_stability(input_data, q_u_check, sv_im, plot_verbose , mjd_align_che
     if( corr_MJD ):
         #correcting_MJD
         if(targ_corr_MJD=='EECEP'):
-            with open('MJD_corr_pix.pickle', 'rb') as fid: #This is saved in pickle
+            with open('./data_pickles/MJD_corr_pix.pickle', 'rb') as fid: #This is saved in pickle
                 corr_da = pickle.load(fid)
         elif(targ_corr_MJD=='bd64'):
-            with open('MJD_corr_64106.pickle', 'rb') as fid: #This is saved in pickle
+            with open('./data_pickles/MJD_corr_64106.pickle', 'rb') as fid: #This is saved in pickle
                 corr_da = pickle.load(fid)
         elif(targ_corr_MJD=='g191'):
-            with open('MJD_corr_G191.pickle', 'rb') as fid: #This is saved in pickle
+            with open('./data_pickles/MJD_corr_G191.pickle', 'rb') as fid: #This is saved in pickle
                 corr_da = pickle.load(fid)            
         elif(targ_corr_MJD=='215806'):
-            with open('MJD_corr_hd215806.pickle', 'rb') as fid: #This is saved in pickle
+            with open('./data_pickles/MJD_corr_hd215806.pickle', 'rb') as fid: #This is saved in pickle
                 corr_da = pickle.load(fid)
     
     means_arr = []
