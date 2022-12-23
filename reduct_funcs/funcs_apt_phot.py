@@ -19,12 +19,23 @@ from kneed import KneeLocator
 
 def apt_phot_global_bkg_sub(fits_data_1, search_offset, positions, apt_rad, plot_phot_tab, plot_sky_med): #, ann_in_rad, ann_out_rad   ):
     """
-    #Function that does aperture photometry but with global background subtraction
-    #It would be interesting to do a global background subtraction to compare the results with global background 
-    #background subtraction. Results show a difference of 3 sigma so more or less the same.
-    """
-    print("Global background subtraction!")
-    
+        A function that does apeture photometry with global background subtraction. Returns a table of photometry fluxes with errors. Was verified to yield similarity to local background subtraction.
+
+    Parameters
+    ----------
+    fits_data_1 : str
+        Single FITS filename and their relative directory path
+    search_offset : list
+        List of length 4 integers that determine a region to search within image
+    positions : list
+        List of integers. Array that scales both image data to act as zoom. 
+    apt_rad : float
+         aperture radius
+    plot_phot_tab : bool, optional
+         plot image. True by default
+    plot_sky_med : bool, optional
+         Saves image to file.
+    """    
     search_this = fits_data_1[0].data[512-search_offset:512+search_offset,
                                        512-search_offset:512+search_offset]
     
@@ -74,14 +85,27 @@ def apt_phot_global_bkg_sub(fits_data_1, search_offset, positions, apt_rad, plot
     
     return phot_table
     
-def apt_phot_local_bkg_sub(fits_data_1, search_offset, search_array, positions, apt_rad, ann_in_rad, ann_out_rad, plot , im_val  ):
+def apt_phot_local_bkg_sub(fits_data_1, positions, search_array, img_offset,  apt_rad, ann_in_rad, ann_out_rad, plot = False):
+    """   
+    A function that does apterture photometry with local background subtraction. Returns photometry table
+
+    Parameters
+    ----------
+    fits_data_1 : numpy ndarray
+        Single FITS file with their relative directory path
+    positions : list
+        List of lists. Should be a list of 2 lists for Suhora data polarimeter. The nested list contain x and y coordinates. 
+    search_array :  list
+        A list of length 4 containing integer limits that determine the area of interest.
+    img_offset : int
+        Integer that determines new bounds of sub image.
+    apt_rad : float
+        Aperture radius
+    plot : bool, optional
+        Plots image. Prints photometry table.  
     """
-    #NOW YOU SEE WHY WE NEED object oriented programming. To prevent you from declaring the same input arguments over and over.
-    #and also needing to know which arguments change what setting.
-    #TODO. Make an image validate. For each time this function is called in the processing loop. output an image
-    """
-    search_this = fits_data_1[0].data[512-search_offset:512+search_offset,
-                                       512-search_offset:512+search_offset]
+    search_this = fits_data_1[512-img_offset:512+img_offset,
+                                       512-img_offset:512+img_offset]
     
     apertures = CircularAperture(positions, r=apt_rad) #Its just standard 4
     annulus_aperture = CircularAnnulus(positions, r_in= ann_in_rad, r_out=ann_out_rad)
@@ -89,7 +113,7 @@ def apt_phot_local_bkg_sub(fits_data_1, search_offset, search_array, positions, 
     
     if (plot):
         plt.imshow(search_this)#, cmap='Greys', origin='lower', norm=norm,interpolation='nearest')
-        plt.title(fits_data_1[0].header['OBJECT']+ " " +fits_data_1[0].header['FILTER'] + " reduced " + fits_data_1[0].header['TIME-OBS']+" DAOphot.")
+        #plt.title(fits_data_1[0].header['OBJECT']+ " " +fits_data_1[0].header['FILTER'] + " reduced " + fits_data_1[0].header['TIME-OBS']+" DAOphot.")
         plt.axvline(x=len(search_this)/2, c='black', alpha=0.2)
         plt.axhline(y=len(search_this[0])/2, c='black', alpha=0.2)
         
@@ -97,27 +121,28 @@ def apt_phot_local_bkg_sub(fits_data_1, search_offset, search_array, positions, 
             plt.text(  positions[z][0],
                        positions[z][1], 
                        "Target " +str(z+1)+"\n" +str((round(positions[z][0], 2), round(positions[z][1],2))), 
-                     fontsize=16, alpha=10)
+                     fontsize=16, alpha=0.8)
         
         #should have the star tracker brackets
-            plt.plot([search_offset+search_array[3],search_offset+search_array[3]], [search_offset-search_array[0],search_offset+search_array[1]], 'k-', lw=1.75, alpha=0.4, linestyle = '--') #vertical
-            plt.plot([search_offset-search_array[2],search_offset-search_array[2]], [search_offset-search_array[0],search_offset+search_array[1]], 'k-', lw=1.75, alpha=0.4, linestyle ='--') #vertical 
-            plt.plot([search_offset-search_array[2],search_offset+search_array[3]], [search_offset+search_array[1],search_offset+search_array[1]], 'k-', lw=1.75, alpha=0.4, linestyle ='--') #horizontal
-            plt.plot([search_offset+search_array[3],search_offset-search_array[2]], [search_offset-search_array[0],search_offset-search_array[0]], 'k-', lw=1.75, alpha=0.4, linestyle = '--') #horizontal lines
-        
-        
-        #plot
-        
+            plt.plot([img_offset+search_array[3],img_offset+search_array[3]], 
+                     [img_offset-search_array[0],img_offset+search_array[1]], 
+                     'k-', lw=1.75, alpha=0.4, linestyle = '--') #vertical
+            plt.plot([img_offset-search_array[2],img_offset-search_array[2]], 
+                     [img_offset-search_array[0],img_offset+search_array[1]], 
+                     'k-', lw=1.75, alpha=0.4, linestyle ='--') #vertical 
+            plt.plot([img_offset-search_array[2],img_offset+search_array[3]], 
+                     [img_offset+search_array[1],img_offset+search_array[1]], 
+                     'k-', lw=1.75, alpha=0.4, linestyle ='--') #horizontal
+            plt.plot([img_offset+search_array[3],img_offset-search_array[2]], 
+                     [img_offset-search_array[0],img_offset-search_array[0]],
+                     'k-', lw=1.75, alpha=0.4, linestyle = '--') #horizontal 
+               
         ap_patches = apertures.plot(color='white', lw=2,label='Photometry aperture')
         ann_patches = annulus_aperture.plot(color='red', lw=2,label='Background annulus')
         handles = (ap_patches[0], ann_patches[0])
         plt.legend(loc=(0.17, 0.05), facecolor='#458989', labelcolor='white', handles=handles, prop={'weight': 'bold', 'size': 11})
         plt.colorbar()
         plt.grid(lw='0.15')
-        
-        if(im_val):
-            print("Make a validation image!")
-        
         plt.show()
     
     apers = [apertures, annulus_aperture]
@@ -154,7 +179,16 @@ def apt_phot_local_bkg_sub(fits_data_1, search_offset, search_array, positions, 
 
 def solve_apt(combine_target, trial_radii,verbose):
     """
-    #So, Tries different aperture size.
+    A function that takes in a list of lists of combined targets and a list of trial_radii and fits for the knee point. Returns the median of the knee which is supposed to be a recommended radius for aperture photometry.
+    
+    Parameters
+    ----------
+    combine_target : list
+        List of lists.
+    trial_radii : list
+        List of trial radii. 
+    verbose : bool, optional
+        Prints some extrat things     
     """
     
     knees = []
@@ -168,6 +202,7 @@ def solve_apt(combine_target, trial_radii,verbose):
         knees.append(kn.knee)
         if(verbose):
             plt.plot(combine_target)
+            plt.grid()
             plt.show()
             print("Target:", x+1 ,kn.knee)
 

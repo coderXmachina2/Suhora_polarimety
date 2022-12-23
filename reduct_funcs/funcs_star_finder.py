@@ -17,11 +17,25 @@ from photutils.detection import DAOStarFinder
 from astropy.visualization.mpl_normalize import ImageNormalize
 from astropy.visualization import SqrtStretch
 
-def source_peak_finder(fits_data_1, siegma, search_array, trim, plot_peaks, verbose):
+def source_peak_finder(fits_data_1, search_array, siegma, trim, plot_peaks=False, verbose=False):
     """
-    Function that finds coordinates of stars.
+    Function that finds location and values of peaks in the image bounded within offsets given in array (that define a region of interest shaped in a rectangle/square). Involves some further trhesholding/ filtering routines. Returns list of x coordinates, list of y coordinates, and list of the peak in image. This function is succeeded with plot_spotted for maximum results.
     
-    Input should be sigma
+    Parameters
+    ----------
+    fits_data_1 : numpy ndarray
+        Single numpy ndarray of image intensities. 2D image array.
+    siegma : int
+        Integer that determines sigma cutoff for sigma_clipped_stats image search function
+    search_array :  list
+        A list of length 4 containing integer limits that determine the area of interest.
+    trim : int
+         Integer in the hundreds to thousand. Defines a lower limit used to calculate a threshold. 
+    plot_peaks : bool, optional
+         Plot peaks for verification
+    verbose : bool, optional
+         Prints results Plots peaks for verification
+    
     """
     x_peak = []
     y_peak = []
@@ -32,29 +46,30 @@ def source_peak_finder(fits_data_1, siegma, search_array, trim, plot_peaks, verb
     peak_interest = []
     index_x = []
 
-    mean, median, std = sigma_clipped_stats(fits_data_1[0].data, sigma=siegma) #searches the whole image
+    mean, median, std = sigma_clipped_stats(fits_data_1, sigma=siegma) #searches the whole image
     threshold = median + (10. * std)
-    tbl = find_peaks(fits_data_1[0].data, threshold, box_size=40)
+    tbl = find_peaks(fits_data_1, threshold, box_size=40)
     tbl['peak_value'].info.format = '%.3g'  # for consistent table output
     
-    #stripper
+    #Gets locations
     for things in tbl:
         x_peak.append(things['x_peak'])
         y_peak.append(things['y_peak'])
         peak_val.append(things['peak_value'])
 
-    for i in range(0, len(peak_val)): #looks inside zone
+    #looks inside this zone
+    for i in range(0, len(peak_val)): 
         """
-        #TODO replace with a circle
+        #TODO replace search within circle
         #Calculate a distance r
-        #if distnace to point (d = sqrt( (x-x)^2 + (y-y)^2) is less than some input d#search offset is the center
+        #save point if distnace to point (d = sqrt( (x-x)^2 + (y-y)^2) is less than some input search offset
         """
         if(y_peak[i] > 512-search_array[0] and 
            y_peak[i] < 512+search_array[1] and 
            x_peak[i] > 512-search_array[2] and 
            x_peak[i] < 512+search_array[3]):
             x_interest.append(x_peak[i])
-            y_interest.append(y_peak[i])#theres this really bright pixel off to the side
+            y_interest.append(y_peak[i])
             peak_interest.append(peak_val[i])
             index_x.append(i)
     
@@ -65,50 +80,65 @@ def source_peak_finder(fits_data_1, siegma, search_array, trim, plot_peaks, verb
     
     for peaks in peak_val:
         if peaks < trim:
-            sub_sample.append(peaks) #But it cannot identify it out of this sample...
-            
-    threshold = np.mean(sub_sample)+5*np.std(sub_sample) #This becomes nan and shit is fucked
+            sub_sample.append(peaks)
+    
+    #Calculates threshold from a sub sample
+    threshold = np.mean(sub_sample)+5*np.std(sub_sample)
     
     for z in range(0, len(peak_interest)):
         if(peak_interest[z] > threshold):
             x_targ.append(x_interest[z])
             y_targ.append(y_interest[z])
             peak_targ.append(peak_interest[z])
-    #Output
+    
     if(plot_peaks):
-        plt.plot(peak_val[:])
-        plt.title("Flux peaks")
+        xaxis = np.linspace(0, len(peak_val[:]), len(peak_val[:]))
+        plt.scatter(xaxis, peak_val[:])
+        plt.title("Image flux peaks")
         plt.grid()
         
-        plt.text(0, threshold,
-                 'Region of interest threshold ', 
-                 fontsize=16, alpha=10, color = 'red')
-        plt.axhline(y=threshold, 
-                    color = 'red', linestyle='--', lw=2.5) #horizontal line y is constan
-        plt.text(0, trim,
-                         'Trim', 
-                         fontsize=16, alpha=10, color = 'red')
-        plt.axhline(y=trim, 
-                            color = 'red', linestyle='--', lw=2.5) #horizontal line y is constan
+        plt.text(0, threshold, 'Threshold ', fontsize=16, color = 'red')
+        plt.text(0, trim,'Trim ',fontsize=16,color = 'red')
+        
+        plt.axhline(y=threshold, color = 'red', linestyle='--', lw=2.5) 
+        plt.axhline(y=trim,color = 'red',linestyle='--',lw=2.5)
         for i in range(0, len(index_x)):
-            plt.plot([index_x[i],index_x[i]], [peak_interest[i]-300, peak_interest[i]+300], 'k-', lw=2.5) #vertical line x is constant
-            plt.plot([index_x[i]-2.5,index_x[i]+2.5], [peak_interest[i], peak_interest[i]] , 'k-', lw=2.5) #horizontal line y is constant
+            plt.plot([index_x[i],index_x[i]], [peak_interest[i]-300, peak_interest[i]+300], 'k-', lw=2.5) 
+            plt.plot([index_x[i]-2.5,index_x[i]+2.5], [peak_interest[i], peak_interest[i]] , 'k-', lw=2.5) 
         plt.show()
 
     if(verbose):
         print(len(tbl), 
               "peaks detected from image of size", 
-              fits_data_1[0].header['NAXIS1'], "x", fits_data_1[0].header['NAXIS2'],
-              "with sigma:", siegma, "and threshold:", threshold, "threshold is nan and shit is fucked" if math.isnan(threshold) else "valid" )
+              "HEADER NAXIS1 x NAXIS2",
+              #fits_data_1[0].header['NAXIS1'], "x", fits_data_1[0].header['NAXIS2'],
+              "with sigma:", siegma, "and threshold:", threshold, "threshold is nan and there is error" if math.isnan(threshold) else "valid" )
 
         print("Targets within region of interest: ", len(x_targ))
 
     return(x_targ, y_targ, peak_targ)
 
 
-def plot_spotted(fits_data_1, img_offset, search_array ,x_targ, y_targ, peak_targ, plot_im, fade_plot):
+def plot_spotted(fits_data_1, search_array, x_targ, y_targ, peak_targ, img_offset, plot_im=False):
     """
-    Function that takes in two plots and plots them. It just plots
+    Function that takes in 2D image data and plots them along with search offsets. Creats a list of tuples with x and y coordinates packaged together. Takes in list of x and y coordinates and peak fluxes to put them on the image. Returns a list of tuples which are apeture positions. apeture positions x and y coordinates are calculated based on the search offset. So what if the image is not 512? We may face problems moving forward.
+    
+    Parameters
+    ----------
+    fits_data_1 : numpy ndarray
+        Single numpy ndarray of image intensities. 2D image array.
+    img_offset : int
+        Integer that determines new bounds of sub image. 
+    search_array :  list
+        A list of length 4 containing integer limits that determine the area of interest.
+    x_targ : list
+         A list of x positions
+    y_targ : list
+         A list of y positions
+    peak_targ : list
+         A list of  peak intensities at the x and y coordinates
+    plot_im :  bool, optional
+         Plot image
     """    
     search_offset = img_offset
     
@@ -117,13 +147,13 @@ def plot_spotted(fits_data_1, img_offset, search_array ,x_targ, y_targ, peak_tar
         apt_positions.append((x_targ[xint]-(512-search_offset), y_targ[xint]-(512-search_offset)))
     
     if(plot_im):
-        plt.imshow(fits_data_1[0].data[512-img_offset:512+img_offset,
+        plt.imshow(fits_data_1[512-img_offset:512+img_offset,
                                        512-img_offset:512+img_offset])
         plt.axvline(x=img_offset, c='black', alpha=0.2)
         plt.axhline(y=img_offset, c='black', alpha=0.2)
         plt.grid(lw='0.15')
         plt.colorbar()
-        plt.title(fits_data_1[0].header['OBJECT']+ " " +fits_data_1[0].header['FILTER'] + " reduced " + fits_data_1[0].header['TIME-OBS'])
+        #plt.title(fits_data_1[0].header['OBJECT']+ " " +fits_data_1[0].header['FILTER'] + " reduced " + fits_data_1[0].header['TIME-OBS'])
 
         apt_positions = []
         plt_alpha= 0.2
@@ -132,32 +162,53 @@ def plot_spotted(fits_data_1, img_offset, search_array ,x_targ, y_targ, peak_tar
             plt.text(x_targ[xint]-(512-search_offset),
                      y_targ[xint]-(512-search_offset),
                      'Target '+str((x_targ[xint]-(512-search_offset),
-                                    y_targ[xint]-(512-search_offset)))+"\nPeak_val:"+str(round(peak_targ[xint],2)) , 
-                     fontsize=16, alpha=10)
+                                    y_targ[xint]-(512-search_offset)))+
+                     "\nPeak_val:"+str(round(peak_targ[xint],2)),fontsize=16)
             
             apt_positions.append((x_targ[xint]-(512-search_offset), y_targ[xint]-(512-search_offset)))
 
-            #This thing is freaking magical!
-            #I need to implement a bracketing for my first filter
-            plt.plot([search_offset+search_array[3],search_offset+search_array[3]], [search_offset-search_array[0],search_offset+search_array[1]], 'k-', lw=1.75, alpha=0.4, linestyle = '--') #vertical
-            plt.plot([search_offset-search_array[2],search_offset-search_array[2]], [search_offset-search_array[0],search_offset+search_array[1]], 'k-', lw=1.75, alpha=0.4, linestyle ='--') #vertical 
-            plt.plot([search_offset-search_array[2],search_offset+search_array[3]], [search_offset+search_array[1],search_offset+search_array[1]], 'k-', lw=1.75, alpha=0.4, linestyle ='--') #horizontal
-            plt.plot([search_offset+search_array[3],search_offset-search_array[2]], [search_offset-search_array[0],search_offset-search_array[0]], 'k-', lw=1.75, alpha=0.4, linestyle = '--') #horizontal lines
+            plt.plot([search_offset+search_array[3],search_offset+search_array[3]], 
+                     [search_offset-search_array[0],search_offset+search_array[1]], 
+                     'k-', lw=1.75, alpha=0.4, linestyle = '--') #vertical
+            plt.plot([search_offset-search_array[2],search_offset-search_array[2]], 
+                     [search_offset-search_array[0],search_offset+search_array[1]], 
+                     'k-', lw=1.75, alpha=0.4, linestyle ='--') #vertical 
+            plt.plot([search_offset-search_array[2],search_offset+search_array[3]], 
+                     [search_offset+search_array[1],search_offset+search_array[1]], 
+                     'k-', lw=1.75, alpha=0.4, linestyle ='--') #horizontal
+            plt.plot([search_offset+search_array[3],search_offset-search_array[2]],
+                     [search_offset-search_array[0],search_offset-search_array[0]],
+                     'k-', lw=1.75, alpha=0.4, linestyle = '--') #horizontal
             
             plt.plot([x_targ[xint]-(512-search_offset),
                       x_targ[xint]-(512-search_offset)], 
                      [y_targ[xint]-(512-search_offset)-2,
-                      y_targ[xint]-(512-search_offset)+2], 'k-', lw=2) #vertical line
+                      y_targ[xint]-(512-search_offset)+2], 
+                     'k-', lw=2) #vertical
             plt.plot([x_targ[xint]-(512-search_offset),
                       x_targ[xint]-(512-search_offset)], 
-                     [y_targ[xint]-(512-search_offset)-2, y_targ[xint]-(512-search_offset)+2], 'k-', lw=2) #vertical line
-            plt.plot([x_targ[xint]-(512-search_offset)-2, x_targ[xint]-(512-search_offset)+2], 
-                     [y_targ[xint]-(512-search_offset),y_targ[xint]-(512-search_offset) ], 'k-', lw=2) #horizontal line
+                     [y_targ[xint]-(512-search_offset)-2, 
+                      y_targ[xint]-(512-search_offset)+2], 
+                     'k-', lw=2) #vertical
+            plt.plot([x_targ[xint]-(512-search_offset)-2, 
+                      x_targ[xint]-(512-search_offset)+2], 
+                     [y_targ[xint]-(512-search_offset),
+                      y_targ[xint]-(512-search_offset)], 
+                     'k-', lw=2) #horizontal line
         plt.show()
     
     return apt_positions
 
 def peak_to_DAO(apt_pos):
+    """
+    Converts aperture positions returned by source_peak_finder to a format acceptable by DAOStarFinder. Returns a list
+    
+    Parameters
+    ----------
+    apt_pos : list
+        List of tuples containing x and y locations relative to a predefined search offset.
+    """    
+    
     DAO_array = []
     for pos in apt_pos:
         pos_array = [   ]
@@ -168,16 +219,41 @@ def peak_to_DAO(apt_pos):
         
     return(DAO_array)
     
-def dao_star_finder(fits_data_1, search_array, siegma, second_thresh ,search_offset, apt_rad, ann_in_rad, ann_out_rad, plot, plot_tab):
+def dao_star_finder(fits_data_1, search_array, siegma, trim ,img_offset, apt_rad, ann_in_rad, ann_out_rad, plot=False, plot_tab=False):
+    """
+    Function that finds location and values of peaks in the image bounded within offsets given in array (that define a region of interest shaped in a rectangle/square). Involves some further trhesholding/ filtering routines. Does a little bit of preliminary aperture photometry but does not return the results. Returns list of x coordinates, list of y coordinates, and list of the peak in image. This function is used in pipeline counts extraction cell. Returns positions of target of interest.
     
-    search_this = fits_data_1[0].data[512-search_offset:512+search_offset,
-                                   512-search_offset:512+search_offset]
+    Parameters
+    ----------
+    fits_data_1 : numpy ndarray
+        Single numpy ndarray of image intensities. 2D image array.
+    search_array :  list
+        A list of length 4 containing integer limits that determine the area of interest.
+    siegma : int
+        Integer that determines sigma cutoff for sigma_clipped_stats image search function        
+    trim : int
+         Integer in the hundreds to thousand. Defines a lower limit used to calculate a threshold. 
+    img_offset : int
+         Integer that determines new bounds of sub image.
+    apt_rad : float
+         aperture radius
+    ann_in_rad : int
+         Integer that determines inner radius of the circular annulus 
+    ann_out_rad :  int
+         Integer that determines outer radius of the circular annulus 
+    plot :  bool, optional
+         Plot aperture photometry image
+    plot_tab :  bool, optional
+         Plot aperture photometry table,
+    """    
     
+    search_this = fits_data_1[512-img_offset:512+img_offset,512-img_offset:512+img_offset]
+
     #DAO star finder. Takes in argument sigma 
     mean, median, std = sigma_clipped_stats(search_this, sigma=siegma)
     daofind = DAOStarFinder(fwhm=3.0, threshold=5.*std) #what happens if we change fwhm
     sources = daofind(search_this - median)#, mask=mask)  #sources is a table just like tbl
-    
+
     if plot_tab:
         print("DAO found", len(sources), "objects discovered")
         print(sources)
@@ -204,10 +280,10 @@ def dao_star_finder(fits_data_1, search_array, siegma, second_thresh ,search_off
     sub_sample = []
     
     if plot_tab:
-        print("second_thresh", second_thresh)
+        print("second_thresh", trim)
     
     for peaks in peak_val: 
-        if peaks < second_thresh: #was 2 thousand 
+        if peaks < trim:
             sub_sample.append(peaks)
                 
     threshold = np.mean(sub_sample)+5*np.std(sub_sample)
@@ -218,10 +294,10 @@ def dao_star_finder(fits_data_1, search_array, siegma, second_thresh ,search_off
         #Calculate a distance r
         #if distnace to point (d = sqrt( (x-x)^2 + (y-y)^2) is less than some input d#search offset is the center
         """
-        if(y_peak[i] > search_offset-search_array[0] and 
-           y_peak[i] < search_offset+search_array[1] and 
-           x_peak[i] > search_offset-search_array[2] and 
-           x_peak[i] < search_offset+search_array[3] and peak_val[i] > threshold):
+        if(y_peak[i] > img_offset-search_array[0] and 
+           y_peak[i] < img_offset+search_array[1] and 
+           x_peak[i] > img_offset-search_array[2] and 
+           x_peak[i] < img_offset+search_array[3] and peak_val[i] > threshold):
             x_targ.append(x_peak[i])
             y_targ.append(y_peak[i])
             flux_targ.append(measure_flux[i])
@@ -233,15 +309,22 @@ def dao_star_finder(fits_data_1, search_array, siegma, second_thresh ,search_off
     
     if (plot):
         plt.imshow(search_this)#, cmap='Greys', origin='lower', norm=norm,interpolation='nearest')
-        plt.title(fits_data_1[0].header['OBJECT']+ " " +fits_data_1[0].header['FILTER'] + " reduced " + fits_data_1[0].header['TIME-OBS']+" DAOphot")
+        #plt.title(fits_data_1[0].header['OBJECT']+ " " +fits_data_1[0].header['FILTER'] + " reduced " + fits_data_1[0].header['TIME-OBS']+" DAOphot")
         plt.axvline(x=len(search_this)/2, c='black', alpha=0.2)
         plt.axhline(y=len(search_this[0])/2, c='black', alpha=0.2)
 
-        #This thing is freaking magical!
-        plt.plot([search_offset+search_array[3],search_offset+search_array[3]], [search_offset-search_array[0],search_offset+search_array[1]], 'k-', lw=1.75, alpha=0.4, linestyle = '--') #vertical
-        plt.plot([search_offset-search_array[2],search_offset-search_array[2]], [search_offset-search_array[0],search_offset+search_array[1]], 'k-', lw=1.75, alpha=0.4, linestyle ='--') #vertical 
-        plt.plot([search_offset-search_array[2],search_offset+search_array[3]], [search_offset+search_array[1],search_offset+search_array[1]], 'k-', lw=1.75, alpha=0.4, linestyle ='--') #horizontal
-        plt.plot([search_offset+search_array[3],search_offset-search_array[2]], [search_offset-search_array[0],search_offset-search_array[0]], 'k-', lw=1.75, alpha=0.4, linestyle = '--') #horizontal lines
+        plt.plot([img_offset+search_array[3],img_offset+search_array[3]], 
+                 [img_offset-search_array[0],img_offset+search_array[1]], 
+                 'k-', lw=1.75, alpha=0.4, linestyle = '--') #vertical
+        plt.plot([img_offset-search_array[2],img_offset-search_array[2]], 
+                 [img_offset-search_array[0],img_offset+search_array[1]], 
+                 'k-', lw=1.75, alpha=0.4, linestyle ='--') #vertical 
+        plt.plot([img_offset-search_array[2],img_offset+search_array[3]], 
+                 [img_offset+search_array[1],img_offset+search_array[1]], 
+                 'k-', lw=1.75, alpha=0.4, linestyle ='--') #horizontal
+        plt.plot([img_offset+search_array[3],img_offset-search_array[2]], 
+                 [img_offset-search_array[0],img_offset-search_array[0]], 
+                 'k-', lw=1.75, alpha=0.4, linestyle = '--') #horizontal lines
 
         for xint in range(0,len(x_targ)):
             plt.text(x_targ[xint], 
@@ -249,7 +332,7 @@ def dao_star_finder(fits_data_1, search_array, siegma, second_thresh ,search_off
                      "Target "+ str(xint+1) + " " + str((round(x_targ[xint], 2), round(y_targ[xint],2))) + "\nFlux: " +
                      str(round(flux_targ[xint], 4)) +
                      "\nPeak_val: " + str(round(peak_targ[xint], 4)), 
-                     fontsize=16, alpha=10)
+                     fontsize=16, alpha=0.4)
 
         ap_patches = apertures.plot(color='white', lw=2,
                                    label='Photometry aperture')
@@ -267,7 +350,21 @@ def dao_star_finder(fits_data_1, search_array, siegma, second_thresh ,search_off
 
 def dao_star_finder_HD104860(fits_data_1, search_array, siegma, second_thresh ,search_offset, apt_rad, ann_in_rad, ann_out_rad, plot, plot_tab):
     """
-    #Special function for 104860
+    Function that finds location and values of peaks in the image bounded within offsets given in array (that define a region of interest shaped in a rectangle/square). Involves some further trhesholding/ filtering routines. Returns list of x coordinates, list of y coordinates, and list of the peak in image. This function is used in pipeline counts extraction cell. Returns positions of target of interest.
+    
+    Parameters
+    ----------
+    fits_data_1 : numpy ndarray
+        Single numpy ndarray of image intensities. 2D image array.
+    search_array :  
+    siegma : 
+    second_thresh : 
+    search_offset : 
+    apt_rad : 
+    ann_in_rad : 
+    ann_out_rad : 
+    plot : 
+    plot_tab : 
     """
     
     search_this = fits_data_1[0].data[512-search_offset:512+search_offset,
@@ -333,7 +430,7 @@ def dao_star_finder_HD104860(fits_data_1, search_array, siegma, second_thresh ,s
     
     if (plot):
         plt.imshow(search_this)#, cmap='Greys', origin='lower', norm=norm,interpolation='nearest')
-        plt.title(fits_data_1[0].header['OBJECT']+ " " +fits_data_1[0].header['FILTER'] + " reduced " + fits_data_1[0].header['TIME-OBS']+" DAOphot")
+        #plt.title(fits_data_1[0].header['OBJECT']+ " " +fits_data_1[0].header['FILTER'] + " reduced " + fits_data_1[0].header['TIME-OBS']+" DAOphot")
         plt.axvline(x=len(search_this)/2, c='black', alpha=0.2)
         plt.axhline(y=len(search_this[0])/2, c='black', alpha=0.2)
 
@@ -349,7 +446,7 @@ def dao_star_finder_HD104860(fits_data_1, search_array, siegma, second_thresh ,s
                      "Target "+ str(xint+1) + " " + str((round(x_targ[xint], 2), round(y_targ[xint],2))) + "\nFlux: " +
                      str(round(flux_targ[xint], 4)) +
                      "\nPeak_val: " + str(round(peak_targ[xint], 4)), 
-                     fontsize=16, alpha=10)
+                     fontsize=16, alpha=0.4)
 
         ap_patches = apertures.plot(color='white', lw=2,
                                    label='Photometry aperture')

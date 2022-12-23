@@ -19,6 +19,7 @@ from photutils import find_peaks
 from photutils.detection import DAOStarFinder
 from astropy.visualization.mpl_normalize import ImageNormalize
 from astropy.visualization import SqrtStretch
+
 from reduct_funcs import funcs_utils
 from reduct_funcs import funcs_polarimetry
 
@@ -45,8 +46,20 @@ plt.rcParams['xtick.labelsize'] = 10
 
 def make_calib_files(bias, dark, flat_p1, flat_p3):
     """
-    Takes in bias, dark, and flat. Returns master bias, master dark, and master flat
+    A function that takes in lists of bias, dark, p1 and p3 FITS files. Creates master bias, master dark, and master flat by taking the median of the data and returning result.
+
+    Parameters
+    ----------
+    bias : list
+        List of bias FITS files with their relative directory path. 
+    dark : list
+        List of dark FITS files with their relative directory path.
+    flat_p1 : list
+        List of P1 flat FITS files with their relative directory path.
+    flat_p3 : list
+        List of P3 flat FITS files with their relative directory path.
     """
+
     b_frames = []
     drk_frames = []
     normed_bs_p1fl_frames = []
@@ -56,7 +69,7 @@ def make_calib_files(bias, dark, flat_p1, flat_p3):
         bias_frame = astropy.io.fits.open(bias_file)
         b_frames.append(bias_frame[0].data)
     
-    master_bias = np.median(b_frames, axis= 0) #I am sure that my master bias method is corrct
+    master_bias = np.median(b_frames, axis= 0)
 
     for dark_file in dark:
         drk_frame = astropy.io.fits.open(dark_file)
@@ -64,10 +77,7 @@ def make_calib_files(bias, dark, flat_p1, flat_p3):
         drk_frames.append(bias_subtracted_dark)
     
     master_drk =  np.median(drk_frames, axis= 0)
-    
-    #Here is an idea, depending on which pol filter you want to use, only take 
-    #the corresponding p filter (P3 - R) or (P1 - R). The flats also subtract master_bias
-    
+        
     for flat_x in flat_p1:
         flat_frame = astropy.io.fits.open(flat_x)
         bias_subtracted_flat = np.subtract(flat_frame[0].data, master_bias)
@@ -86,6 +96,15 @@ def make_calib_files(bias, dark, flat_p1, flat_p3):
     return(master_bias, master_drk, masterf_p1, masterf_p3)
 
 def file_splits(list_data):
+    """
+    A function that takes in a list of any data type (bias, dark, flat or target) and iterates through the list to get basic information on the image type, filters, and exposure time if the object type not a reduction file. Used for initial checking and was initially designed for EDA. Expects single type in the input.
+
+    Parameters
+    ----------
+    list_data : list
+        List of either bias, dark, flat, or data FITS files with their relative directory path. Loops through the list and adds FITS metadata from the header into separate list. Prints the information with some formatting.
+    """
+    img_type= []
     filts= []
     objects = []
     exp_times = []
@@ -95,23 +114,24 @@ def file_splits(list_data):
             exp_times.append(  astropy.io.fits.open(list_data[k])[0].header['EXPTIME']   ) 
         filts.append(astropy.io.fits.open(list_data[k])[0].header['FILTER'])
         objects.append(astropy.io.fits.open(list_data[k])[0].header['OBJECT'])
+        img_type.append(astropy.io.fits.open(list_data[k])[0].header['IMAGETYP'])
 
-    print(astropy.io.fits.open(list_data[0])[0].header['IMAGETYP'],
-          set(objects), 
-          "Filters:", [(filters, filts.count(filters)) for filters in set(filts)], #Wow thats some bullshit
-          "total " + str(np.round(sum(exp_times)/60)) + " min exposure time" if astropy.io.fits.open(list_data[0])[0].header['IMAGETYP'] == 'object' else '' )
+    print("Img type:", [x for x in list(set(img_type))],
+          "Obj:", [t for t in list(set(objects))], 
+          "Filters:", [(filters, filts.count(filters)) for filters in set(filts)],
+          "\nTotal " + str(np.round(sum(exp_times)/60)) + " min exposure time" if astropy.io.fits.open(list_data[0])[0].header['IMAGETYP'] == 'object' else '' )
 
 def reduction(raw_data, calib_files):
     """
-    Takes in the calibration files and raw data. Takes in two input. Returns reduced fits image.
-    There should be more steps need to be taken with CCD proc.
+    A function that takes in openned FITS image data and performs reduction with raw numpy routines (direct quick and dirty computation). Image subtract bias, subtract dark, and divide flat. Returns 2d nd array data.
+
+    Parameters
+    ----------
+    raw_data : numpy ndarray
+        Single numpy ndarray of image intensities. 2D image array.
+    calib_files : tuple
+        Tuple of length 3 comprising of bias (calib_files[0]), dark (calib_files[1]), and flat (calib_files[1]).
     """
-    
-    #Everything is here. subtract bias, subtract dark, and flat fielding.
-    #what is raw data
-    #Its not a numpy thing. It is an image.
-    #print(type(raw_data))
-    #print("Raw data:", raw_data)
     
     bs_data = np.subtract(raw_data, calib_files[0]) #subtract the bias
     bs_ds_data = np.subtract(bs_data, calib_files[1]) #subtract the dark
@@ -121,17 +141,19 @@ def reduction(raw_data, calib_files):
 
 def reduction_ccd_proc(unredu_fits_data, calib_files, key):
     """
-    Takes in the calibration files and raw data. Takes in two input. Returns reduced fits image.
-    There should be more steps need to be taken with CCD proc.
+    A function that takes in FITS file data and performs reduction with ccd proc routines. Image subtract bias, subtract dark, and divide flat. Was still in testing and not used in deployment for EAS 2022. As of 21/12/2022 still not deployed and in testing but last I recall the results were approximately similar with quick and dirty method. Do another round of verification adn deploy.Returns 2D nd array data.
+
+    Parameters
+    ----------
+    unredu_fits_data : str
+        Single FITS file with their relative directory path
+    calib_files : tuple,
+        Tuple of length 3 comprising of bias (calib_files[0]), dark (calib_files[1]), and flat (calib_files[1]).
+    key: str
+        Year '2020' or '2021'. Conducts different reduction based on camera used to capture data assuming the correct input files are given.
     """
     
-    #It is the same image that pops out in the end. I acknowledge that the change has been applied
-    #
-    shad_cop = cp(astropy.io.fits.open(unredu_fits_data)) #Shadow copy
-    #Everything is here. subtract bias, subtract dark, and flat fielding.
-    #what is raw data
-    #Its not a numpy thing. It is an image.
-    #calib_files = (bias, dark, p_flat)
+    shad_cop = cp(astropy.io.fits.open(unredu_fits_data))
     
     masterf = CCDData(calib_files[2], unit=u.adu)
     masterf.header = astropy.io.fits.open(unredu_fits_data)[0].header 
@@ -152,11 +174,8 @@ def reduction_ccd_proc(unredu_fits_data, calib_files, key):
         #AspenCG47:
         #gain: 1.15 e/ADU   
         #readout noise: 48.9 e
-        
-        #Gain correction
-        print("Apply Gain Correction here. New Stuff LoL XD. Today. Do target again.")
-        
-        #Method 1 subtract biast, subtract dark, gain correct and flat field together. no night and day difference
+               
+        #Method 1 subtract bias, subtract dark, gain correct and flat field together. No night and day difference
         #bias_subtracted = ccdproc.subtract_bias(ccd_data, master_b)
         #dark_subtracted = ccdproc.subtract_dark(bias_subtracted, master_d,
         #                                        exposure_time='exposure',
@@ -167,12 +186,11 @@ def reduction_ccd_proc(unredu_fits_data, calib_files, key):
         #                           exposure_unit=u.second, 
         #                           exposure_key='exposure')
         
-        #Method 2 subtract biast, subtract dark, flat field, and gain correct. no night and day difference
+        #Method 2 subtract bias, subtract dark, flat field, and gain correct. no night and day difference
         bias_subtracted = ccdproc.subtract_bias(ccd_data, master_b)
         dark_subtracted = ccdproc.subtract_dark(bias_subtracted, master_d,
                                                 exposure_time='exposure',
                                                 exposure_unit=u.second)
-        
         reduced_image = ccdproc.flat_correct(dark_subtracted, masterf)
         nccd = ccdproc.ccd_process(dark_subtracted,
                                    gain= 1.15*u.electron/u.adu, 
@@ -198,10 +216,7 @@ def reduction_ccd_proc(unredu_fits_data, calib_files, key):
         dark_subtracted = ccdproc.subtract_dark(bias_subtracted, master_d,
                                                 exposure_time='exposure',
                                                 exposure_unit=u.second)
-        #Flat fielding
-        
-        print("Commencing gain correction:")
-
+        reduced_image = ccdproc.flat_correct(dark_subtracted, masterf)
         nccd = ccdproc.ccd_process(ccd_data, 
                                    gain= 1.5*u.electron/u.adu, 
                                    readnoise= 8.5*u.electron, 
@@ -213,63 +228,57 @@ def reduction_ccd_proc(unredu_fits_data, calib_files, key):
                           
     return(shad_cop)
 
-def plot_raw_double_compare(fits_data_1, fits_data_2, scale_arr, comp_what, sup_tit ,sigma ,plot):
+def plot_raw_double_compare(fits_data_1, scale_arr, comp_what = ["plot A", "plot B"], sv_img = False):
     """
-    Plots 2 data side by side. Without reduction. Sigma Clipped stats is an option.
-    
-    Take is a whole fits file. Does not return anything.
-    
+    A function that plots FITS image data. Does not return anything
+
+    Parameters
+    ----------
+    fits_data_1 : str
+        Single numpy ndarray of image intensities. 2D image array.
+    scale_arr : list
+        List of integers. Array that scales both image data to act as zoom. 
+    comp_what :  list
+        A list that contains image sub titles.
+    sv_img : bool, optional
+         Saves image to file. Expects the correct directory to be in place.
     """
     
-    #So which one is whcih? Compare with your old one ish!
-    #It is with the [0] as per the original
-    m1 = fits_data_1.data[scale_arr[0]-scale_arr[2]:scale_arr[1]+scale_arr[2],  #So the common syntax is file[0].data[blah]
-                          scale_arr[1]-scale_arr[3]:scale_arr[1]+scale_arr[3]] #
-    m2 = fits_data_2.data[scale_arr[0]-scale_arr[2]:scale_arr[1]+scale_arr[2], 
+    op = astropy.io.fits.open(fits_data_1)[0] #heade abd data
+    
+    m1 = op.data[scale_arr[0]-scale_arr[2]:scale_arr[1]+scale_arr[2],  
                           scale_arr[1]-scale_arr[3]:scale_arr[1]+scale_arr[3]]
 
     fig = plt.figure(figsize=(16, 12))
     ax1 = fig.add_subplot(121)
-    fig.suptitle(sup_tit)
-    
-    if(sigma):
-        mean, median, std = sigma_clipped_stats(m1)
-        im1 = ax1.imshow(m1, 
-                         vmin = median - 3*std,
-                         vmax = median + 3*std,
-                         interpolation='None')
-    else:
-        im1 = ax1.imshow(m1)
+
+    im1 = ax1.imshow(m1)
 
     divider = make_axes_locatable(ax1)
     cax = divider.append_axes('right', size='5%', pad=0.05)
     fig.colorbar(im1, cax=cax, orientation='vertical')
     
-    ax1.set_title(fits_data_1[0].header['OBJECT']+ " " +fits_data_1[0].header['FILTER']+ ' ' + comp_what[0]+ ' ' + fits_data_1[0].header['TIME-OBS'])
+    ax1.set_title(op.header['OBJECT']+ " " +op.header['FILTER']+ ' ' + comp_what[0]+ ' ' + op.header['TIME-OBS'])
     
     ax1.axvline(x=scale_arr[2],alpha = 0.15, color='red')
     ax1.axhline(y=scale_arr[2],alpha = 0.15, color='red')
                           
-    ax2 = fig.add_subplot(122)
-    
-    if(sigma):
-        mean, median, std = sigma_clipped_stats(m2)
-        im2 = ax2.imshow(m2,
-                         vmin = median - 3*std,
+    ax2 = fig.add_subplot(122)  
+
+    mean, median, std = sigma_clipped_stats(m1)
+    m1 = ax2.imshow(m1, vmin = median - 3*std,
                          vmax = median + 3*std,
                          interpolation='None')
-    else:
-        im2 = ax2.imshow(m2)
     
     divider = make_axes_locatable(ax2)
     cax = divider.append_axes('right', size='5%', pad=0.05)
-    fig.colorbar(im2, cax=cax, orientation='vertical')
+    fig.colorbar(im1, cax=cax, orientation='vertical')
     
-    ax2.set_title(fits_data_2[0].header['OBJECT']+ " " +fits_data_2[0].header['FILTER']+ ' ' + comp_what[1] + ' ' + fits_data_2[0].header['TIME-OBS'])
+    ax2.set_title(op.header['OBJECT']+ " " +op.header['FILTER']+ ' ' + comp_what[1] + ' ' + op.header['TIME-OBS'])
     ax2.axvline(x=scale_arr[2],alpha = 0.15, color='red')
     ax2.axhline(y=scale_arr[2],alpha = 0.15, color='red')
     
-    if (plot):
+    if (sv_img):
         if(fits_data_1[0].header['OBJECT'] =='eecep'):
             string_out='./img_out/target/'+ fits_data_1[0].header['OBJECT']+'_'+ fits_data_1[0].header['FILTER'] +'_'+fits_data_1[0].header['TIME-OBS'].replace(":", "-")
         else:
@@ -281,35 +290,40 @@ def plot_raw_double_compare(fits_data_1, fits_data_2, scale_arr, comp_what, sup_
         plt.savefig(string_out ,bbox_inches='tight',
                         pad_inches=0.1)
         
-    fig.tight_layout()
+    fig.tight_layout(pad=0.6, w_pad=0.5, h_pad=1.0)
     plt.show()
-    #Does not return anything
         
-def plot_double_raw_v_reduced(fits_data_1, scale_arr, calib_files, sup_tit, sigma, file_out, plot):
+def plot_double_raw_v_reduced(fits_data_1, calib_files,scale_arr, sigma=False, plot=True, sv_img=False):
     """
-    Plots 2 data side by side. One data is reduced/ bias, dark subtracted
-    Only needs one input. Sigma Clipped stats is an option.
-    
-    Instead of returning a numpy array image I need it to return a fits_object
-    
-    """    
+    A function that plots fits image data. Does not return anything
 
-    reduced = reduction(fits_data_1[0].data, calib_files) #does the redictopm
+    Parameters
+    ----------
+    fits_data_1 : str
+        Single FITS filename and their relative directory path
+    calib_files : tuple
+        Tuple of length 3 comprising of bias (calib_files[0]), dark (calib_files[1]), and flat (calib_files[1])
+    scale_arr : list
+        List of integers. Array that scales both image data to act as zoom. 
+    sigma : bool, optional
+         Applies sigma_clipped_stats to image. Sigma is 3 by default
+    plot : bool, optional
+         Plot image. True by default.
+    sv_img : bool, optional
+         Saves image to file.
+    """
     
-    #you cloned it and you made the 
-    reduced_fits_obj = cp(fits_data_1)
-    reduced_fits_obj[0].data = reduced #so I can overwrite it just like this
-                          
-    m1 = fits_data_1[0].data[scale_arr[0]-scale_arr[2]:scale_arr[1]+scale_arr[2], 
+    op = astropy.io.fits.open(fits_data_1)[0] 
+    reduced = reduction(op.data, calib_files)     
+    reduced_fits_data = cp(reduced)
+    
+    m1 = op.data[scale_arr[0]-scale_arr[2]:scale_arr[1]+scale_arr[2], 
                              scale_arr[1]-scale_arr[3]:scale_arr[1]+scale_arr[3]]
-    m2 = reduced[scale_arr[0]-scale_arr[2]:scale_arr[1]+scale_arr[2], 
+    m2 = reduced_fits_data [scale_arr[0]-scale_arr[2]:scale_arr[1]+scale_arr[2], 
                  scale_arr[1]-scale_arr[3]:scale_arr[1]+scale_arr[3]]
 
     if(plot):
-        fig = plt.figure(figsize=(16, 12))
-        if(sup_tit != ''):
-            fig.suptitle(sup_tit)
-            
+        fig = plt.figure(figsize=(16, 12)) 
         ax1 = fig.add_subplot(121)
 
         if(sigma):
@@ -325,7 +339,7 @@ def plot_double_raw_v_reduced(fits_data_1, scale_arr, calib_files, sup_tit, sigm
         cax = divider.append_axes('right', size='5%', pad=0.05)
         fig.colorbar(im1, cax=cax, orientation='vertical')
 
-        ax1.set_title(fits_data_1[0].header['OBJECT']+ " " +fits_data_1[0].header['FILTER'] + " raw " + fits_data_1[0].header['TIME-OBS'])
+        ax1.set_title(op.header['OBJECT']+ " " +op.header['FILTER'] + " raw " + op.header['TIME-OBS'])
         ax1.axvline(x=scale_arr[2],alpha = 0.15, color='red')
         ax1.axhline(y=scale_arr[2],alpha = 0.15, color='red')
 
@@ -345,33 +359,42 @@ def plot_double_raw_v_reduced(fits_data_1, scale_arr, calib_files, sup_tit, sigm
 
         fig.colorbar(im2, cax=cax, orientation='vertical')
         
-        ax2.set_title(fits_data_1[0].header['OBJECT']+ " " +fits_data_1[0].header['FILTER'] + " reduced " + fits_data_1[0].header['TIME-OBS'])
+        ax2.set_title(op.header['OBJECT']+ " " +op.header['FILTER'] + " reduced " + op.header['TIME-OBS'])
         ax2.axvline(x=scale_arr[2],alpha = 0.15, color='red')
         ax2.axhline(y=scale_arr[2],alpha = 0.15, color='red')
 
         fig.tight_layout()
         plt.show()
     
-    if (file_out):
-        if(fits_data_1[0].header['OBJECT'] =='eecep'):
-            string_out='./img_out/target/'+ fits_data_1[0].header['OBJECT']+'_'+ fits_data_1[0].header['FILTER'] +'_'+fits_data_1[0].header['TIME-OBS'].replace(":", "-")
+    if (sv_img):
+        if(op.header['OBJECT'] =='eecep'): #What if it is spelled differently
+            string_out='./img_out/target/'+ op.header['OBJECT']+'_'+ op.header['FILTER'] +'_'+fits_data_1[0].header['TIME-OBS'].replace(":", "-")
         else:
-            string_out='./img_out/pol_std/'+ fits_data_1[0].header['OBJECT']+'_'+fits_data_1[0].header['FILTER'] +'_'+fits_data_1[0].header['TIME-OBS'].replace(":", "-")
+            string_out='./img_out/pol_std/'+ op.header['OBJECT']+'_'+op.header['FILTER'] +'_'+op.header['TIME-OBS'].replace(":", "-")
         if(sigma):
             string_out += '_sigma.png'
         else:
             string_out += '.png'
-        plt.savefig(string_out ,bbox_inches='tight',
-                        pad_inches=0.1)
-    
-    
-    return(reduced_fits_obj) #returns this
+        plt.savefig(string_out,
+                    bbox_inches='tight',
+                    pad_inches=0.1)
+       
+    return(reduced_fits_data)
 
-
-def calib_pipe(target_data, zero_pol_data, plot_me, key_verb_t):
+def calib_pipe(target_data, zero_pol_data, plot_me=False, key_verb_t=False):
     """
-    #Copy and paste the latest applicable calibration process here.
-    #Takes in target data and zero pol data and returns calibrated data
+    A function that implements an experimental draft pipeline. Copy and pasted
+
+    Parameters
+    ----------
+    target_data : numpy ndarray
+        Single FITS file with their relative directory path
+    zero_pol_data : tuple
+        Tuple of length 3 comprising of bias (calib_files[0]), dark (calib_files[1]), and flat (calib_files[1])
+    plot_me : list
+        List of integers. Array that scales both image data to act as zoom. 
+    key_verb_t : bool, optional
+         Applies sigma_clipped_stats to image. Sigma is 3 by default
     """
     ##Just get g191. That is not very robust isn't it...
     cal_prod = cp(target_data)
