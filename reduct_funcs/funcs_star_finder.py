@@ -19,18 +19,18 @@ from astropy.visualization import SqrtStretch
 
 def source_peak_finder(fits_data_1, search_array, siegma, trim, plot_peaks=False, verbose=False):
     """
-    Function that finds location and values of peaks in the image bounded within offsets given in array (that define a region of interest shaped in a rectangle/square). Involves some further trhesholding/ filtering routines. Returns list of x coordinates, list of y coordinates, and list of the peak in image. This function is succeeded with plot_spotted for maximum results.
+    A function that finds location and values of peaks in the image bounded within offsets given in array (that define a region of interest shaped in a rectangle/square). Involves some further trhesholding/ filtering routines. Returns list of x coordinates, list of y coordinates, and list of the peak in image. This function is succeeded with plot_spotted for maximum results.
     
     Parameters
     ----------
     fits_data_1 : numpy ndarray
         Single numpy ndarray of image intensities. 2D image array.
-    siegma : int
-        Integer that determines sigma cutoff for sigma_clipped_stats image search function
     search_array :  list
         A list of length 4 containing integer limits that determine the area of interest.
+    siegma : int
+        Integer that determines sigma cutoff for sigma_clipped_stats image search function.
     trim : int
-         Integer in the hundreds to thousand. Defines a lower limit used to calculate a threshold. 
+         Integer in the hundreds to thousand. Defines a lower limit used to calculate a rejection threshold. 
     plot_peaks : bool, optional
          Plot peaks for verification
     verbose : bool, optional
@@ -121,24 +121,24 @@ def source_peak_finder(fits_data_1, search_array, siegma, trim, plot_peaks=False
 
 def plot_spotted(fits_data_1, search_array, x_targ, y_targ, peak_targ, img_offset, plot_im=False):
     """
-    Function that takes in 2D image data and plots them along with search offsets. Creats a list of tuples with x and y coordinates packaged together. Takes in list of x and y coordinates and peak fluxes to put them on the image. Returns a list of tuples which are apeture positions. apeture positions x and y coordinates are calculated based on the search offset. So what if the image is not 512? We may face problems moving forward.
+    A function that takes in 2D image data and plots them along with search offsets. Creats a list of tuples with x and y coordinates packaged together. Takes in list of x and y coordinates and peak fluxes to put them on the image. Returns a list of tuples which are apeture positions. apeture positions x and y coordinates are calculated based on the search offset. So what if the image is not 512? We may face problems moving forward.
     
     Parameters
     ----------
     fits_data_1 : numpy ndarray
         Single numpy ndarray of image intensities. 2D image array.
-    img_offset : int
-        Integer that determines new bounds of sub image. 
     search_array :  list
         A list of length 4 containing integer limits that determine the area of interest.
     x_targ : list
-         A list of x positions
+         A list of x positions.
     y_targ : list
-         A list of y positions
+         A list of y positions.
     peak_targ : list
-         A list of  peak intensities at the x and y coordinates
+         A list of  peak intensities at the x and y coordinates.
+    img_offset : int
+        Integer that determines new bounds of sub image. 
     plot_im :  bool, optional
-         Plot image
+         Plot image.
     """    
     search_offset = img_offset
     
@@ -201,7 +201,7 @@ def plot_spotted(fits_data_1, search_array, x_targ, y_targ, peak_targ, img_offse
 
 def peak_to_DAO(apt_pos):
     """
-    Converts aperture positions returned by source_peak_finder to a format acceptable by DAOStarFinder. Returns a list
+    A function to that converts aperture positions returned by source_peak_finder to a format acceptable by DAOStarFinder. Returns a list
     
     Parameters
     ----------
@@ -221,7 +221,7 @@ def peak_to_DAO(apt_pos):
     
 def dao_star_finder(fits_data_1, search_array, siegma, trim ,img_offset, apt_rad, ann_in_rad, ann_out_rad, plot=False, plot_tab=False):
     """
-    Function that finds location and values of peaks in the image bounded within offsets given in array (that define a region of interest shaped in a rectangle/square). Involves some further trhesholding/ filtering routines. Does a little bit of preliminary aperture photometry but does not return the results. Returns list of x coordinates, list of y coordinates, and list of the peak in image. This function is used in pipeline counts extraction cell. Returns positions of target of interest.
+    A function that finds location and values of peaks in the image bounded within offsets given in array (that define a region of interest shaped in a rectangle/square). Involves some further trhesholding/ filtering routines. Does a little bit of preliminary aperture photometry but does not return the results. Returns list of x coordinates, list of y coordinates, and list of the peak in image. This function is used in pipeline counts extraction cell. Returns positions of target of interest.
     
     Parameters
     ----------
@@ -230,9 +230,9 @@ def dao_star_finder(fits_data_1, search_array, siegma, trim ,img_offset, apt_rad
     search_array :  list
         A list of length 4 containing integer limits that determine the area of interest.
     siegma : int
-        Integer that determines sigma cutoff for sigma_clipped_stats image search function        
+        Integer that determines sigma cutoff for sigma_clipped_stats image search function   
     trim : int
-         Integer in the hundreds to thousand. Defines a lower limit used to calculate a threshold. 
+         Integer in the hundreds to thousand. Defines a lower limit used to calculate a rejection threshold. 
     img_offset : int
          Integer that determines new bounds of sub image.
     apt_rad : float
@@ -350,7 +350,7 @@ def dao_star_finder(fits_data_1, search_array, siegma, trim ,img_offset, apt_rad
 
 def dao_star_finder_HD104860(fits_data_1, search_array, siegma, second_thresh ,search_offset, apt_rad, ann_in_rad, ann_out_rad, plot, plot_tab):
     """
-    Function that finds location and values of peaks in the image bounded within offsets given in array (that define a region of interest shaped in a rectangle/square). Involves some further trhesholding/ filtering routines. Returns list of x coordinates, list of y coordinates, and list of the peak in image. This function is used in pipeline counts extraction cell. Returns positions of target of interest.
+    Experimental. I attempted it a few times in 2021. It works but not refined as of 23-12-2019
     
     Parameters
     ----------

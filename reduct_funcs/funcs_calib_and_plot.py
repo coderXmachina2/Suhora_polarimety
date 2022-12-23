@@ -51,13 +51,13 @@ def make_calib_files(bias, dark, flat_p1, flat_p3):
     Parameters
     ----------
     bias : list
-        List of bias FITS files with their relative directory path. 
+        List of bias FITS file names with their relative directory path. 
     dark : list
-        List of dark FITS files with their relative directory path.
+        List of dark FITS files names with their relative directory path.
     flat_p1 : list
-        List of P1 flat FITS files with their relative directory path.
+        List of P1 flat FITS files names with  with their relative directory path.
     flat_p3 : list
-        List of P3 flat FITS files with their relative directory path.
+        List of P3 flat FITS files names with their relative directory path.
     """
 
     b_frames = []
@@ -146,7 +146,7 @@ def reduction_ccd_proc(unredu_fits_data, calib_files, key):
     Parameters
     ----------
     unredu_fits_data : str
-        Single FITS file with their relative directory path
+        Single FITS file name with their relative directory path
     calib_files : tuple,
         Tuple of length 3 comprising of bias (calib_files[0]), dark (calib_files[1]), and flat (calib_files[1]).
     key: str
@@ -241,7 +241,7 @@ def plot_raw_double_compare(fits_data_1, scale_arr, comp_what = ["plot A", "plot
     comp_what :  list
         A list that contains image sub titles.
     sv_img : bool, optional
-         Saves image to file. Expects the correct directory to be in place.
+         Saves image to file. Expects the correct directory to already exist.
     """
     
     op = astropy.io.fits.open(fits_data_1)[0] #heade abd data
@@ -300,7 +300,7 @@ def plot_double_raw_v_reduced(fits_data_1, calib_files,scale_arr, sigma=False, p
     Parameters
     ----------
     fits_data_1 : str
-        Single FITS filename and their relative directory path
+        Single FITS file name with their relative directory path
     calib_files : tuple
         Tuple of length 3 comprising of bias (calib_files[0]), dark (calib_files[1]), and flat (calib_files[1])
     scale_arr : list
@@ -388,13 +388,13 @@ def calib_pipe(target_data, zero_pol_data, plot_me=False, key_verb_t=False):
     Parameters
     ----------
     target_data : numpy ndarray
-        Single FITS file with their relative directory path
+        Single FITS file with their relative directory path.
     zero_pol_data : tuple
-        Tuple of length 3 comprising of bias (calib_files[0]), dark (calib_files[1]), and flat (calib_files[1])
+        Tuple of length 3 comprising of bias (calib_files[0]), dark (calib_files[1]), and flat (calib_files[1]).
     plot_me : list
         List of integers. Array that scales both image data to act as zoom. 
     key_verb_t : bool, optional
-         Applies sigma_clipped_stats to image. Sigma is 3 by default
+         Applies sigma_clipped_stats to image. Sigma is 3 by default.
     """
     ##Just get g191. That is not very robust isn't it...
     cal_prod = cp(target_data)

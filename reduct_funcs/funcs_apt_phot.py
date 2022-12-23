@@ -19,12 +19,12 @@ from kneed import KneeLocator
 
 def apt_phot_global_bkg_sub(fits_data_1, search_offset, positions, apt_rad, plot_phot_tab, plot_sky_med): #, ann_in_rad, ann_out_rad   ):
     """
-        A function that does apeture photometry with global background subtraction. Returns a table of photometry fluxes with errors. Was verified to yield similarity to local background subtraction.
+    A function that does apeture photometry with global background subtraction. Returns a table of photometry fluxes with errors. Was verified to yield similarity to local background subtraction.
 
     Parameters
     ----------
-    fits_data_1 : str
-        Single FITS filename and their relative directory path
+    fits_data_1 : numpy ndarray
+        Single numpy ndarray of image intensities. 2D image array.
     search_offset : list
         List of length 4 integers that determine a region to search within image
     positions : list
@@ -92,7 +92,7 @@ def apt_phot_local_bkg_sub(fits_data_1, positions, search_array, img_offset,  ap
     Parameters
     ----------
     fits_data_1 : numpy ndarray
-        Single FITS file with their relative directory path
+        Single numpy ndarray of image intensities. 2D image array.
     positions : list
         List of lists. Should be a list of 2 lists for Suhora data polarimeter. The nested list contain x and y coordinates. 
     search_array :  list
@@ -100,7 +100,7 @@ def apt_phot_local_bkg_sub(fits_data_1, positions, search_array, img_offset,  ap
     img_offset : int
         Integer that determines new bounds of sub image.
     apt_rad : float
-        Aperture radius
+        Aperture radius.
     plot : bool, optional
         Plots image. Prints photometry table.  
     """
@@ -184,7 +184,7 @@ def solve_apt(combine_target, trial_radii,verbose):
     Parameters
     ----------
     combine_target : list
-        List of lists.
+        List of lists. The nested lists contain photometry fluxes.
     trial_radii : list
         List of trial radii. 
     verbose : bool, optional
