@@ -35,7 +35,6 @@ def source_peak_finder(fits_data_1, search_array, siegma, trim, plot_peaks=False
          Plot peaks for verification
     verbose : bool, optional
          Prints results Plots peaks for verification
-    
     """
     x_peak = []
     y_peak = []

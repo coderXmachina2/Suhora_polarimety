@@ -1,0 +1,14 @@
+./stats/2020-03-26/pol_std/oj287/master_2020-03-26_oj287_P1-P3R258-296_comb_corr.xlsx
+./stats/2020-04-06/pol_std/oj287/master_2020-04-06_oj287_P1-P3R388-402_mac_comb.xlsx
+./stats/2020-04-07/pol_std/oj287/master_2020-04-07_oj287_P1-P3R300-312_mac_comb.xlsx
+./stats/2020-04-15/pol_std/OJ287/master_2020-04-15_oj287_P1-P3R503-541_mac_comb.xlsx
+./stats/2020-04-16/pol_std/OJ287/master_2020-04-16_oj287_P1-P3R324-344_mac_comb.xlsx
+./stats/2020-04-18/pol_std/oj287/master_2020-04-18_OJ287_P1-P3R0-20_mac_comb.xlsx
+./stats/2020-04-19/pol_std/OJ287/master_2020-04-19_oj287_P1-P3R265-285_mac_comb.xlsx
+./stats/2020-04-21/pol_std/OJ287/master_2020-04-21_oj287_P1-P3R167-209_mac_comb_corr.xlsx
+./stats/2020-04-22/pol_std/OJ287/master_2020-04-22_oj287_P1-P3R266-288_mac_comb.xlsx
+./stats/2020-04-23/pol_std/OJ287/master_2020-04-23_oj287_P1-P3R229-249_mac_comb.xlsx
+./stats/2020-04-27/pol_std/OJ287/master_2020-04-27_OJ287_P1-P3R160-172_mac_comb_corr.xlsx
+./stats/2020-04-28/pol_std/OJ287/master_2020-04-28_oj287_P1-P3R215-243_mac_comb_corr.xlsx
+./stats/2020-05-04/pol_std/OJ287/master_2020-05-04_oj287_P1-P3R243-265_mac_comb.xlsx
+./stats/2020-05-12/pol_std/oj287/master_2020-05-12_oj287_P1-P3R409-429_mac_comb_corr.xlsx

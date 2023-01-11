@@ -1,0 +1,41 @@
+./stats/2020-03-05/target/EE_Cep/master_2020-03-05_eecep_P1-P3R0-102_combined_corr.xlsx
+./stats/2020-03-14/target/EE_Cep/master_2020-03-14_EE Cep_P1-P3R0-69_combined.xlsx
+./stats/2020-03-15/target/EE_Cep/master_2020-03-15_EE Cep_P1-P3R19-59_combined.xlsx
+./stats/2020-03-24/target/EE_Cep/master_2020-03-24_eecep_P1-P3R600-770_mac_comb_corr.xlsx
+./stats/2020-03-25/target/EE_Cep/master_2020-03-25_eecep_P1-P3R464-540_combined_corr.xlsx
+./stats/2020-03-26/target/EE_Cep/master_2020-03-26_eecep_P1-P3R40-109_mac_comb_corr.xlsx
+./stats/2020-03-31/target/EE_Cep/master_2020-03-31_eecep_P1-P3R140-194_mac_comb_corr.xlsx
+./stats/2020-04-01/target/EE_Cep/master_2020-04-01_EE_Cep_P1-P3R307-425_man_comb_corr.xlsx
+./stats/2020-04-02/target/EE_Cep/master_2020-04-02_eecep_P1-P3R180-230_mac_comb.xlsx
+./stats/2020-04-04/target/EE_Cep_test_x/master_2020-04-04_EE Cep_P1-P3R0-46_mac_comb_corr.xlsx
+./stats/2020-04-05/target/EE_Cep/master_2020-04-05_EE Cep_P1-P3R0-43_comb_corr.xlsx
+./stats/2020-04-06/target/EE_Cep/master_2020-04-06_eecep_P1-P3R428-618_mac_comb_corr.xlsx
+./stats/2020-04-07/target/EE_Cep/master_2020-04-07_eecep_P1-P3R504-712_mac_comb_corr.xlsx
+./stats/2020-04-08/target/EE_Cep/master_2020-04-08_eecep_P1-P3R288-508_mac_comb_corr.xlsx
+./stats/2020-04-15/target/EE_Cep/master_2020-04-15_eecep_P1-P3R320-426_mac_comb.xlsx
+./stats/2020-04-16/target/EE_Cep/master_2020-04-16_eecep_P1-P3R300-500_mac_comb_corr.xlsx
+./stats/2020-04-18/target/EE_Cep/master_2020-04-18_EE Cet_P1-P3R0-100_mac_comb_corr.xlsx
+./stats/2020-04-19/target/EE_Cep/master_2020-04-19_EE Cep_P1-P3R0-50_mac_comb_corr.xlsx
+./stats/2020-04-21/target/EE_Cep/master_2020-04-21_eecep_P1-P3R524-586_mac_comb.xlsx
+./stats/2020-04-22/target/EE_Cep/master_2020-04-22_eecep_P1-P3R240-342_mac_comb.xlsx
+./stats/2020-04-23/target/EE_Cep/master_2020-04-23_eecep_P1-P3R320-410_mac_comb.xlsx
+./stats/2020-04-27/target/EE_Cep/master_2020-04-27_EECep_P1-P3R0-60_mac_comb_corr.xlsx
+./stats/2020-04-28/target/EE_Cep/master_2020-04-28_eecep_P1-P3R200-270_mac_comb_corr.xlsx
+./stats/2020-04-30/target/EE_Cep/master_2020-04-30_eecep_P1-P3R80-110_mac_comb.xlsx
+./stats/2020-05-01/target/EE_Cep/master_2020-05-01_eecep_P1-P3R152-240_mac_comb_corr.xlsx
+./stats/2020-05-04/target/EE_Cep/master_2020-05-04_eecep_P1-P3R140-204_mac_comb.xlsx
+./stats/2020-05-06/target/EE_Cep/master_2020-05-06_eecep_P1-P3R100-168_mac_comb_corr_x.xlsx
+./stats/2020-05-12/target/EE_Cep/master_2020-05-12_eecep_P1-P3R108-154_mac_comb_corr.xlsx
+./stats/2020-05-14/target/EE_Cep/master_2020-05-14_eecep_P1-P3R108-156_mac_comb_corr.xlsx
+./stats/2020-05-20/target/EE_Cep/master_2020-05-20_eecep_P1-P3R112-160_mac_comb_corr.xlsx
+./stats/2020-06-03/target/EE_Cep/master_2020-06-03_eecep_P1-P3R104-154_mac_comb_corr.xlsx
+./stats/2020-07-29/target/EE_Cep/master_2020-07-29_eecep_P1-P3R360-484_mac_comb.xlsx
+./stats/2020-08-25/target/EE_Cep/master_2020-08-25_eecep_P1-P3R388-534_mac_comb.xlsx
+./stats/2020-09-08/target/EE_Cep/master_2020-09-08_eecep_P1-P3R212-332_mac_comb.xlsx
+./stats/2020-09-22/target/EE_Cep/master_2020-09-22_eecep_P1-P3R200-317_mac_comb.xlsx
+./stats/2020-10-08/target/EE_Cep/master_2020-10-08_eecep_P1-P3R72-124_mac_comb.xlsx
+./stats/2020-10-28/target/EE_Cep/master_2020-10-28_eecep_P1-P3R216-352_mac_comb.xlsx
+./stats/2021-04-06/target/EE_Cep/master_2021-04-06_eecep_P1-P3R100-168_mac_comb_corr.xlsx
+./stats/2021-05-05/target/EE_Cep/master_2021-05-05_eecep_P1-P3R212-284_mac_comb_corr.xlsx
+./stats/2021-05-20/target/EE_Cep/master_2021-05-20_eecep_P1-P3R212-284_mac_comb_corr.xlsx
+./stats/2021-05-25/target/EE_Cep/master_2021-05-25_eecep_P1-P3R260-340_mac_comb_corr.xlsx

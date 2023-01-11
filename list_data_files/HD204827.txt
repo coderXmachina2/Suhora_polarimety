@@ -1,0 +1,4 @@
+./stats/2020-03-26/pol_std/HD204827/master_2020-03-26_hd204827_P1-P3R60-90_combined_corr.xlsx
+./stats/2020-04-08/pol_std/HD204827/master_2020-04-08_hd204827_P1-P3R42-276_mac_comb.xlsx
+./stats/2020-04-15/pol_std/HD204827/master_2020-04-15_hd204827_P1-P3R0-120_mac_comb_corr.xlsx
+./stats/2020-04-16/pol_std/HD204827/master_2020-04-16_hd204827_P1-P3R134-193_mac_comb_corr.xlsx

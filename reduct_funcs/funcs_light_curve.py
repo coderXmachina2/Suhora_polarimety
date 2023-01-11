@@ -1,23 +1,18 @@
+import astropy
 import gzip
-import shutil
 import glob
-import astropy
-import matplotlib.pyplot as plt
 import numpy as np
-import astropy
 import math
 import xlrd
 import re 
+import shutil
 import matplotlib.pyplot as plt
 import pickle
 
-from astropy.time import Time
-from astropy.time import TimeJD
+from astropy.time import Time,  TimeJD
 from datetime import datetime
 from copy import deepcopy as cp
 from scipy import stats
-from photutils.aperture import CircularAperture, CircularAnnulus
-from photutils.aperture import EllipticalAperture, EllipticalAnnulus
 from photutils.aperture import aperture_photometry
 from astropy.visualization import simple_norm
 from astropy.io import fits
@@ -32,6 +27,286 @@ from scipy.interpolate import interp1d
 from reduct_funcs import funcs_utils
         
 ######## An Experiment
+
+def EECep_light_curve_based_pol(target_data, MJD_L_cutoff , MJD_cutoff, point_MJD , lc, verb_t, mark_t ,txt_arg, true_pa, title_t):
+    print("Reading:", 'ee_cep_2014.txt')
+    file1 = open('./EE_Cep_light_curve/ee_cep_2014.txt', 'r')
+    #file1 = open('./EE_Cep_light_curve/ee_cep_small_our_obs.txt', 'r')
+    ee_lines = file1.readlines()
+    
+    if(verb_t):
+        print("Plotting:",txt_arg)
+        print("Len all:", len(target_data[0]), len(target_data[1]), len(target_data[2]))
+        for h in range(0, len(target_data[0])):
+            print(h, target_data[0][h] , target_data[1][h] , target_data[2][h].value)
+    
+    B_arr = []
+    V_arr = []
+    R_arr = []
+    I_arr = []
+
+    B_JD = []
+    V_JD = []
+    R_JD = []
+    I_JD = []
+
+    for things in ee_lines:
+        if ',B,' in things:
+            B_arr.append( float(things.split(",")[1]))
+            B_JD.append(  float(things.split(",")[0]))
+        elif ',V,' in things:
+            V_arr.append( float(things.split(",")[1]))
+            V_JD.append(  float(things.split(",")[0]))
+        elif ',R,' in things:
+            R_arr.append( float(things.split(",")[1]))
+            R_JD.append(  float(things.split(",")[0]))
+        elif ',I,' in things:
+            I_arr.append( float(things.split(",")[1]))
+            I_JD.append(  float(things.split(",")[0]))
+
+    t_b = Time(B_JD , format='jd', scale='utc')
+    t_v = Time(V_JD , format='jd', scale='utc')
+    t_r = Time(R_JD , format='jd', scale='utc')
+    t_i = Time(I_JD , format='jd', scale='utc')
+        
+    color_arr = [B_arr, V_arr, R_arr, I_arr]
+    mjd_arr_k = [t_b, t_v, t_r, t_i, target_data[2]]
+    
+    #c_arr=['purple', 'red', 'green', 'blue']
+    #c_labs=['I', 'R', 'V', 'B', 'pol_d']
+    
+    #originals
+    c_arr = ['blue',  'green',  'red', 'purple']
+    c_labs = ['B', 'V', 'R', 'I', 'pol_d']
+    
+    #c_labs = ['I', 'R', 'V', 'B', 'pol_d']    
+    index_cutt = []
+    index_L_cutt = []
+    
+    for jk in range(0, len(mjd_arr_k)):
+        idx = np.abs(mjd_arr_k[jk].to_value('mjd', 'float')   - MJD_cutoff).argmin()
+        idxL = np.abs(mjd_arr_k[jk].to_value('mjd', 'float')   - MJD_L_cutoff).argmin()
+        index_cutt.append(int(idx))
+        index_L_cutt.append(int(idxL))      
+
+    if(verb_t):
+        inspect_val = 500
+        print("\n")
+        print("The light curve is long:", len(mjd_arr_k[0]), len(mjd_arr_k[1]), len(mjd_arr_k[2]), len(mjd_arr_k[3]), "And of varying length")
+        print("Starting at:", mjd_arr_k[0][0],  mjd_arr_k[1][0], mjd_arr_k[2][0], mjd_arr_k[3][0])
+        print("Ending at:", mjd_arr_k[0][-1],  mjd_arr_k[1][-1], mjd_arr_k[2][-1], mjd_arr_k[3][-1])
+        print("At those values:", (mjd_arr_k[0][inspect_val]), (mjd_arr_k[1][inspect_val]), (mjd_arr_k[2][inspect_val]), (mjd_arr_k[3][inspect_val]))
+    
+    fig, ax1 = plt.subplots(figsize=(36, 12))
+    
+    for ka in range(0, len(mjd_arr_k)-1): #this is a recursive call. Just recursive call the third plot
+        ax1.scatter(mjd_arr_k[ka][index_L_cutt[ka]:index_cutt[ka]].mjd,  color_arr[ka][index_L_cutt[ka]:index_cutt[ka]], alpha = 0.72, s=16, color=c_arr[ka], label=c_labs[ka])
+       
+    fig.gca().invert_yaxis()
+    
+    plt.xticks(fontsize=28)
+    plt.yticks(fontsize=28)
+
+    plt.xlabel('Time, (MJD)', fontsize=32)
+    plt.ylabel('magnitude, (m)', fontsize=32)
+    
+    if(txt_arg == 'PD'):
+        if(lc):
+            if(title_t):
+                ax1.set_title("EE Cep light curve and Polarization Degree ("+txt_arg+")", fontsize=32)
+        else:
+            if(title_t):
+                ax1.set_title("EE Cep light curve ", fontsize=32)
+    elif(txt_arg == 'PA'):
+        if(lc):
+            if(true_pa):
+                if(title_t):
+                    ax1.set_title("EE Cep light curve and true Position Angle ("+txt_arg+")", fontsize=32)
+            else:
+                if(title_t):
+                    ax1.set_title("EE Cep light curve and Position Angle ("+txt_arg+")", fontsize=32)
+        else:
+            ax1.set_title("EE Cep light curve ", fontsize=32)
+        
+    ax1.grid()
+    ax1.plot()
+    
+    if(lc):
+        ax2 = ax1.twinx()
+
+        if(txt_arg == 'PD'):              
+            if(MJD_cutoff >= 59354.9925 ):#include
+                markers, caps, bars = ax2.errorbar(target_data[2][index_L_cutt[4]:index_cutt[4]+1].mjd, target_data[0][index_L_cutt[4]:index_cutt[4]+1], yerr=target_data[1][index_L_cutt[4]:index_cutt[4]+1], xerr =[0]*len(target_data[0][index_L_cutt[4]:index_cutt[4]+1]), color='black' ,fmt=mark_t, markersize=16, capsize=10, capthick=5, label='PD')
+            else:
+                markers, caps, bars = ax2.errorbar(target_data[2][index_L_cutt[4]:index_cutt[4]].mjd, target_data[0][index_L_cutt[4]:index_cutt[4]], yerr=target_data[1][index_L_cutt[4]:index_cutt[4]], xerr =[0]*len(target_data[0][index_L_cutt[4]:index_cutt[4]]), color='black', fmt=mark_t, markersize=16, capsize=10, capthick=5, label='PD')
+                
+        elif(txt_arg == 'PA'):
+            if( MJD_cutoff >= 59354.9925 ):#include
+                markers, caps, bars = ax2.errorbar(target_data[2][index_L_cutt[4]:index_cutt[4]+1].mjd, target_data[0][index_L_cutt[4]:index_cutt[4]+1], yerr=target_data[1][index_L_cutt[4]:index_cutt[4]+1], xerr =[0]*len(target_data[0][index_L_cutt[4]:index_cutt[4]+1]), color='black', fmt=mark_t, markersize=16, capsize=10, capthick=5, label='PA')
+            else:
+                markers, caps, bars = ax2.errorbar(target_data[2][index_L_cutt[4]:index_cutt[4]].mjd, target_data[0][index_L_cutt[4]:index_cutt[4]], yerr=target_data[1][index_L_cutt[4]:index_cutt[4]], xerr =[0]*len(target_data[0][index_L_cutt[4]:index_cutt[4]]), color='black', fmt=mark_t, markersize=16, capsize=10, capthick=5, label='PA')
+
+        if(txt_arg == 'PD'):
+            ax2.set_ylabel('PD, (%)', fontsize=32)
+            plt.yticks(fontsize=28)
+        elif(txt_arg == 'PA'):
+            if(true_pa):
+                ax2.set_ylabel('true PA, ('+u'\N{DEGREE SIGN}'+')', fontsize=32)
+            else:
+                ax2.set_ylabel('PA, ('+u'\N{DEGREE SIGN}'+')', fontsize=32)
+            plt.yticks(fontsize=28)
+
+        if(point_MJD):
+            for hi in range(0, len(target_data[0])):
+                if(hi%2 == 0):
+                    plt.text(target_data[2][hi].mjd, target_data[0][hi],target_data[2][hi].mjd, fontsize=12, alpha=0.69, rotation=45    )
+
+        [bar.set_alpha(0.2) for bar in bars]
+        [cap.set_alpha(0.72) for cap in caps]
+
+    lgnd = fig.legend(loc="upper right", fontsize=36, borderaxespad=3.2)#, borderaxespad=0.86)
+    
+    lgnd.legendHandles[0]._sizes = [999]
+    lgnd.legendHandles[1]._sizes = [999]
+    lgnd.legendHandles[2]._sizes = [999]
+    lgnd.legendHandles[3]._sizes = [999]
+    lgnd.legendHandles[4]._sizes = [999]
+    
+    fig.tight_layout()
+    plt.show()
+
+def EECep_stacked_based_pol(target_data_PD, target_data_PA, MJD_L_cutoff , MJD_cutoff, point_MJD , lc, verb_t, mark_td, mark_t, true_pa, title_t):
+    """
+    A function that plot the EE Cep light curve
+    """
+    file1 = open('./EE_Cep_light_curve/ee_cep_big_dump.txt', 'r')
+    ee_lines = file1.readlines()
+    
+    B_arr = []
+    V_arr = []
+    R_arr = []
+    I_arr = []
+
+    B_JD = []
+    V_JD = []
+    R_JD = []
+    I_JD = []
+
+    for things in ee_lines:
+        if ',B,' in things:
+            B_arr.append( float(things.split(",")[1]))
+            B_JD.append(  float(things.split(",")[0]))
+        elif ',V,' in things:
+            V_arr.append( float(things.split(",")[1]))
+            V_JD.append(  float(things.split(",")[0]))
+        elif ',R,' in things:
+            R_arr.append( float(things.split(",")[1]))
+            R_JD.append(  float(things.split(",")[0]))
+        elif ',I,' in things:
+            I_arr.append( float(things.split(",")[1]))
+            I_JD.append(  float(things.split(",")[0]))
+
+    t_b = Time(B_JD , format='jd', scale='utc')
+    t_v = Time(V_JD , format='jd', scale='utc')
+    t_r = Time(R_JD , format='jd', scale='utc')
+    t_i = Time(I_JD , format='jd', scale='utc')
+        
+    color_arr = [B_arr, V_arr, R_arr, I_arr]
+    mjd_arr_k = [t_b, t_v, t_r, t_i, target_data_PD[2]] #Which is just the time array
+        
+    #originals
+    c_arr = ['blue',  'green',  'red', 'purple']
+    c_labs = ['B', 'V', 'R', 'I', 'pol_d']
+        
+    index_cutt = []
+    index_L_cutt = []
+    
+    for jk in range(0, len(mjd_arr_k)):
+        idx = np.abs(mjd_arr_k[jk].to_value('mjd', 'float')   - MJD_cutoff).argmin()
+        idxL = np.abs(mjd_arr_k[jk].to_value('mjd', 'float')   - MJD_L_cutoff).argmin()
+        index_cutt.append(int(idx))
+        index_L_cutt.append(int(idxL))
+        
+    #This makes things...
+
+    x = np.linspace(0, 2 * np.pi, 400)
+    y = np.sin(x ** 2)
+    
+    fig = plt.figure(figsize=(36, 12))
+    gs = fig.add_gridspec(3, hspace=0)
+    axs = gs.subplots(sharex=True, sharey=False)
+    
+    if(true_pa):
+        if(title_t):
+            fig.suptitle('Polarization degree (PD), true Position angle (PA) and EE CEP light curve', fontsize=32)    
+    else:
+        if(title_t):
+            fig.suptitle('Polarization degree (PD), Position angle (PA) and EE CEP light curve', fontsize=32)
+    
+    #We should include last plot also 
+    if(MJD_cutoff >= 59354.9925 ):#include
+        markers, caps, bars = axs[0].errorbar(target_data_PD[2][index_L_cutt[4]:index_cutt[4]+1].mjd, target_data_PD[0][index_L_cutt[4]:index_cutt[4]+1], yerr=target_data_PD[1][index_L_cutt[4]:index_cutt[4]+1], xerr =[0]*len(target_data_PD[0][index_L_cutt[4]:index_cutt[4]+1]), color='black' ,fmt=mark_t, markersize=16, capsize=10, capthick=5, label='PD')
+        
+        [bar.set_alpha(0.2) for bar in bars]
+        [cap.set_alpha(0.72) for cap in caps]
+        
+            #axs[1].plot(target_data_PA[2][index_L_cutt[4]:index_cutt[4]+1].mjd, target_data_PA[0])
+        markers, caps, bars = axs[1].errorbar(target_data_PA[2][index_L_cutt[4]:index_cutt[4]+1].mjd, target_data_PA[0][index_L_cutt[4]:index_cutt[4]+1], yerr=target_data_PA[1][index_L_cutt[4]:index_cutt[4]+1], xerr =[0]*len(target_data_PA[0][index_L_cutt[4]:index_cutt[4]+1]), color='black' ,fmt=mark_td, markersize=16, capsize=10, capthick=5, label='PA')
+        axs[0].grid()
+        axs[1].grid()
+        
+        [bar.set_alpha(0.2) for bar in bars]
+        [cap.set_alpha(0.72) for cap in caps]
+        
+        axs[0].set_ylabel('PD, (%)', fontsize=32)
+        axs[0].tick_params(axis="y", labelsize=28)
+        
+        if(true_pa):
+            axs[1].set_ylabel('true PA, ('+u'\N{DEGREE SIGN}'+')', fontsize=32)
+        else:
+            axs[1].set_ylabel('PA, ('+u'\N{DEGREE SIGN}'+')', fontsize=32)
+            
+        axs[1].tick_params(axis="y", labelsize=28)
+        
+    else:       
+        markers, caps, bars = axs[0].errorbar(target_data_PD[2][index_L_cutt[4]:index_cutt[4]].mjd, target_data_PD[0][index_L_cutt[4]:index_cutt[4]], yerr=target_data_PD[1][index_L_cutt[4]:index_cutt[4]], xerr =[0]*len(target_data_PD[0][index_L_cutt[4]:index_cutt[4]]), color='black', fmt=mark_t, markersize=16, capsize=10, capthick=5, label='PD')
+            
+        markers, caps, bars = axs[1].errorbar(target_data_PA[2][index_L_cutt[4]:index_cutt[4]].mjd, target_data_PA[0][index_L_cutt[4]:index_cutt[4]], yerr=target_data_PA[1][index_L_cutt[4]:index_cutt[4]], xerr =[0]*len(target_data_PA[0][index_L_cutt[4]:index_cutt[4]]), color='black', fmt=mark_td, markersize=16, capsize=10, capthick=5, label='PA')
+        axs[0].grid()
+        axs[1].grid()       
+         
+        axs[0].set_ylabel('PD, (%)', fontsize=32)
+        axs[0].tick_params(axis="y", labelsize=28)
+        axs[1].set_ylabel('PA, ('+u'\N{DEGREE SIGN}'+')', fontsize=32)
+        #axs[1].set_yticklabels(fontsize=28) #Disabled for debugging
+        axs[1].tick_params(axis="y", labelsize=28)
+
+    for ka in range(0, len(mjd_arr_k)-1): #this is a recursive call. Just recursive call the third plot
+        axs[2].scatter(mjd_arr_k[ka][index_L_cutt[ka]:index_cutt[ka]].mjd,  color_arr[ka][index_L_cutt[ka]:index_cutt[ka]], alpha = 0.72, s=16, color=c_arr[ka], label=c_labs[ka])
+
+    axs[2].grid()
+    axs[2].set_ylabel('magnitude, (m)', fontsize=32)
+    axs[2].invert_yaxis()
+    axs[2].set_xlabel('Time, (MJD)', fontsize=32)
+
+    plt.xticks(fontsize=28)
+    plt.yticks(fontsize=28)
+
+    # Hide x labels and tick labels for all but bottom plot.
+    for ax in axs:
+        ax.label_outer()
+
+    lgnd = fig.legend(loc="upper right", fontsize=36, borderaxespad=1.75)#, borderaxespad=0.86)
+    
+    lgnd.legendHandles[0]._sizes = [999]
+    lgnd.legendHandles[1]._sizes = [999]
+    lgnd.legendHandles[2]._sizes = [999]
+    lgnd.legendHandles[3]._sizes = [999]
+    lgnd.legendHandles[4]._sizes = [999]
+    lgnd.legendHandles[5]._sizes = [999]
+        
+    fig.tight_layout()
+    plt.show()
 
 def EECep_stacked_based(target_data_PD, target_data_PA, MJD_cuts, point_MJD , lc, verb_t, mark_td, mark_t, true_pa, title_t):
     """

@@ -34,7 +34,7 @@ def apt_phot_global_bkg_sub(fits_data_1, search_offset, positions, apt_rad, plot
     plot_phot_tab : bool, optional
          plot image. True by default
     plot_sky_med : bool, optional
-         Saves image to file.
+         Saves image to file. False by default
     """    
     search_this = fits_data_1[0].data[512-search_offset:512+search_offset,
                                        512-search_offset:512+search_offset]

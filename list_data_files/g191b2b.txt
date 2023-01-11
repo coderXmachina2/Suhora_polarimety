@@ -1,0 +1,7 @@
+./stats/2020-03-05/pol_std/G191B2B/master_2020-03-05_g191b2b_P1-P3R0-46_combined_corr.xlsx
+./stats/2020-03-14/pol_std/G191B2B/master_2020-03-14_G191B2B_P1-P3R0-60_combined_corr.xlsx
+./stats/2020-03-15/pol_std/G191B2B/master_2020-03-15_G191B2B_P1-P3R0-40_combined_corr.xlsx
+./stats/2020-03-26/pol_std/G191B2B/master_2020-03-26_g191b2b_P1-P3R0-30_combined_corr.xlsx
+./stats/2020-04-16/pol_std/G191B2B/master_2020-04-16_g191b2b_P1-P3R62-134_mac_comb_corr.xlsx
+./stats/2020-05-01/pol_std/G191B2B/master_2020-05-01_g191b2b_P1-P3R102-126_mac_comb_corr.xlsx
+./stats/2020-05-04/pol_std/G191B2B/master_2020-05-04_g191b2b_P1-P3R24-44_mac_comb_x.xlsx
