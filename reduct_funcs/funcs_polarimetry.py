@@ -541,7 +541,7 @@ def plot_pol_stab_doobly(MJD_track_PD, MJD_track_PA, obj_pol_PD, obj_pol_PA, obj
 
 def plot_q_u_stability(input_data, q_u_check, sv_im, plot_verbose , mjd_align_check, verbose, m_plot):
     """
-    A function that plots q over time
+    A function that plots q or u over time
     """
     
     means_arr = []
@@ -679,21 +679,22 @@ def plot_q_u_stability(input_data, q_u_check, sv_im, plot_verbose , mjd_align_ch
     plt.show()
     """
 
-def q_n_u_single_plot_v1(pol_data, plot_c, sv_im_str,  sv_im, MJD_arg ,pol_deg, only_means, to_excel, retrun_plotelems,key_verb):
+def q_n_u_single_plot_v1(pol_data,
+                         tstamps,
+                         plot_c,   
+                         sv_im='', 
+                         verbose_MJD_arg=False,
+                         pol_deg=False, 
+                         only_means=False, 
+                         to_excel=False, 
+                         retrun_plotelems=False,
+                         key_verb=False):
     """
     #please document. Thanks past me...
     #If only means then only the means
-    """
-    #data input, plot color, save image string, arguement for MJD (boolean), polaraization degree draw a line, launch verb (redundant)
-    #key_verb is for opennig text
-    
-    #What is not needed in v2 is the plot_c
-    #what is needed in v2 is that sv_im_str
-    result = re.search('./img_out/(.*)', sv_im_str)
-    
+    """    
     if(key_verb):
-        print("N obs:", len(pol_data))
-    #something that I notice that you havent done... Calculate q means std and u means std... easy take it in quadrature.
+        print("N data:", len(pol_data))
     
     targ_qmeans = []
     targ_umeans = []
@@ -705,10 +706,7 @@ def q_n_u_single_plot_v1(pol_data, plot_c, sv_im_str,  sv_im, MJD_arg ,pol_deg, 
     target_us = []
     targ_qstds = []
     targ_ustds = []
-    
-    targ_date_strs = [] #
-    mjd_strs = []
-    
+        
     for things in pol_data:
         targ_qmeans.append(np.mean(things[list(things.keys())[0]][0][1:])) #qmeans
         targ_umeans.append(np.mean(things[list(things.keys())[0]][2][1:])) #umeans
@@ -718,15 +716,20 @@ def q_n_u_single_plot_v1(pol_data, plot_c, sv_im_str,  sv_im, MJD_arg ,pol_deg, 
                                                                            
         #yo we can do it here
         date = re.search('(.*)_', list(things.keys())[0][:12]) #suppress the target name, just give me the 
-        targ_date_strs.append(date.group(1)) #just the keys ay
-        mjd_strs.append(date.group(1)+'T00:00:00.000000000')
-
-        target_qs = target_qs + things[list(things.keys())[0]][0][1:]
-        targ_qstds = targ_qstds + things[list(things.keys())[0]][1][1:]
-        target_us = target_us + things[list(things.keys())[0]][2][1:] 
-        targ_ustds = targ_ustds + things[list(things.keys())[0]][3][1:]
         
-    t = Time(mjd_strs, format='isot', scale='utc')
+        #print("Hello",  things[list(things.keys())[0]][0]  )
+        #target_qs = target_qs + things[list(things.keys())[0]][0]
+        #target_qs.append(things[list(things.keys())[0]][0][1:]           )
+        #target_qstds.append(things[list(things.keys())[0]][1][1:]            )
+        #target_us.append(things[list(things.keys())[0]][2][1:]            )
+        #target_ustds.append(things[list(things.keys())[0]][3][1:]              )
+        
+        #target_qs = target_qs + things[list(things.keys())[0]][0][1:]
+        #targ_qstds = targ_qstds + things[list(things.keys())[0]][1][1:]
+        #target_us = target_us + things[list(things.keys())[0]][2][1:] 
+        #targ_ustds = targ_ustds + things[list(things.keys())[0]][3][1:]
+        
+    t = Time([x.strftime("%Y-%m-%dT%H:%M:%S.%f") for x in tstamps], format='isot', scale='utc')
     
     if(only_means):
         plt.scatter(targ_qmeans, targ_umeans, alpha=0.9, color = plot_c,)
@@ -741,19 +744,15 @@ def q_n_u_single_plot_v1(pol_data, plot_c, sv_im_str,  sv_im, MJD_arg ,pol_deg, 
     if(pol_deg):
         for z in range(0, len(targ_qmeans)):
             plt.plot([0,targ_qmeans[z]], [0, targ_umeans[z]], 'k-', lw=1.75, alpha=0.4, linestyle = '--')
-    if(MJD_arg):
+    if(verbose_MJD_arg):
         for z in range(0, len(targ_qmeans)):
-            plt.text(targ_qmeans[z], targ_umeans[z], int(t[z].mjd), rotation=-45, fontsize=10) #suppress the title
+            plt.text(targ_qmeans[z], targ_umeans[z], int(t[z].mjd), rotation=-45, fontsize=10) #suppress the title        
     else:
         for z in range(0, len(targ_qmeans)):
-            plt.text(targ_qmeans[z], targ_umeans[z], targ_date_strs[z], rotation=-45, fontsize=10) #suppress the title
+            plt.text(targ_qmeans[z], targ_umeans[z], str(t[z]), rotation=-45, fontsize=10) #suppress the title
     
     plt.grid()
-    if(sv_im_str != ''):
-        plt.title(result.group(1)+" Pol Scatter")
-        plt.savefig(sv_im_str,bbox_inches='tight',pad_inches=0.1 )
-    else:
-        plt.title("Pol Scatter")        
+    plt.title("Pol Scatter")        
         
     plt.yticks(fontsize = 22)
     plt.xticks(fontsize = 22)        
@@ -766,14 +765,14 @@ def q_n_u_single_plot_v1(pol_data, plot_c, sv_im_str,  sv_im, MJD_arg ,pol_deg, 
     if(to_excel):
         funcs_utils.data_to_excel((t.mjd, targ_qmeans, targ_qmeans_err), 'cal_eecep', 'Stokes_q')
         funcs_utils.data_to_excel((t.mjd, targ_umeans, targ_umeans_err), 'cal_eecep', 'Stokes_u')
-        
-    
+            
     if(sv_im != ''):
+        plt.title(" Pol Scatter")
         plt.savefig(sv_im,bbox_inches='tight',pad_inches=0.1 )
     
     plt.show()
     
-    #pls return what you plot. Thank you.
+    #Returns what what you plot... It strips.
     if(retrun_plotelems):
         return( targ_qmeans, targ_qmeans_err, targ_umeans, targ_umeans_err)
     
