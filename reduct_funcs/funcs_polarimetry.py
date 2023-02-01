@@ -92,57 +92,73 @@ def calc_pd2(input_data,
     sv_arg : bool, optional
         Saves image to file.  False by default 
     """
-    dates = sorted(input_data[1])
+    #dates = sorted(input_data[1])
     
-    print("Calculate and plot polarization degree (PD) for duration", dates[0], "to", dates[-1],"\nwithout returning data")
+    print("Calculate pold d for", len(input_data), "input data")
+    #print("Calculate and plot polarization degree (PD) for duration", dates[0], "to", dates[-1],"\nwithout returning data")
+       
     pol_d_array = []
     pol_d_err_array = []
+    t_array = []
     
-    for dats in input_data[0]:        
-        result = re.search('(.*)_', list(dats.keys())[0][:12])
-        targ_name_str = re.search('_(.*)', list(dats.keys())[0])
+    for data2d in input_data:
+        pol_d = []
+        pol_d_err = []
+        
+        for dats in data2d[0]:
+            result = re.search('(.*)_', list(dats.keys())[0][:12])
+            targ_name_str = re.search('_(.*)', list(dats.keys())[0])
+
+            ###Math
+            mean_q_squared = np.mean(dats[list(dats.keys())[0]][0][1:])**2 #mean q squared
+            mean_u_squared = np.mean(dats[list(dats.keys())[0]][2][1:])**2 #mean u squared
+
+            mean_q_err_squared = np.std(dats[list(dats.keys())[0]][1][1:])**2 #std q squared
+            mean_u_err_squared = np.std(dats[list(dats.keys())[0]][3][1:])**2 #std u squared
+
+            sum_o_squares = mean_q_squared + mean_u_squared #mean q squared + mean u squared
+
+            pol_dval = math.sqrt(sum_o_squares)
+            pol_d_errval  = math.sqrt(((mean_q_squared)/(sum_o_squares))*(mean_q_err_squared)+ ((mean_u_squared)/(sum_o_squares))*(mean_u_err_squared))
+
+            ###
+            if(perc_arg):
+                if(verbose_calc_pd):
+                    print(targ_name_str.group(1), "MJD:", result.group(1), 
+                          pol_dval*100, u"\u00B1",  pol_d_errval*100)
+                pol_d.append(pol_dval*100)
+                pol_d_err.append(pol_d_errval*100)
+            else:
+                if(verbose_calc_pd):
+                    print("MJD:", result.group(1), 
+                          pol_dval, u"\u00B1",  pol_d_errval)
+                pol_d.append(pol_dval)
+                pol_d_err.append(pol_d_errval)
+
+        pol_d_array.append(pol_d)
+        pol_d_err_array.append(pol_d_err)
                 
-        ###Math
-        mean_q_squared = np.mean(dats[list(dats.keys())[0]][0][1:])**2 #mean q squared
-        mean_u_squared = np.mean(dats[list(dats.keys())[0]][2][1:])**2 #mean u squared
-        
-        mean_q_err_squared = np.std(dats[list(dats.keys())[0]][1][1:])**2 #std q squared
-        mean_u_err_squared = np.std(dats[list(dats.keys())[0]][3][1:])**2 #std u squared
-        
-        sum_o_squares = mean_q_squared + mean_u_squared #mean q squared + mean u squared
-        
-        pol_d = math.sqrt(sum_o_squares)
+        t = Time([x.strftime("%Y-%m-%dT%H:%M:%S.%f") for x in data2d[1]], format='isot', scale='utc')
+        t_array.append(t)    
+    
+    color_arr = [plot_c, 'blue', 'green', 'purple', 'magenta' ]
+    for l in range(0, len(input_data)):
+        plt.errorbar(t_array[l].mjd , 
+                 pol_d_array[l], 
+                 xerr=[0]*len(pol_d_array[l]), 
+                 yerr=pol_d_err_array[l], 
+                 lw=0.75, fmt="^", capsize=10,
+                 color=color_arr[l], alpha=0.9)
 
-        pol_d_err  = math.sqrt(((mean_q_squared)/(sum_o_squares))*(mean_q_err_squared)+ ((mean_u_squared)/(sum_o_squares))*(mean_u_err_squared))
-        ###
-        
-        if(perc_arg):
-            if(verbose_calc_pd):
-                print(targ_name_str.group(1), "MJD:", result.group(1), pol_d*100, u"\u00B1",  pol_d_err*100)
-            pol_d_array.append(pol_d*100)
-            pol_d_err_array.append(pol_d_err*100)
-        else:
-            if(verbose_calc_pd):
-                print("MJD:", result.group(1), pol_d, u"\u00B1",  pol_d_err)
-            pol_d_array.append(pol_d)
-            pol_d_err_array.append(pol_d_err)
-
-    t = Time([x.strftime("%Y-%m-%dT%H:%M:%S.%f") for x in input_data[1]], format='isot', scale='utc')
- 
-    plt.errorbar(t.mjd , 
-                 pol_d_array, 
-                 xerr=[0]*len(pol_d_array), 
-                 yerr=pol_d_err_array, 
-                 lw=0.75, fmt="^", capsize=10,color=plot_c, alpha=0.9)
-        
     plt.title(plot_title)
     
     if(verbose_data):
-        for i in range(0, len(t)):
-            plt.text(t[i].mjd, 
-                     pol_d_array[i], 
-                     str(np.round(t[i].mjd))+"\nPD:"+str(np.round(pol_d_array[i],2)),
-                     fontsize=12, rotation=45)
+        for k in range(0, len(t_array)):
+            for i in range(0, len(t_array[k])):
+                plt.text(t_array[k][i].mjd, 
+                         pol_d_array[k][i], 
+                         str(np.round(t_array[k][i].mjd))+"\nPD:"+str(np.round(pol_d_array[k][i],2)),
+                         fontsize=12, rotation=45)
             
     if(perc_arg):
         plt.ylabel("PD %")
@@ -181,60 +197,87 @@ def calc_pa2(input_data,
     sv_polpa_img : bool, optional
         Saves image to file.  False by default 
     """
-    dates = sorted(input_data[1])
+    #dates = sorted(input_data[1])
     
-    print("Calculate and plot position angle (PA) for duration", dates[0], "to", dates[-1],"\nwithout returning data")
+    print("Calculate pold d for", len(input_data), "input data")
+   # print("Calculate and plot position angle (PA) for duration", dates[0], "to", dates[-1],"\nwithout returning data")
     pol_pa_array = []
     pol_pa_err_array = []
+    t_array = []
+    
+    for data2d in input_data:
+        pol_pa = []
+        pol_pa_err = []
+    
+        for dats in data2d[0]:        
+            result = re.search('(.*)_', list(dats.keys())[0][:12])
+            targ_name_str = re.search('_(.*)', list(dats.keys())[0] )
 
-    for dats in input_data[0]:        
-        result = re.search('(.*)_', list(dats.keys())[0][:12])
-        targ_name_str = re.search('_(.*)', list(dats.keys())[0] )
-        
-        ###Please check
-        mean_q_err_squared = np.std(dats[list(dats.keys())[0]][1][1:])**2
-        mean_u_err_squared = np.std(dats[list(dats.keys())[0]][3][1:])**2
-        
-        mean_q_squared = np.mean(dats[list(dats.keys())[0]][0][1:])**2
-        mean_u_squared = np.mean(dats[list(dats.keys())[0]][2][1:])**2
-        
-        mean_q = np.mean(dats[list(dats.keys())[0]][0][1:])
-        mean_u = np.mean(dats[list(dats.keys())[0]][2][1:])
-        
-        sum_o_squares = mean_q_squared + mean_u_squared
-        
-        pol_pa = 0.5*math.atan2(mean_u , mean_q)
-        pol_pa_err = math.sqrt(((1/(2*mean_q*(1 + (mean_u_squared/mean_q_squared))))**2 )*(mean_u_err_squared) + ((-1*((mean_u)/(2*sum_o_squares)))**2 )*(mean_q_err_squared))
-        #Please check
-        
-        if(deg_arg):
-            if(verbose_calc_pa): #
-                print("MJD:", result.group(1), pol_pa*(180/3.142), u"\u00B1",  pol_pa_err*(180/3.142))
-            pol_pa_array.append(pol_pa*(180/3.142)) 
-            pol_pa_err_array.append(pol_pa_err*(180/3.142)) 
-        else:
-            if(verbose_calc_pa):
-                print("MJD:", result.group(1), pol_pa, u"\u00B1",  pol_pa_err)
-            pol_pa_array.append(pol_pa)
-            pol_pa_err_array.append(pol_pa_err)
+            ###Please check
+            mean_q_err_squared = np.std(dats[list(dats.keys())[0]][1][1:])**2
+            mean_u_err_squared = np.std(dats[list(dats.keys())[0]][3][1:])**2
 
-    t = Time([x.strftime("%Y-%m-%dT%H:%M:%S.%f") for x in input_data[1]], format='isot', scale='utc')
+            mean_q_squared = np.mean(dats[list(dats.keys())[0]][0][1:])**2
+            mean_u_squared = np.mean(dats[list(dats.keys())[0]][2][1:])**2
 
-    plt.errorbar(t.mjd, 
-                 pol_pa_array, 
-                 xerr=[0]*len(pol_pa_array), 
-                 yerr=pol_pa_err_array, 
-                 lw=0.75, fmt="^", capsize=10, color=plot_c, alpha=0.9) 
+            mean_q = np.mean(dats[list(dats.keys())[0]][0][1:])
+            mean_u = np.mean(dats[list(dats.keys())[0]][2][1:])
+
+            sum_o_squares = mean_q_squared + mean_u_squared
+
+            pol_paval = 0.5*math.atan2(mean_u , mean_q)
+            pol_pa_errval = math.sqrt(((1/(2*mean_q*(1 + (mean_u_squared/mean_q_squared))))**2 )*(mean_u_err_squared) + ((-1*((mean_u)/(2*sum_o_squares)))**2 )*(mean_q_err_squared))
+            #Please check
+
+            if(deg_arg):
+                if(verbose_calc_pa): #
+                    print("MJD:", result.group(1), 
+                          pol_paval*(180/3.142), u"\u00B1",  pol_pa_errval*(180/3.142))
+                pol_pa.append(pol_paval*(180/3.142)) 
+                pol_pa_err.append(pol_pa_errval*(180/3.142)) 
+            else:
+                if(verbose_calc_pa):
+                    print("MJD:", result.group(1), pol_paval, u"\u00B1",  pol_pa_errval)
+                pol_pa.append(pol_paval)
+                pol_pa_err.append(pol_pa_errval)
+
+        t = Time([x.strftime("%Y-%m-%dT%H:%M:%S.%f") for x in data2d[1]], format='isot', scale='utc')
+        t_array.append(t)
+        pol_pa_array.append(pol_pa)
+        pol_pa_err_array.append(pol_pa_err)
+        
+    color_arr = [plot_c, 'blue', 'green', 'purple', 'magenta' ]
+    for l in range(0, len(input_data)):
+        plt.errorbar(t_array[l].mjd , 
+                 pol_pa_array[l], 
+                 xerr=[0]*len(pol_pa_array[l]), 
+                 yerr=pol_pa_err_array[l], 
+                 lw=0.75, fmt="^", capsize=10,
+                 color=color_arr[l], alpha=0.9)
+        
+    #plt.errorbar(t.mjd, 
+    #             pol_pa_array, 
+    #             xerr=[0]*len(pol_pa_array), 
+    #             yerr=pol_pa_err_array, 
+    #             lw=0.75, fmt="^", capsize=10, color=plot_c, alpha=0.9) 
     
     plt.title(plot_title)
     plt.grid()
     
     if(verbose_data):
-        for i in range(0, len(t)):
-            plt.text(t[i].mjd, 
-                     pol_pa_array[i], 
-                     str(np.round(t[i].mjd))+"\nPA:"+str(np.round(pol_pa_array[i])),
-                     fontsize=14, rotation=45)
+        for k in range(0, len(t_array)):
+            for i in range(0, len(t_array[k])):
+                plt.text(t_array[k][i].mjd, 
+                         pol_pa_array[k][i], 
+                         str(np.round(t_array[k][i].mjd))+"\nPD:"+str(np.round(pol_pa_array[k][i],2)),
+                         fontsize=12, rotation=45)
+    
+    #if(verbose_data):
+    #    for i in range(0, len(t)):
+    #        plt.text(t[i].mjd, 
+    #                 pol_pa_array[i], 
+    #                 str(np.round(t[i].mjd))+"\nPA:"+str(np.round(pol_pa_array[i])),
+    #                 fontsize=14, rotation=45)
             
     plt.ylabel("PA")
     plt.xlabel("MJD")
@@ -1155,74 +1198,6 @@ def calib_data(inp_data,
     
     return(cal_prod)
     
-    """
-    for dats in inp_data:
-        for h in range(0, len(   dats[list(dats.keys())[0]][0][1:]   )):
-            if(verbose):
-                print("qs", (dats[list(dats.keys())[0]][0][1:][h]) )
-                print("qs cal:",  (dats[list(dats.keys())[0]][0][1:][h])  - instrumental_pol[0])
-                print("us", (dats[list(dats.keys())[0]][2][1:][h]))
-                print("us cal", (dats[list(dats.keys())[0]][2][1:][h]) - instrumental_pol[2])
-            
-            qs_cal.append((dats[list(dats.keys())[0]][0][1:][h])  - instrumental_pol[0])
-            us_cal.append((dats[list(dats.keys())[0]][2][1:][h])  - instrumental_pol[2])
-            
-            #overwrite the points
-            
-        qs_uncal += dats[list(dats.keys())[0]][0][1:]
-        us_uncal += dats[list(dats.keys())[0]][2][1:]
-        
-        qs_err += dats[list(dats.keys())[0]][1][1:]
-        us_err += dats[list(dats.keys())[0]][3][1:]
-
-     
-    if(plt_show):
-        plt.scatter( qs_uncal , us_uncal) #orange 
-        plt.scatter( qs_cal, us_cal)   #blue
-
-        plt.scatter(qs_uncal , us_uncal)#, lw=0.75, fmt="o", alpha=0.9)
-        plt.scatter(qs_cal , us_cal)
-        #plt.errorbar(qs_cal, us_cal, xerr=qs_err, yerr=us_err, lw=0.75, fmt="o", alpha=0.9)
-        plt.title("Calibrated Pol Scatter")        
-        plt.yticks(fontsize = 22)
-        plt.xticks(fontsize = 22)        
-        plt.ylabel('u', fontsize = 24)
-        plt.xlabel('q', fontsize = 24)
-        plt.axhline(y=0, color = 'black')
-        plt.axvline(x=0, color = 'black')
-        plt.grid()
-        plt.show()
-
-        plt.errorbar(qs_uncal , us_uncal, xerr=qs_err, yerr=us_err, lw=0.75, fmt="o", alpha=0.9)
-        plt.errorbar(qs_cal, us_cal, xerr=qs_err, yerr=us_err, lw=0.75, fmt="o", alpha=0.9)
-        plt.title("Calibrated Pol Scatter")        
-        plt.yticks(fontsize = 22)
-        plt.xticks(fontsize = 22)        
-        plt.ylabel('u', fontsize = 24)
-        plt.xlabel('q', fontsize = 24)
-        plt.axhline(y=0, color = 'black')
-        plt.axvline(x=0, color = 'black')
-        plt.grid()
-        plt.show()
-
-        fig, ax = plt.subplots()
-        markers, caps, bars = ax.errorbar(qs_uncal , us_uncal, xerr=qs_err, yerr=us_err,
-                fmt='o', ecolor='blue',capsize=1, capthick=1)
-        markers, caps, bars = ax.errorbar(qs_cal, us_cal, xerr=qs_err, yerr=us_err,
-                fmt='o', ecolor='orange',capsize=1, capthick=1)
-        plt.title("Calibrated Pol Scatter", fontsize=24)
-        plt.yticks(fontsize = 22)
-        plt.xticks(fontsize = 22)
-        plt.axhline(y=0, color = 'black')
-        plt.axvline(x=0, color = 'black')
-
-        plt.grid()
-        [bar.set_alpha(0.1) for bar in bars]
-        [cap.set_alpha(0.95) for cap in caps]
-        plt.show()
-        #if(sv_im != ''):
-        #    plt.savefig(sv_im,bbox_inches='tight',pad_inches=0.1 )
-    """            
 def mean_q_u_check(inp_data, n, q_u_ret, verb_arg):
     q_top = []
     q_bot = []

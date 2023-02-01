@@ -394,68 +394,64 @@ def calib_pipe(input_data,
         Tuple containing a list of dictionaries with q, q error, u, u error data, and a list of date time objects (data timestamps)
     zero_pol_data : tuple
         Tuple of length 3 comprising of bias (calib_files[0]), dark (calib_files[1]), and flat (calib_files[1]).
-    plot_me : list
+    verbose_plot_zpol : bool, optional
         List of integers. Array that scales both image data to act as zoom. 
     key_verb_t : bool, optional
          Applies sigma_clipped_stats to image. Sigma is 3 by default.
     """
-    ##Just get g191. That is not very robust isn't it...
+    
     cal_prod = cp(input_data)
+    zero_cal_point = cp(zero_pol_data)
     
     #This could technically still be useful for other cases of data
     #data_strs = ['g191b2b', 'G191B2B']
     #G191_low_pol = funcs_utils.filter_data(zero_pol_data, data_strs, False)
 
     if(verbose_plot_zpol):
-        means = funcs_polarimetry.q_n_u_single_plot_v1(zero_pol_data,
+        means = funcs_polarimetry.q_n_u_single_plot_v1(zero_cal_point,
                                        plot_c='blue',
                                        only_means=True,
                                        pol_deg=True)
 
-    mean_q, mean_q_err = funcs_polarimetry.plot_q_u_stability(zero_pol_data, q_u_check='q', 
+    mean_q, mean_q_err = funcs_polarimetry.plot_q_u_stability(zero_cal_point, q_u_check='q', 
                                                           m_plot=True, 
                                                           plot_verbose=True)
-    mean_u, mean_u_err = funcs_polarimetry.plot_q_u_stability(zero_pol_data, q_u_check='u', 
+    mean_u, mean_u_err = funcs_polarimetry.plot_q_u_stability(zero_cal_point, q_u_check='u', 
                                                           m_plot=True)
 
     #This does that removal of points... how about that
     print("Removing unstable points")
     
-    zero_pol_data[0] = np.delete(zero_pol_data[0], 1)
-    zero_pol_data[0] = np.delete(zero_pol_data[0], -1)
-    zero_pol_data[1] = np.delete(zero_pol_data[1], 1)
-    zero_pol_data[1] = np.delete(zero_pol_data[1], -1)
+    unstable_data = [1, -1]
+    for points in unstable_data:
+        zero_cal_point[0] = np.delete(zero_cal_point[0], points)
+        zero_cal_point[1] = np.delete(zero_cal_point[1], points)
 
-    print("Should be 5:", len(zero_pol_data[0])) 
     if(verbose_plot_zpol):
-        means = funcs_polarimetry.q_n_u_single_plot_v1(zero_pol_data,
+        means = funcs_polarimetry.q_n_u_single_plot_v1(zero_cal_point,
                                        plot_c='blue',
                                        only_means=True,
                                        pol_deg=True)
         
-    #this guy is suppressed. For calculation only
-    mean_q, mean_q_err = funcs_polarimetry.plot_q_u_stability(zero_pol_data, q_u_check='q', 
+    mean_q, mean_q_err = funcs_polarimetry.plot_q_u_stability(zero_cal_point, q_u_check='q', 
                                                           m_plot=True, 
                                                           plot_verbose=True)
-    mean_u, mean_u_err = funcs_polarimetry.plot_q_u_stability(zero_pol_data, q_u_check='u', 
+    mean_u, mean_u_err = funcs_polarimetry.plot_q_u_stability(zero_cal_point, q_u_check='u', 
                                                           m_plot=True)
 
-    print("For all 0 pols. q n u instrumental points:")
-    print("q inst:", mean_q, u"\u00B1",mean_q_err)
-    print("u inst:", mean_u, u"\u00B1",mean_u_err)
-    print("\n")    
+    if(key_verb_t):
+        print("For all 0 pols. q n u instrumental points:")
+        print("q inst:", mean_q, u"\u00B1",mean_q_err)
+        print("u inst:", mean_u, u"\u00B1",mean_u_err)
+        print("\n")    
     
-    #1 0-2: 2
-    #2 2-4: 2
-    #3 5-13: 9
-    #4 13-22: 9
-    #5 22-len(target_data): 19
-
     c = 1
     cal_c = 0
-    arr_qcal = []
-    cal_targ = []
 
+    cal_targ = [[],
+                []]
+    
+    #Sections defined arbitrarily
     targ_data_arr = [np.array(cal_prod)[:,:2],
                      np.array(cal_prod)[:,2:4],
                      np.array(cal_prod)[:,4:13], 
@@ -468,27 +464,24 @@ def calib_pipe(input_data,
                   '13-22',
                   '22-len(target_data)']
    
-    for k in range(0, len(zero_pol_data[0])):
-        mean_q, mean_q_err = funcs_polarimetry.plot_q_u_stability(np.array(zero_pol_data)[:,:c],
+    for k in range(0, len(zero_cal_point[0])):
+        mean_q, mean_q_err = funcs_polarimetry.plot_q_u_stability(np.array(zero_cal_point)[:,:c],
                                                                   q_u_check='q', 
                                                                   m_plot=False, 
                                                                   plot_verbose=False)
-        mean_u, mean_u_err = funcs_polarimetry.plot_q_u_stability(np.array(zero_pol_data)[:,:c], 
+        mean_u, mean_u_err = funcs_polarimetry.plot_q_u_stability(np.array(zero_cal_point)[:,:c], 
                                                                   q_u_check='u', 
                                                                   m_plot=False)        
 
-        #calibrate a section
-        #calibrated_data = funcs_polarimetry.calib_data(data_EECep, 
-        #       ([0.1, 0.001], [0.1,0.001]), 
-        #       plt_show = False,
-        #       verbose=False)
         q_cal = [np.mean(mean_q), np.mean(mean_q_err)]
         u_cal = [np.mean(mean_u), np.mean(mean_u_err)]
-        print("Length Check:",len(targ_data_arr[k][0]))
+
         cal_section = funcs_polarimetry.calib_data(targ_data_arr[k], (q_cal, u_cal))
- 
-        cal_targ.append(cal_section)
-       
+
+        for di in range(0, len(cal_section[0])):
+            cal_targ[0].append(cal_section[0][di])
+            cal_targ[1].append(cal_section[1][di])
+                  
         #compute this ting called the slice
         #the_slice = [list(x.keys())[0] for x in G191_low_pol[0:c]]
         #if(key_verb_t):
@@ -497,8 +490,7 @@ def calib_pipe(input_data,
         #    print("q cal:", q_cal[0], u"\u00B1", q_cal[1])
         #    print("u cal:", u_cal[0], u"\u00B1", u_cal[1])
         #    print("\n")
-        #increment by 1
+
         c =c + 1
-    """
-    """
+
     return(cal_targ)
