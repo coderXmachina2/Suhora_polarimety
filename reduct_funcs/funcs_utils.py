@@ -168,7 +168,7 @@ def data_splitter(list_data):
     s1 = np.array(list_data)[:, :width_cutoff] #data array
     s2 = np.array(list_data)[:, width_cutoff:] #MJD array
     
-    return(s1.flatten(), s2.flatten())
+    return ([s1.flatten(), s2.flatten()])
 
 def make_set_list(s_query, param_check, verb_arg, verb_arg_MJD=False):
     """
@@ -450,7 +450,7 @@ def list_autoloader(input_string,
         
     splitted_data = data_splitter(list_return)
 
-    return(splitted_data)
+    return (splitted_data)
     
 def autoloader(verb_arg):
     """
@@ -1193,7 +1193,7 @@ def outlier_removal(inp_data, q_lim, u_lim):
     
     outlier_rejected_data = cp(inp_data)
     ###
-    #Do some outlier rejection
+    #Do some outlier rejection using q and u plane
     ###
     
     return outlier_rejected_data

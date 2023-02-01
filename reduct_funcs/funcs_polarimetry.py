@@ -66,7 +66,6 @@ def check_pol_std():
     print("Low Pol standard:", low_pol_std, "\n")
     
 def calc_pd2(input_data, 
-             tstamps,
              plot_title, 
              plot_c, 
              perc_arg= False, 
@@ -74,32 +73,32 @@ def calc_pd2(input_data,
              verbose_data=False,
              sv_pold_img=False):
     """
-    A function that takes in data and calculates polarization degree. Can be used in preliminary analysis. Does not plot with respect to time. .Does not return anything.
-
+    A function that takes in data and calculates polarization degree (PD). Does not return anything. Can be used in preliminary analysis of polarization data.
 
     Parameters
     ----------
-    input_data : dict
-        Dictionary containing tuple of q, q error, u, u error data
-    tstamps : ndarray
-        list of date time objects
+    input_data : tuple
+        Tuple containing a list of dictionaries with q, q error, u, u error data, and a list of date time objects (data timestamps)
     plot_title : str,
         String that defines the title of the plot. Used in the filename if the pol data is saved to file.
     plot_c : str,
         String that defines the color of the plot.
     perc_arg : bool, optional
         Multiply calculated pd values by 100 to get percentage polarization. 
-    calc_pd_verbose : bool, optional
+    verbose_calc_pd : bool, optional
+        Prints calculations for extra verbosity.  False by default
+    verbose_data : bool, optional
         Prints calculations for extra verbosity.  False by default 
     sv_arg : bool, optional
         Saves image to file.  False by default 
     """
-
-    print("Calculate and Plot Polarization Degree (without returning data):")
+    dates = sorted(input_data[1])
+    
+    print("Calculate and plot polarization degree (PD) for duration", dates[0], "to", dates[-1],"\nwithout returning data")
     pol_d_array = []
     pol_d_err_array = []
     
-    for dats in input_data:        
+    for dats in input_data[0]:        
         result = re.search('(.*)_', list(dats.keys())[0][:12])
         targ_name_str = re.search('_(.*)', list(dats.keys())[0])
                 
@@ -128,7 +127,7 @@ def calc_pd2(input_data,
             pol_d_array.append(pol_d)
             pol_d_err_array.append(pol_d_err)
 
-    t = Time([x.strftime("%Y-%m-%dT%H:%M:%S.%f") for x in tstamps], format='isot', scale='utc')
+    t = Time([x.strftime("%Y-%m-%dT%H:%M:%S.%f") for x in input_data[1]], format='isot', scale='utc')
  
     plt.errorbar(t.mjd , 
                  pol_d_array, 
@@ -156,7 +155,6 @@ def calc_pd2(input_data,
     plt.show()
     
 def calc_pa2(input_data, 
-             tstamps, 
              plot_title, 
              plot_c,
              deg_arg=False, 
@@ -164,29 +162,32 @@ def calc_pa2(input_data,
              verbose_data=False,
              sv_polpa_img=False):
     """
-    A function that takes in data and calculates polarization degree. Does not return anything. Can be used in preliminary.
+    A function that takes in data and calculates position angle (PA). Does not return anything. Can be used in preliminary analysis of polarization data.
 
     Parameters
     ----------
-    input_data : dict
-        Dictionary containing tuple of q, q error, u, u error data
+    input_data : tuple
+        Tuple containing a list of dictionaries with q, q error, u, u error data, and a list of date time objects (data timestamps)
     plot_title : str,
         String that defines the title of the plot. Used in the filename if the pol data is saved to file.
     plot_c : str,
         String that defines the color of the plot.
     deg_arg : bool, optional
         Multiply calculated pd values by 180/pi to get pol angle degree. 
-    calc_pa_verbose : bool, optional
+    verbose_calc_pa : bool, optional
+        Prints calculations for extra verbosity.  False by default
+    verbose_data : bool, optional
         Prints calculations for extra verbosity.  False by default 
     sv_polpa_img : bool, optional
         Saves image to file.  False by default 
     """
+    dates = sorted(input_data[1])
     
-    print("Calculate and Plot Polarization Angle (without returning data):")
+    print("Calculate and plot position angle (PA) for duration", dates[0], "to", dates[-1],"\nwithout returning data")
     pol_pa_array = []
     pol_pa_err_array = []
 
-    for dats in input_data:        
+    for dats in input_data[0]:        
         result = re.search('(.*)_', list(dats.keys())[0][:12])
         targ_name_str = re.search('_(.*)', list(dats.keys())[0] )
         
@@ -205,7 +206,6 @@ def calc_pa2(input_data,
         pol_pa = 0.5*math.atan2(mean_u , mean_q)
         pol_pa_err = math.sqrt(((1/(2*mean_q*(1 + (mean_u_squared/mean_q_squared))))**2 )*(mean_u_err_squared) + ((-1*((mean_u)/(2*sum_o_squares)))**2 )*(mean_q_err_squared))
         #Please check
-        #For RINGO Slowikoska et al 2016
         
         if(deg_arg):
             if(verbose_calc_pa): #
@@ -218,7 +218,7 @@ def calc_pa2(input_data,
             pol_pa_array.append(pol_pa)
             pol_pa_err_array.append(pol_pa_err)
 
-    t = Time([x.strftime("%Y-%m-%dT%H:%M:%S.%f") for x in tstamps], format='isot', scale='utc')
+    t = Time([x.strftime("%Y-%m-%dT%H:%M:%S.%f") for x in input_data[1]], format='isot', scale='utc')
 
     plt.errorbar(t.mjd, 
                  pol_pa_array, 
@@ -242,16 +242,38 @@ def calc_pa2(input_data,
         plt.savefig(sv_im_str, bbox_inches='tight',pad_inches=0.1)
     plt.show()  
 
-def calc_PD_stability(input_data, 
-                      tstamps,             
+def calc_PD_stability(input_data,              
                       targ_corr_MJD='',
                       verbose_calc_pd=False, 
                       verbose_mjd_align_check=False, 
                       perc_arg=False,
                       to_excel=False, 
                       corr_MJD=False):
+    
+    """
+    A function that takes in data and calculates polarization degree (PD). Returns data to be used in other plot tools
 
-    print("Only Calculates Polarization Degree stability and returns result")
+    Parameters
+    ----------
+    input_data : tuple
+        Tuple containing a list of dictionaries with q, q error, u, u error data, and a list of date time objects (data timestamps)
+    targ_corr_MJD : str
+        String to identify data file for correcting MJD
+    verbose_calc_pd : bool, optional
+        Multiply calculated pd values by 100 to get percentage polarization degree. 
+    verbose_mjd_align_check : bool, optional
+        Prints calculations for extra verbosity.  False by default 
+    perc_arg : bool, optional
+        Saves image to file.  False by default
+    to_excel : bool, optional
+        Saves image to file.  False by default 
+    corr_MJD : bool, optional
+        Saves image to file.  False by default 
+    """
+    dates = sorted(input_data[1])
+    objn = list(input_data[0][0].keys())[0][11:]
+    
+    print("Calculate and return polarization degree (PD) for duration", dates[0], "to", dates[-1], "\nfor", objn)
     
     if(corr_MJD):
         if(targ_corr_MJD=='EECEP'):
@@ -272,7 +294,7 @@ def calc_PD_stability(input_data,
     
     mjd_strs = []
     
-    for dats in input_data:        
+    for dats in input_data[0]:        
         result = re.search('(.*)_', list(dats.keys())[0][:12])
         targ_name_str = re.search('_(.*)', list(dats.keys())[0])
 
@@ -309,19 +331,18 @@ def calc_PD_stability(input_data,
     if(corr_MJD):
         t = Time(mjd_strs, scale='utc',format='mjd')
     else:
-        t = tstamps
+        t = input_data[1]
 
     if(verbose_mjd_align_check):
-        for a in range(0, len(input_data)):
-            print(list(input_data[a].keys())[0], t[a], t.mjd[a])
+        for a in range(0, len(input_data[0])):
+            print(list(input_data[0][a].keys())[0], t[a], t.mjd[a])
 
     if(to_excel):
         funcs_utils.data_to_excel((t.mjd, means_arr, means_err_arr),'cal_eecep', 'pol_deg')
 
     return(means_arr,means_err_arr, t)
 
-def calc_PA_stability(input_data, 
-                      tstamps,
+def calc_PA_stability(input_data,
                       targ_corr_MJD='', 
                       verbose_calc_pa=False,
                       verbose_mjd_align_check=False, 
@@ -329,8 +350,30 @@ def calc_PA_stability(input_data,
                       to_excel=False, 
                       corr_MJD=False,
                       PA_shift=False):
+    """
+    A function that takes in data and calculates position angle (PA). Returns data to be used in other plot tools
 
-    print("Only Calculates Position Angle and return result")
+    Parameters
+    ----------
+    input_data : tuple
+        Tuple containing a list of dictionaries with q, q error, u, u error data, and a list of date time objects (data timestamps)
+    targ_corr_MJD : str
+        String to identify data file for correcting MJD
+    verbose_calc_pa : bool, optional
+        Multiply calculated pd values by 180/pi to get position angle in degree degree. 
+    verbose_mjd_align_check : bool, optional
+        Prints calculations for extra verbosity.  False by default 
+    perc_arg : bool, optional
+        Saves image to file.  False by default
+    to_excel : bool, optional
+        Saves image to file.  False by default 
+    corr_MJD : bool, optional
+        Saves image to file.  False by default 
+    """
+    dates = sorted(input_data[1])
+    objn = list(input_data[0][0].keys())[0][11:]
+    
+    print("Calculate and return position angle (PA) for duration", dates[0], "to", dates[-1], "\nfor", objn)
     
     if( corr_MJD ):
         if(targ_corr_MJD=='EECEP'):
@@ -351,7 +394,7 @@ def calc_PA_stability(input_data,
     
     mjd_strs = []
     
-    for dats in input_data:        
+    for dats in input_data[0]:        
         result = re.search('(.*)_', list(dats.keys())[0][:12])
         targ_name_str = re.search('_(.*)', list(dats.keys())[0])
         
@@ -392,37 +435,55 @@ def calc_PA_stability(input_data,
     if(corr_MJD):
         t = Time(mjd_strs, scale='utc',format='mjd') #watch out
     else:
-        t = tstamps        
+        t = input_data[1]       
     
     if(PA_shift):
         print("Shifting PA...")
         means_arr= np.array(means_arr) + 40
     
     if(verbose_mjd_align_check):
-        for a in range(0, len(input_data)):
-            print(list(input_data[a].keys())[0], t[a], t.mjd[a])
+        for a in range(0, len(input_data[0])):
+            print(list(input_data[0][a].keys())[0], t[a], t.mjd[a])
             
     if(to_excel):
         funcs_utils.data_to_excel((t.mjd, means_arr, means_err_arr), 'cal_eecep', 'pol_PA')
             
     return(means_arr, means_err_arr, t) #This is where it happens.
 
-###Terminate###
-
 def plot_pol_stab(MJD_track,
                   obj_pol, 
                   obj_pol_err, 
-                  plot_what,  
+                  plot_data,  
                   toggle=False):
+    """
+    A function that takes in data and calculates position angle (PA). Returns data to be used in other plot tools. More presentable publication quality style.
+
+    Parameters
+    ----------
+    input_data : tuple
+        Tuple containing a list of dictionaries with q, q error, u, u error data, and a list of date time objects (data timestamps)
+    targ_corr_MJD : str
+        String to identify data file for correcting MJD
+    verbose_calc_pa : bool, optional
+        Multiply calculated pd values by 180/pi to get position angle in degree degree. 
+    verbose_mjd_align_check : bool, optional
+        Prints calculations for extra verbosity.  False by default 
+    perc_arg : bool, optional
+        Saves image to file.  False by default
+    to_excel : bool, optional
+        Saves image to file.  False by default 
+    corr_MJD : bool, optional
+        Saves image to file.  False by default 
+    """
     
     fig, ax = plt.subplots(figsize=(36, 12))
     
     MJD_track = Time([x.strftime("%Y-%m-%dT%H:%M:%S.%f") for x in MJD_track], format='isot', scale='utc')
     
-    if(plot_what=='PD'):
+    if(plot_data=='PD'):
         markers, caps, bars = ax.errorbar(MJD_track.mjd, obj_pol, yerr=obj_pol_err, xerr =[0]*len(obj_pol),
                         fmt='o',markersize=16, ecolor='blue',capsize=10, capthick=5,  label='PD')
-    elif(plot_what=='PA'):
+    elif(plot_data=='PA'):
         markers, caps, bars = ax.errorbar(MJD_track.mjd, obj_pol, yerr=obj_pol_err, xerr =[0]*len(obj_pol),
                         fmt='o',markersize=16, ecolor='blue',capsize=10, capthick=5,  label='PA')
 
@@ -430,47 +491,49 @@ def plot_pol_stab(MJD_track,
     plt.xticks(fontsize=24)
     plt.yticks(fontsize=24)
     
-    if(plot_what=='PD'):
+    if(plot_data=='PD'):
         plt.title('Polarization Degree (PD) versus Time (MJD)', fontsize=32)
         plt.ylabel('PD, (%)', fontsize=28)
         plt.xlabel('Time, (MJD)', fontsize=28)
         if(toggle):
             bounce = 1
+            mjds_arr = Time([x.strftime("%Y-%m-%dT%H:%M:%S.%f") for x in MJD_track], scale='utc',format='isot')
             for k in range(0, len(MJD_track.value)):
                 if (bounce == 0):
-                    plt.text(MJD_track.value[k], 2.8+0.025, k)
+                    plt.text(float(mjds_arr[k].mjd), 2.8+0.025, k) #The 
                     bounce = 1
                 elif (bounce == 1):
-                    plt.text(MJD_track.value[k], 2.8-0.025, k)
+                    plt.text(float(mjds_arr[k].mjd), 2.8-0.025, k)
                     bounce = 2
                 elif (bounce == 2):
-                    plt.text(MJD_track.value[k], 2.8+0.06, k)
+                    plt.text(float(mjds_arr[k].mjd), 2.8+0.06, k)
                     bounce = 3
                 elif (bounce == 3):
-                    plt.text(MJD_track.value[k], 2.8-0.06, k)
+                    plt.text(float(mjds_arr[k].mjd), 2.8-0.06, k)
                     bounce = 0
                         
-    elif(plot_what=='PA'):
+    elif(plot_data=='PA'):
         plt.title('Positiona Angle (PA) versus time (MJD)', fontsize=32)
         plt.ylabel('PA, ('+u'\N{DEGREE SIGN}'+')', fontsize=28)
         plt.xlabel('Time, (MJD)', fontsize=28)
         if(toggle):
             bounce = 1
+            mjds_arr = Time([x.strftime("%Y-%m-%dT%H:%M:%S.%f") for x in MJD_track], scale='utc',format='isot')
             for k in range(0, len(MJD_track.value)):
                 if (bounce == 0):
-                    plt.text(MJD_track.value[k], -10+0.525, k)
+                    plt.text(mjds_arr[k].mjd, -10+0.525, k)
                     bounce = 1
                 elif (bounce == 1):
-                    plt.text(MJD_track.value[k], -10-0.525, k)
+                    plt.text(mjds_arr[k].mjd, -10-0.525, k)
                     bounce = 2
                 elif (bounce == 2):
-                    plt.text(MJD_track.value[k], -10+1.06, k)
+                    plt.text(mjds_arr[k].mjd, -10+1.06, k)
                     bounce = 3
                 elif (bounce == 3):
-                    plt.text(MJD_track.value[k], -10-1.06, k)
+                    plt.text(mjds_arr[k].mjd, -10-1.06, k)
                     bounce = 0
     else:
-        print("error. Please supply correct arguement.")
+        print("error. Please supply correct pol type.")
         
     [bar.set_alpha(0.2) for bar in bars]
     [cap.set_alpha(0.6) for cap in caps]
@@ -479,39 +542,58 @@ def plot_pol_stab(MJD_track,
     fig.tight_layout()
     plt.show()
     
-
-def plot_pol_stab_doobly(MJD_track_PD, MJD_track_PA, obj_pol_PD, obj_pol_PA, obj_pol_PD_err, obj_pol_PA_err, icon_pd, icon_pa, toggle):
-    fig, ax1 = plt.subplots(figsize=(36, 12))
+def plot_pol_stab_double(input_data, 
+                         fmt_icon, 
+                         color_icon):
     
-    markers, caps, bars = ax1.errorbar(MJD_track_PD.value, obj_pol_PD, yerr=obj_pol_PD_err, xerr =[0]*len(obj_pol_PD), fmt=icon_pd, markersize=32, capsize=10, capthick=5, color = 'blue', label='PD')
+    """
+    A function that takes in data and calculates position angle (PA). Returns data to be used in other plot tools. More presentable publication quality style.
+
+    Parameters
+    ----------
+    input_data : list
+        Lis of data where expectation is:
+        input_data[0] = MJD_track_PD
+        input_data[1] = MJD_track_PA
+        input_data[2] = obj_pol_PD
+        input_data[3] = obj_pol_PA
+        input_data[4] = obj_pol_PD_err
+    icon : list
+        List of strings where expectation is:
+        fmt_icon[0] = '*'
+        fmt_icon[1] = '-'
+        Or whatever format icon is preferred
+    color_icon : list
+        List of strings where expectation is:
+        color_icon[0] = 'red'
+        color_icon[1] = 'blue'
+        Or whatever format color is preferred
+    """
+    fig, ax1 = plt.subplots(figsize=(36, 12))
+    mjds_PD_arr = Time([x.strftime("%Y-%m-%dT%H:%M:%S.%f") for x in input_data[0]], 
+                       scale='utc',
+                       format='isot')
+    
+    markers, caps, bars = ax1.errorbar(mjds_PD_arr.mjd, 
+                                       input_data[2], 
+                                       yerr=input_data[4], 
+                                       xerr =[0]*len(input_data[4]), 
+                                       fmt=fmt_icon[0], 
+                                       markersize=32, 
+                                       capsize=10, 
+                                       capthick=5, 
+                                       color = color_icon[0], 
+                                       label='PD')
 
     plt.xticks(fontsize=24)
     plt.yticks(fontsize=24)
     plt.xlabel('Time (MJD)', fontsize=28)
     plt.ylabel('PD, (%)', fontsize=24)
     plt.title('Polarization Degree (PD) and Polarization Angle (PA) versus Time (MJD)', fontsize=28)
-    
-    """
-    if(toggle):
-        bounce = 1
-        for k in range(0, len(MJD_track_PD.value)):
-            if (bounce == 0):
-                ax1.text(MJD_track_PD.value[k], -10+0.525, k)
-                bounce = 1
-            elif (bounce == 1):
-                ax1.text(MJD_track_PD.value[k], -10-0.525, k)
-                bounce = 2
-            elif (bounce == 2):
-                ax1.text(MJD_track_PD.value[k], -10+1.06, k)
-                bounce = 3
-            elif (bounce == 3):
-                ax1.text(MJD_track_PD.value[k], -10-1.06, k)
-                bounce = 0
-    """    
+        
     ax1.grid()
     ax1.plot()
     
-    #[marker.set_alpha(0.3) for marker in markers] 
     [bar.set_alpha(0.2) for bar in bars]
     [cap.set_alpha(0.6) for cap in caps]
     
@@ -522,48 +604,61 @@ def plot_pol_stab_doobly(MJD_track_PD, MJD_track_PA, obj_pol_PD, obj_pol_PA, obj
     plt.xlabel('Time, (MJD)', fontsize=28)
     plt.ylabel('PA, ('+u'\N{DEGREE SIGN}'+')' , fontsize=24)
 
-    markers, caps, bars = ax2.errorbar(MJD_track_PA.value, obj_pol_PA, yerr=obj_pol_PA_err, xerr =[0]*len(obj_pol_PA), fmt=icon_pa, markersize=24, capsize=10, capthick=5, color = 'red', label='PA')
-
-    #[marker.set_alpha(0.3) for marker in markers]    
+    mjds_PA_arr = Time([x.strftime("%Y-%m-%dT%H:%M:%S.%f") for x in input_data[1]],
+                       scale='utc',
+                       format='isot')
+    
+    markers, caps, bars = ax2.errorbar(mjds_PA_arr.mjd, 
+                                       input_data[3], 
+                                       yerr=input_data[5], 
+                                       xerr =[0]*len(input_data[4]),
+                                       fmt=fmt_icon[1], 
+                                       markersize=24, 
+                                       capsize=10, 
+                                       capthick=5, 
+                                       color = color_icon[1],
+                                       label='PA')
+    
     [bar.set_alpha(0.2) for bar in bars]
     [cap.set_alpha(0.6) for cap in caps]
     
     ax2.plot()
 
-    #handles, labels = ax.get_legend_handles_labels()
-    #fig.legend(markerfirst=False, fontsize=28)
     fig.legend(loc="upper right", fontsize=36, borderaxespad=3.0)
-    #fig.legend(loc="lower right", bbox_to_anchor=(0.5, 1.00), shadow=True, ncol=2, fontsize=28)
-    #fig.legend(loc="lower right", ncol=2, borderaxespad=10, fontsize=24)
-    #fig.legend(loc="lower right", fontsize=24,  bbox_to_anchor=(0,1) )#,borderaxespad=5)# ,bbox_to_anchor=(1,1), borderaxespad=4,)#, bbox_transform=ax1.transAxes, fontsize=28)#)
-    fig.tight_layout()  # otherwise the right y-label is slightly clipped
+
+    fig.tight_layout()
     plt.show()
 
-def plot_q_u_stability(input_data, q_u_check, sv_im, plot_verbose , mjd_align_check, verbose, m_plot):
+def plot_q_u_stability(input_data, 
+                       q_u_check, 
+                       sv_im='', 
+                       plot_verbose=False, 
+                       verbose=False, 
+                       m_plot=False):
     """
-    A function that plots q or u over time
+    A function that takes in data and calculates position angle (PA). Returns data to be used in other plot tools. More presentable publication quality style.
+
+    Parameters
+    ----------
+    input_data : tuple
+        Tuple containing a list of dictionaries with q, q error, u, u error data, and a list of date time objects (data timestamps)
+    q_u_check : str
+        String to identify data file for correcting MJD
+    sv_im : bool, optional
+        Multiply calculated pd values by 180/pi to get position angle in degree degree. 
+    plot_verbose : bool, optional
+        Prints calculations for extra verbosity.  False by default 
+    m_plot : bool, optional
+        Saves image to file.  False by default 
     """
     
     means_arr = []
     means_err_arr = []
-    array_des_dates = []
     
-    array_des_noms = []
-    mjd_strs = []
-    
-    for dats in input_data:        
+    for dats in input_data[0]:        
         result = re.search('(.*)_', list(dats.keys())[0][:12])
         targ_name_str = re.search('_(.*)', list(dats.keys())[0])
-
-        array_des_noms.append(targ_name_str.group(1))
-        mjd_strs.append(result.group(1)+'T00:00:00.000000000')
-        array_des_dates.append(result.group(1)) #This is 
-        
-        if(verbose and mjd_align_check):
-            print(targ_name_str.group(1), Time([result.group(1)+'T00:00:00.000000000'])[0].mjd  )
-        elif(verbose):
-            print(targ_name_str.group(1), result.group(1))
-        
+                
         if(q_u_check=='q'):
             if(verbose):
                 print(np.mean(dats[list(dats.keys())[0]][0][1:]),u"\u00B1",np.std(dats[list(dats.keys())[0]][0][1:]))
@@ -575,23 +670,20 @@ def plot_q_u_stability(input_data, q_u_check, sv_im, plot_verbose , mjd_align_ch
             means_arr.append(np.mean(dats[list(dats.keys())[0]][2][1:]))
             means_err_arr.append(np.std(dats[list(dats.keys())[0]][2][1:]))
             
-    t = Time(mjd_strs, format='isot', scale='utc')
-    
-    if(mjd_align_check):
-        for a in range(0, len(input_data)):
-            print(list(input_data[a].keys())[0], t[a], t.mjd[a])
-    
-    #Theres no way to turn off the plot
-    if( m_plot):
+    t = Time([x.strftime("%Y-%m-%dT%H:%M:%S.%f") for x in input_data[1]], format='isot', scale='utc')
+       
+    if(m_plot):
         print("Plot", q_u_check,"stability")
         fig, ax = plt.subplots()
         markers, caps, bars = ax.errorbar(t.mjd, means_arr, yerr=means_err_arr, xerr =[0]*len(means_arr),
                 fmt='o', ecolor='blue',capsize=2, capthick=2)
 
-        plt.title(array_des_noms[0]+" "+q_u_check + " stability", fontsize=24)
+        plt.title(q_u_check + " stability over time", fontsize=24)
         if(plot_verbose):
             for l in range(0, len(t.mjd)):
-                plt.text(t.mjd[l], means_arr[l], str(round(means_arr[l], 6))+u"\u00B1"+str(np.round(means_err_arr[l],4)), fontsize=24)
+                plt.text(t.mjd[l], means_arr[l], 
+                         str(round(means_arr[l],6))+u"\u00B1"+str(np.round(means_err_arr[l],4)), 
+                         fontsize=12, rotation=45)
 
         plt.yticks(fontsize = 22)
         plt.xticks(fontsize = 22)
@@ -602,7 +694,7 @@ def plot_q_u_stability(input_data, q_u_check, sv_im, plot_verbose , mjd_align_ch
 
             plt.text(t.mjd[0],
                      np.mean(means_arr) - (locs[1]-locs[0])/6 ,
-                     'Stokes q Instrumental Polarization:'+ str(np.round(np.mean(means_arr),4))+u"\u00B1"+str(np.round(np.mean(means_err_arr), 4  ) ),
+                     'Mean Stokes Q:'+ str(np.round(np.mean(means_arr),4))+u"\u00B1"+str(np.round(np.mean(means_err_arr), 4  ) ),
                      fontsize=24)
         elif(q_u_check=='u'):
             plt.ylabel('u', fontsize=24)
@@ -611,7 +703,7 @@ def plot_q_u_stability(input_data, q_u_check, sv_im, plot_verbose , mjd_align_ch
 
             plt.text(t.mjd[0],
                      np.mean(means_arr) - (locs[1]-locs[0])/6,
-                     'Stokes u Instrumental Polarization:'+ str(np.round(np.mean(means_arr),4))+u"\u00B1"+str(np.round(np.mean(means_err_arr), 4)), 
+                     'Mean Stokes U:'+ str(np.round(np.mean(means_arr),4))+u"\u00B1"+str(np.round(np.mean(means_err_arr), 4)), 
                      fontsize=24)
 
         plt.axhline(y=0, color = 'black')
@@ -623,45 +715,9 @@ def plot_q_u_stability(input_data, q_u_check, sv_im, plot_verbose , mjd_align_ch
 
         if(sv_im != ''):
             plt.savefig(sv_im,bbox_inches='tight',pad_inches=0.1 )
-        plt.show()
-    
-    #Here is where you do the interpolate
-    
-    #OK so from here on end is all experimental methodoloy. I wanna do splines!
-    #
-    
-    
-    """
-    #bivariate spline interpolation
-    tck = interpolate.splrep(t.mjd, means_arr, s=0)
-    print("tck:", tck)
-    print("tck[0]:", tck[0])
-    print("tck[1]:", tck[1])
-    
-    #simple linear interpolation
-    f = interp1d(t.mjd, means_arr)
-    f2 = interp1d(t.mjd, means_arr, kind='cubic')
-    
-    #lets
-    #
-    plt.plot(tck[0], tck[1])
-    plt.errorbar(t.mjd, means_arr, yerr=means_err_arr, xerr =[0]*len(means_arr),
-            fmt='o', ecolor='blue',capsize=2, capthick=2)
-    plt.grid()
-    plt.show()
-    
-    print("Blah", f)
-    print("Blah", f2)
-    
-    plt.plot(f(t.mjd))
-    plt.plot(f2(t.mjd))
-    #plt.errorbar(t.mjd, means_arr, yerr=means_err_arr, xerr =[0]*len(means_arr),
-    #        fmt='o', ecolor='blue',capsize=2, capthick=2)
-    plt.grid()
-    plt.show()
-    """
-    
-    return([np.mean(means_arr), np.mean(means_err_arr)]) #returns the plot here
+        plt.show()   
+        
+    return([means_arr, means_err_arr]) #returns the plot here
     
     """
     print("Plot versus time!")
@@ -679,8 +735,12 @@ def plot_q_u_stability(input_data, q_u_check, sv_im, plot_verbose , mjd_align_ch
     plt.show()
     """
 
-def q_n_u_single_plot_v1(pol_data,
-                         tstamps,
+'''
+input_data[0] = pol_data
+input_data[0] = tstamps
+'''
+    
+def q_n_u_single_plot_v1(input_data,
                          plot_c,   
                          sv_im='', 
                          verbose_MJD_arg=False,
@@ -690,11 +750,23 @@ def q_n_u_single_plot_v1(pol_data,
                          retrun_plotelems=False,
                          key_verb=False):
     """
-    #please document. Thanks past me...
-    #If only means then only the means
+    A function that takes in data and calculates position angle (PA). Returns data to be used in other plot tools. More presentable publication quality style.
+
+    Parameters
+    ----------
+    input_data : tuple
+        Tuple containing a list of dictionaries with q, q error, u, u error data, and a list of date time objects (data timestamps)
+    q_u_check : str
+        String to identify data file for correcting MJD
+    sv_im : bool, optional
+        Multiply calculated pd values by 180/pi to get position angle in degree degree. 
+    plot_verbose : bool, optional
+        Prints calculations for extra verbosity.  False by default 
+    m_plot : bool, optional
+        Saves image to file.  False by default 
     """    
     if(key_verb):
-        print("N data:", len(pol_data))
+        print("N data:", len(input_data[0]))
     
     targ_qmeans = []
     targ_umeans = []
@@ -702,54 +774,49 @@ def q_n_u_single_plot_v1(pol_data,
     targ_qmeans_err = []
     targ_umeans_err = []
     
-    target_qs = []
-    target_us = []
+    targ_qs = []
+    targ_us = []
     targ_qstds = []
     targ_ustds = []
         
-    for things in pol_data:
-        targ_qmeans.append(np.mean(things[list(things.keys())[0]][0][1:])) #qmeans
-        targ_umeans.append(np.mean(things[list(things.keys())[0]][2][1:])) #umeans
+    for things in input_data[0]:
+        for k in range(0, len(things[list(things.keys())[0]][0])):
+            targ_qs.append(things[list(things.keys())[0]][0][k])
+            targ_us.append(things[list(things.keys())[0]][2][k])
+            targ_qstds.append(things[list(things.keys())[0]][1][k])
+            targ_ustds.append(things[list(things.keys())[0]][3][k])
+
+        targ_qmeans.append(np.mean(things[list(things.keys())[0]][0][:])) #qmeans
+        targ_umeans.append(np.mean(things[list(things.keys())[0]][2][:])) #umeans
         
-        targ_qmeans_err.append(np.std(things[list(things.keys())[0]][0][1:])) #qstd
-        targ_umeans_err.append(np.std(things[list(things.keys())[0]][2][1:])) #ustd
-                                                                           
-        #yo we can do it here
-        date = re.search('(.*)_', list(things.keys())[0][:12]) #suppress the target name, just give me the 
-        
-        #print("Hello",  things[list(things.keys())[0]][0]  )
-        #target_qs = target_qs + things[list(things.keys())[0]][0]
-        #target_qs.append(things[list(things.keys())[0]][0][1:]           )
-        #target_qstds.append(things[list(things.keys())[0]][1][1:]            )
-        #target_us.append(things[list(things.keys())[0]][2][1:]            )
-        #target_ustds.append(things[list(things.keys())[0]][3][1:]              )
-        
-        #target_qs = target_qs + things[list(things.keys())[0]][0][1:]
-        #targ_qstds = targ_qstds + things[list(things.keys())[0]][1][1:]
-        #target_us = target_us + things[list(things.keys())[0]][2][1:] 
-        #targ_ustds = targ_ustds + things[list(things.keys())[0]][3][1:]
-        
-    t = Time([x.strftime("%Y-%m-%dT%H:%M:%S.%f") for x in tstamps], format='isot', scale='utc')
-    
+        targ_qmeans_err.append(np.std(things[list(things.keys())[0]][0][:])) #qstd
+        targ_umeans_err.append(np.std(things[list(things.keys())[0]][2][:])) #ustd
+
+    t = Time([x.strftime("%Y-%m-%dT%H:%M:%S.%f") for x in input_data[1]], format='isot', scale='utc')
+
     if(only_means):
-        plt.scatter(targ_qmeans, targ_umeans, alpha=0.9, color = plot_c,)
-        plt.errorbar(targ_qmeans, targ_umeans, xerr=targ_qmeans_err, yerr=targ_umeans_err, color = plot_c, lw=0.75, fmt="o", alpha=0.9)
+        plt.scatter(targ_qmeans, targ_umeans,
+                    alpha=0.9, color = plot_c,)
+        plt.errorbar(targ_qmeans, targ_umeans, xerr=targ_qmeans_err, yerr=targ_umeans_err,
+                     color = plot_c, lw=0.75, fmt="o", alpha=0.9)
     else:
-        plt.scatter(target_qs, target_us, color = plot_c, alpha=0.11)
-        plt.errorbar(target_qs, target_us, xerr=targ_qstds, yerr=targ_ustds, lw=0.75, fmt="o", color=plot_c, alpha=0.1)
-
-        plt.scatter(targ_qmeans, targ_umeans, color = plot_c, alpha=0.9)
-        plt.errorbar(targ_qmeans, targ_umeans, xerr=targ_qmeans_err, yerr=targ_umeans_err, lw=0.75, fmt="o", color = plot_c , alpha=0.9)
-
+        plt.scatter(targ_qs, targ_us, 
+                    color = plot_c, alpha=0.22)
+        plt.errorbar(targ_qs, targ_us, 
+                     xerr=targ_qstds, yerr=targ_ustds, 
+                     lw=0.75, fmt="o", color=plot_c, alpha=0.22)
     if(pol_deg):
         for z in range(0, len(targ_qmeans)):
-            plt.plot([0,targ_qmeans[z]], [0, targ_umeans[z]], 'k-', lw=1.75, alpha=0.4, linestyle = '--')
+            plt.plot([0,targ_qmeans[z]], [0, targ_umeans[z]], 
+                     'k-', lw=1.75, alpha=0.4, linestyle = '--')
     if(verbose_MJD_arg):
         for z in range(0, len(targ_qmeans)):
-            plt.text(targ_qmeans[z], targ_umeans[z], int(t[z].mjd), rotation=-45, fontsize=10) #suppress the title        
+            plt.text(targ_qmeans[z], targ_umeans[z], 
+                     int(t[z].mjd), rotation=45, fontsize=16)       
     else:
         for z in range(0, len(targ_qmeans)):
-            plt.text(targ_qmeans[z], targ_umeans[z], str(t[z]), rotation=-45, fontsize=10) #suppress the title
+            plt.text(targ_qmeans[z], targ_umeans[z], 
+                     str(t[z]), rotation=45, fontsize=16)
     
     plt.grid()
     plt.title("Pol Scatter")        
@@ -924,9 +991,6 @@ def q_n_u_stack_plot_v2( pol_data, sv_im_str ,pol_deg, launch_verb, key_verb):
         if(sv_im_str):
             plt.savefig(sv_im_str,bbox_inches='tight',
                             pad_inches=0.1)
-    
-    #combined_q = target_data[0][1:] + zero_pol_std[0][1:] +  high_pol_std[0][1:]
-    #combined_u = target_data[2][1:] + zero_pol_std[2][1:] +  high_pol_std[2][1:]
 
 def q_n_u_stack_plot(target_data, zero_pol_std, high_pol_std, MJD_obs , name_array ,title , pol_deg, sv_im ):
     """
@@ -1045,48 +1109,24 @@ def q_n_u_stack_plot(target_data, zero_pol_std, high_pol_std, MJD_obs , name_arr
         plt.savefig(MJD_obs+" pol_scatter "+title,bbox_inches='tight',
                         pad_inches=0.1)        
         
-def calib_data(inp_data, instrumental_pol, plt_show,verbose):
+def calib_data(inp_data, 
+               instrumental_pol, 
+               plt_show = False,
+               verbose=False):
     """
-    #Function that scatter plots q nad u
-    #This thing just plots. It does not do anything fance such as compute mean blah
-    #Error should be taken in quadrature
-    
-    #Defunct
-    #Not built you
-    
-    if(stats):
-        mean_q, mean_u, median_q, median_u = q_u_stats(q, q_err, u, u_err)
-        
-    #parse the target name from the data_name
-    result = re.search(MJD+'_(.*)_P', data_name)
-    #print()
-    
-    plt.scatter(q, u) #u is y (vertical), q is x (horizontal) 
-    plt.title(result.group(1)+" q and u scatter plot")
-    plt.xlabel("q")
-    plt.ylabel("u")
-    
-    if(mean_med == 'mean'):
-        plt.plot([0,mean_q], [0, mean_u], 'k-', lw=1.75, alpha=0.4, linestyle = '--') #vertical
-    elif(mean_med == 'median'):
-        plt.plot([0,median_q], [0, median_u], 'k-', lw=1.75, alpha=0.4, linestyle = '--') #vertical
-    elif(mean_med == ''):
-        plt.plot([0,0], [0, 0], 'k-', lw=1.75, alpha=0.4, linestyle = '--') #vertical
-        
-    plt.grid()
-    plt.show()
-    
-    if(mean_med == 'mean'):
-        zero_pol_calib_factor=(mean_q, mean_u)
-    elif(mean_med == 'median'):
-        zero_pol_calib_factor=(median_q, median_u    )
-    elif(mean_med == ''):
-        zero_pol_calib_factor = (0,0)
-    
-    return zero_pol_calib_factor
-    #Ideally you have to recreate the data just as it was on the other end.
-    #Work on the artefact
-    """
+    A function that takes in data and calculates position angle (PA). Returns data to be used in other plot tools. More presentable publication quality style.
+
+    Parameters
+    ----------
+    input_data : tuple
+        Tuple containing a list of dictionaries with q, q error, u, u error data, and a list of date time objects (data timestamps)
+    instrumental_pol : tuple
+        Tuple of list
+    plot_show : bool, optional
+        Prints calculations for extra verbosity.  False by default 
+    verbose : bool, optional
+        Saves image to file.  False by default 
+    """  
     cal_prod = cp(inp_data) #I have copied the data
     
     print("Calibrating data...") #calibration point an
@@ -1095,46 +1135,25 @@ def calib_data(inp_data, instrumental_pol, plt_show,verbose):
         print("Data (pre cal):", inp_data)
         print("Instrumental Polarization:", instrumental_pol) 
         
-    #print("Iterate through calibrated product:")
-    
-    for k in range(0, len(cal_prod)):        
-        for l in range(1, len(cal_prod[k][ list(cal_prod[k].keys())[0]][0][1:])):
-            if(verbose):
-                print("Old val:", cal_prod[k][ list(cal_prod[k].keys())[0]][0][l])
-            cal_prod[k][ list(cal_prod[k].keys())[0]][0][l] = cal_prod[k][ list(cal_prod[k].keys())[0]][0][l] - instrumental_pol[0][0]
+    for k in range(0, len(cal_prod[0])):    #runs through the calib product    
+        for l in range(0, len(cal_prod[0][k][ list(cal_prod[0][k].keys())[0]][0][1:])):
+            if(verbose): #goes through each q value and shifts them
+                print("Old val:", cal_prod[0][ list(cal_prod[0][k].keys())[0]][0][l])
+
+            cal_prod[0][k][list(cal_prod[0][k].keys())[0]][0][l] = cal_prod[0][k][ list(cal_prod[0][k].keys())[0]][0][l] - instrumental_pol[0][0]
+
             if(verbose):            
-                print("New val:", cal_prod[k][ list(cal_prod[k].keys())[0]][0][l])
-            
-        
-        for l in range(1, len(cal_prod[k][ list(cal_prod[k].keys())[0]][2][1:])):
+                print("New val:", cal_prod[0][k][list(cal_prod[0][k].keys())[0]][0][l])
+
+        for l in range(0, len(cal_prod[0][k][list(cal_prod[0][k].keys())[0]][2][1:])):
             if(verbose):
-                print("Old val:", cal_prod[k][ list(cal_prod[k].keys())[0]][0][l])
-            cal_prod[k][ list(cal_prod[k].keys())[0]][2][l] = cal_prod[k][ list(cal_prod[k].keys())[0]][2][l] - instrumental_pol[1][0]
+                print("Old val:", cal_prod[0][k][ list(cal_prod[0][k].keys())[0]][0][l])
+                
+            cal_prod[0][k][list(cal_prod[0][k].keys())[0]][2][l] = cal_prod[0][k][ list(cal_prod[0][k].keys())[0]][2][l] - instrumental_pol[1][0]
             if(verbose):
                 print("New val:", cal_prod[k][ list(cal_prod[k].keys())[0]][0][l])
-        
-        #print("\n")
     
     return(cal_prod)
-    #for k in range(0, len(cal_prod)):
-    #    print(cal_prod[k].keys())
-    #    print(cal_prod[k][list(cal_prod[k].keys())[0]]) #
-    #    print("Len of that things. Expectation 4:", len(cal_prod[k][list(cal_prod[k].keys())[0]]    ))
-    #    for z in range(1, len(cal_prod[k][list(cal_prod[k].keys())[0]][0][:])):
-    #        print(cal_prod[k][list(cal_prod[k].keys())[0]][0][z])
-            
-    
-    #rewrite
-    #for j in range(0, len(inp_data)):
-        #inp_data[j]
-    #    for k in range(0, len(       inp_data[list(inp_data[j].keys())[0]]      )):
-    #        print("Replace Values")
-    
-    #for j in range(0, len(inp_data)):
-    #    if(verbose):
-    #        print(inp_data[j])
-    #    print(  )
-        #for h in range(0, len(     inp_data[j][list(inp_data[j].keys())[0]][0][1:]   )):
     
     """
     for dats in inp_data:
@@ -1155,10 +1174,8 @@ def calib_data(inp_data, instrumental_pol, plt_show,verbose):
         
         qs_err += dats[list(dats.keys())[0]][1][1:]
         us_err += dats[list(dats.keys())[0]][3][1:]
-    """
-        
-        
-        
+
+     
     if(plt_show):
         plt.scatter( qs_uncal , us_uncal) #orange 
         plt.scatter( qs_cal, us_cal)   #blue
@@ -1205,22 +1222,7 @@ def calib_data(inp_data, instrumental_pol, plt_show,verbose):
         plt.show()
         #if(sv_im != ''):
         #    plt.savefig(sv_im,bbox_inches='tight',pad_inches=0.1 )
-            
-
-#Per filter
-    
-#First step is to calculate q and u for zero polarization standard stars
-    
-#Second is to calculate the instrumental q and u which is the average q and u for zero pol standard
-
-#calulate q and u for high pol, subtract high pol q and u with instrumental q and u
-
-#calculate position angle. This gives you the PA correction. #That PA offset should be the original - new.
-#we expect the atan to change very little between calibration steps
-
-#Apply the calibration factors to the target data. PA correction to the target data.
-
-#Done
+    """            
 def mean_q_u_check(inp_data, n, q_u_ret, verb_arg):
     q_top = []
     q_bot = []
