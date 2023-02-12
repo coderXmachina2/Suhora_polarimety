@@ -23,8 +23,6 @@ from astropy.visualization import SqrtStretch
 from reduct_funcs import funcs_utils
 from reduct_funcs import funcs_polarimetry
 
-import matplotlib.pyplot as plt
-
 # Some style for better looking plots
 from pylab import rcParams
 plt.rcParams['font.family'] = 'sans-serif'
@@ -383,18 +381,25 @@ def plot_double_raw_v_reduced(fits_data_1, calib_files,scale_arr, sigma=False, p
 
 def calib_pipe(input_data, 
                zero_pol_data, 
-               verbose_plot_zpol=False, 
-               key_verb_t=False):
+               list_index_unstable_data=[],
+               verbose_plot_zpol=False,
+               verbose_plot_points=False,
+               verbose_text=False):
     """
     A function that implements an experimental draft pipeline. Copy and pasted
 
     Parameters
     ----------
-    input_data : tuple
+    input_data : list
         Tuple containing a list of dictionaries with q, q error, u, u error data, and a list of date time objects (data timestamps)
-    zero_pol_data : tuple
+    zero_pol_data : list
         Tuple of length 3 comprising of bias (calib_files[0]), dark (calib_files[1]), and flat (calib_files[1]).
+    list_index_unstable_data : list
+        List of indexes of the zero polarization points to be removed. Be warned, remove one and the index shifts. Practice in notebook 
+        first then proceed.
     verbose_plot_zpol : bool, optional
+        List of integers. Array that scales both image data to act as zoom. 
+    verbose_plot_points : bool, optional
         List of integers. Array that scales both image data to act as zoom. 
     key_verb_t : bool, optional
          Applies sigma_clipped_stats to image. Sigma is 3 by default.
@@ -412,18 +417,20 @@ def calib_pipe(input_data,
                                        plot_c='blue',
                                        only_means=True,
                                        pol_deg=True)
-
+    
+    #Redundant
     mean_q, mean_q_err = funcs_polarimetry.plot_q_u_stability(zero_cal_point, q_u_check='q', 
-                                                          m_plot=True, 
-                                                          plot_verbose=True)
+                                                          m_plot=verbose_plot_points, 
+                                                          plot_verbose=verbose_plot_points)
     mean_u, mean_u_err = funcs_polarimetry.plot_q_u_stability(zero_cal_point, q_u_check='u', 
-                                                          m_plot=True)
+                                                          m_plot=verbose_plot_points, 
+                                                          plot_verbose=verbose_plot_points)
 
     #This does that removal of points... how about that
-    print("Removing unstable points")
-    
-    unstable_data = [1, -1]
-    for points in unstable_data:
+    if(verbose_text):
+        print("Removing unstable points")
+
+    for points in list_index_unstable_data:
         zero_cal_point[0] = np.delete(zero_cal_point[0], points)
         zero_cal_point[1] = np.delete(zero_cal_point[1], points)
 
@@ -434,20 +441,20 @@ def calib_pipe(input_data,
                                        pol_deg=True)
         
     mean_q, mean_q_err = funcs_polarimetry.plot_q_u_stability(zero_cal_point, q_u_check='q', 
-                                                          m_plot=True, 
-                                                          plot_verbose=True)
+                                                          m_plot=verbose_plot_points, 
+                                                          plot_verbose=verbose_plot_points)
     mean_u, mean_u_err = funcs_polarimetry.plot_q_u_stability(zero_cal_point, q_u_check='u', 
-                                                          m_plot=True)
+                                                          m_plot=verbose_plot_points, 
+                                                          plot_verbose=verbose_plot_points)
 
-    if(key_verb_t):
+    if(verbose_text):
         print("For all 0 pols. q n u instrumental points:")
         print("q inst:", mean_q, u"\u00B1",mean_q_err)
         print("u inst:", mean_u, u"\u00B1",mean_u_err)
         print("\n")    
     
     c = 1
-    cal_c = 0
-
+    
     cal_targ = [[],
                 []]
     
@@ -484,7 +491,7 @@ def calib_pipe(input_data,
                   
         #compute this ting called the slice
         #the_slice = [list(x.keys())[0] for x in G191_low_pol[0:c]]
-        #if(key_verb_t):
+        #if(verbose_text):
         #    print("For 0 pols:", the_slice,the_slice[0])
         #    print("And targets:", targ_slice[k])
         #    print("q cal:", q_cal[0], u"\u00B1", q_cal[1])
