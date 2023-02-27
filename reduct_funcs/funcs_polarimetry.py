@@ -93,10 +93,10 @@ def calc_pd2(input_data,
     sv_arg : bool, optional
         Saves image to file.  False by default 
     """   
-    c=0
-    print("Calculate and plot polarization degree for", len(input_data), "input types without returning data")
-    [print("Type",  c+ 1, "has length:", len(x[0]), "entries") for x in input_data]
-       
+    print("Calculate and plot polarization degree for", len(input_data), "inputs without returning data.")
+    for k in range(0, len(input_data)): 
+        print("Data", k+1, "has length", len(input_data[k][0]) )
+        
     pol_d_array = []
     pol_d_err_array = []
     t_array = []
@@ -202,9 +202,10 @@ def calc_pa2(input_data,
     sv_polpa_img : bool, optional
         Saves image to file.  False by default 
     """
-    c=0
+    
     print("Calculate and plot polarization degree for", len(input_data), "input types without returning data")
-    [print("Type",  c+ 1, "has length:", len(x[0]), "entries") for x in input_data]
+    for k in range(0, len(input_data)): 
+        print("Data", k+1, "has length", len(input_data[k][0]) )
     
     pol_pa_array = []
     pol_pa_err_array = []
@@ -319,16 +320,16 @@ def calc_PD_stability(input_data,
     
     if(corr_MJD):
         if(targ_corr_MJD=='EECEP'):
-            with open('./data_pickles/MJD_corr_pix.pickle', 'rb') as fid: #This is saved in pickle
+            with open('./data_pickles/MJD_corr_pix.pickle', 'rb') as fid: #
                 corr_da = pickle.load(fid)
         elif(targ_corr_MJD=='bd64'):
-            with open('./data_pickles/MJD_corr_64106.pickle', 'rb') as fid: #This is saved in pickle
+            with open('./data_pickles/MJD_corr_64106.pickle', 'rb') as fid: #
                 corr_da = pickle.load(fid)
         elif(targ_corr_MJD=='g191'):
-            with open('./data_pickles/MJD_corr_G191.pickle', 'rb') as fid: #This is saved in pickle
+            with open('./data_pickles/MJD_corr_G191.pickle', 'rb') as fid: #
                 corr_da = pickle.load(fid)            
         elif(targ_corr_MJD=='215806'):
-            with open('./data_pickles/MJD_corr_hd215806.pickle', 'rb') as fid: #This is saved in pickle
+            with open('./data_pickles/MJD_corr_hd215806.pickle', 'rb') as fid: #
                 corr_da = pickle.load(fid)
     
     means_arr = []
@@ -420,16 +421,16 @@ def calc_PA_stability(input_data,
     
     if( corr_MJD ):
         if(targ_corr_MJD=='EECEP'):
-            with open('./data_pickles/MJD_corr_pix.pickle', 'rb') as fid: #This is saved in pickle
+            with open('./data_pickles/MJD_corr_pix.pickle', 'rb') as fid: 
                 corr_da = pickle.load(fid)
         elif(targ_corr_MJD=='bd64'):
-            with open('./data_pickles/MJD_corr_64106.pickle', 'rb') as fid: #This is saved in pickle
+            with open('./data_pickles/MJD_corr_64106.pickle', 'rb') as fid: 
                 corr_da = pickle.load(fid)
         elif(targ_corr_MJD=='g191'):
-            with open('./data_pickles/MJD_corr_G191.pickle', 'rb') as fid: #This is saved in pickle
+            with open('./data_pickles/MJD_corr_G191.pickle', 'rb') as fid: 
                 corr_da = pickle.load(fid)            
         elif(targ_corr_MJD=='215806'):
-            with open('./data_pickles/MJD_corr_hd215806.pickle', 'rb') as fid: #This is saved in pickle
+            with open('./data_pickles/MJD_corr_hd215806.pickle', 'rb') as fid: 
                 corr_da = pickle.load(fid)
             
     means_arr = []
@@ -689,11 +690,11 @@ def plot_q_u_stability(input_data,
     q_u_check : str
         String to identify data file for correcting MJD
     sv_im : bool, optional
-        Multiply calculated pd values by 180/pi to get position angle in degree degree. 
+        Saves image to file.  False by default  
     plot_verbose : bool, optional
         Prints calculations for extra verbosity.  False by default 
     m_plot : bool, optional
-        Saves image to file.  False by default 
+        Makes plot
     """
     
     means_arr = []
@@ -885,7 +886,6 @@ def q_n_u_stack_plot_v2(pol_data,
     key_verb : bool, optional
         Counts all data 
     """
-    
     dtypes = ['zero pol', 'high pol', 'target']
     if(key_verb):
         for k in range(0,3):
@@ -897,7 +897,7 @@ def q_n_u_stack_plot_v2(pol_data,
     high_pol_date_strs = []
     
     #####
-    target_qs = []    #This is what is plotted
+    target_qs = []
     target_us = []
     
     #####
@@ -941,75 +941,33 @@ def q_n_u_stack_plot_v2(pol_data,
 
     for i in range(0,3):
         if(i==0):
-            #print(i, dtypes[i], len(pol_data[i][0]))
             for l in range(0, len(pol_data[i][0])):
-                #print(    pol_data[0][0][l][list(pol_data[0][0][l].keys())[0]][0]     ) #q
-                #print(  pol_data[0][0][l] , np.mean(  list(pol_data[0][0][l].keys())[0]     )  )
-                #print(l, "zpol")
-                z_pol_qmeans.append(np.mean(  pol_data[i][0][l][list(pol_data[i][0][l].keys())[0]][0]))
-                z_pol_qmeans_err.append(np.mean(  pol_data[i][0][l][list(pol_data[i][0][l].keys())[0]][1]))
-                
+                z_pol_qmeans.append(np.mean(pol_data[i][0][l][list(pol_data[i][0][l].keys())[0]][0]))
+                z_pol_qmeans_err.append(np.mean(pol_data[i][0][l][list(pol_data[i][0][l].keys())[0]][1]))
                 z_pol_umeans.append(np.mean(  pol_data[i][0][l][list(pol_data[i][0][l].keys())[0]][2]))
-                z_pol_umeans_err.append(np.mean(  pol_data[i][0][l][list(pol_data[i][0][l].keys())[0]][3]))
-
-                #z_pol_date_strs.append(list(things.keys())[0])
-
-                #z_pol_qs = target_qs + things[list(things.keys())[0]][0][1:]
-                #z_pol_qstds = targ_qstds + things[list(things.keys())[0]][1][1:]
-                #z_pol_us = target_us + things[list(things.keys())[0]][2][1:] 
-                #z_pol_ustds = targ_ustds + things[list(things.keys())[0]][3][1:]            
+                z_pol_umeans_err.append(np.mean(  pol_data[i][0][l][list(pol_data[i][0][l].keys())[0]][3]))         
         elif(i==1):
-            #print(i, dtypes[i], len(pol_data[i][0]))
             for l in range(0, len(pol_data[i][0])):
-                #print(l, "hpol")
                 h_pol_qmeans.append(np.mean(  pol_data[i][0][l][list(pol_data[i][0][l].keys())[0]][0]))
                 h_pol_qmeans_err.append(np.mean(  pol_data[i][0][l][list(pol_data[i][0][l].keys())[0]][1]))
-                
                 h_pol_umeans.append(np.mean(  pol_data[i][0][l][list(pol_data[i][0][l].keys())[0]][2]))
                 h_pol_umeans_err.append(np.mean(  pol_data[i][0][l][list(pol_data[i][0][l].keys())[0]][3]))
-                
                 if(len(cal_data) !=0):
                     cal_h_pol_qmeans.append(np.mean( cal_data[1][0][l][list(cal_data[1][0][l].keys())[0]][0] ))
                     cal_h_pol_qmeans_err.append(np.mean( cal_data[1][0][l][list(cal_data[1][0][l].keys())[0]][1] ))
-                    
-
                     cal_h_pol_umeans.append(np.mean( cal_data[1][0][l][list(cal_data[1][0][l].keys())[0]][2] ))
                     cal_h_pol_umeans_err.append(np.mean( cal_data[1][0][l][list(cal_data[1][0][l].keys())[0]][3] ))
-                    
-                    #pol_data[i][0][l][list(pol_data[i][0][l].keys())[0]][0]          ))
-                
-                    #cal_targ_qmeans.append(np.mean(  pol_data[i][0][l][list(pol_data[i][0][l].keys())[0]][0]))
-                    #cal_targ_qmeans_err.append(   np.mean(  pol_data[i][0][l][list(pol_data[i][0][l].keys())[0]][1]   )     )
-                
-                    #cal_targ_umeans.append(np.mean(  pol_data[i][0][l][list(pol_data[i][0][l].keys())[0]][2]))
-                    #cal_targ_umeans_err.append(np.mean(  pol_data[i][0][l][list(pol_data[i][0][l].keys())[0]][3])       )
         elif(i==2):
-            #print(i, dtypes[i], len(pol_data[i][0]))
             for l in range(0, len(pol_data[i][0])):
-                #print(l, "targ")
                 targ_qmeans.append(np.mean(  pol_data[i][0][l][list(pol_data[i][0][l].keys())[0]][0]))
                 targ_qmeans_err.append(   np.mean(  pol_data[i][0][l][list(pol_data[i][0][l].keys())[0]][1]   )     )
-                
-                #print(l,"Thing", np.mean(  pol_data[i][0][l][list(pol_data[i][0][l].keys())[0]][2]))
                 targ_umeans.append(np.mean(  pol_data[i][0][l][list(pol_data[i][0][l].keys())[0]][2]))
                 targ_umeans_err.append(np.mean(  pol_data[i][0][l][list(pol_data[i][0][l].keys())[0]][3])       )
-                
                 if(len(cal_data) !=0):
                     cal_targ_qmeans.append(np.mean( cal_data[0][0][l][list(cal_data[0][0][l].keys())[0]][0] ))
                     cal_targ_qmeans_err.append(np.mean( cal_data[0][0][l][list(cal_data[0][0][l].keys())[0]][1] ))
-                    
-
                     cal_targ_umeans.append(np.mean( cal_data[0][0][l][list(cal_data[0][0][l].keys())[0]][2] ))
-                    cal_targ_umeans_err.append(np.mean( cal_data[0][0][l][list(cal_data[0][0][l].keys())[0]][3] ))
-                    
-                    #pol_data[i][0][l][list(pol_data[i][0][l].keys())[0]][0]          ))
-                
-                    #cal_targ_qmeans.append(np.mean(  pol_data[i][0][l][list(pol_data[i][0][l].keys())[0]][0]))
-                    #cal_targ_qmeans_err.append(   np.mean(  pol_data[i][0][l][list(pol_data[i][0][l].keys())[0]][1]   )     )
-                
-                    #cal_targ_umeans.append(np.mean(  pol_data[i][0][l][list(pol_data[i][0][l].keys())[0]][2]))
-                    #cal_targ_umeans_err.append(np.mean(  pol_data[i][0][l][list(pol_data[i][0][l].keys())[0]][3])       )
-                
+                    cal_targ_umeans_err.append(np.mean( cal_data[0][0][l][list(cal_data[0][0][l].keys())[0]][3] ))               
     
     simp_counter = 1
     
@@ -1081,127 +1039,13 @@ def q_n_u_stack_plot_v2(pol_data,
                     axs[r, o].scatter(cal_targ_qmeans, cal_targ_umeans, color = cal_c_wheel[0], alpha=alpha_c)
                     axs[r, o].errorbar(cal_targ_qmeans, cal_targ_umeans, xerr=cal_targ_qmeans_err, yerr=cal_targ_umeans_err, 
                                    lw=0.75, fmt="*", color=cal_c_wheel [0], alpha=0.1)
-
+                axs[r, o].legend(['Uncalibrated Target', 'Zero pol', 'Uncalibrated data'])                
                 axs[r, o].axhline(y=0, color = 'black', lw=black_lw)
                 axs[r, o].axvline(x=0, color = 'black', lw=black_lw)
 
                 axs[r, o].grid()
                 axs[r, o].set_title('Data Combined')               
 
-    """
-    for things in pol_data:
-        #stripper loop
-        print(simp_counter, list(things.keys())[0])#, ,things[list(things.keys())[0]], type(things[list(things.keys())[0]]))
-        simp_counter+=1
-        if('ee' in list(things.keys())[0] or 'EE'  in list(things.keys())[0]):
-            targ_qmeans.append(np.mean(things[list(things.keys())[0]][0][1:])) #means
-            targ_umeans.append(np.mean(things[list(things.keys())[0]][2][1:])) #ummeans
-                                                                               #mean std
-            targ_date_strs.append(list(things.keys())[0])
-            
-            target_qs = target_qs + things[list(things.keys())[0]][0][1:]
-            targ_qstds = targ_qstds + things[list(things.keys())[0]][1][1:]
-            target_us = target_us + things[list(things.keys())[0]][2][1:] 
-            targ_ustds = targ_ustds + things[list(things.keys())[0]][3][1:]
-            
-        elif('g191' in list(things.keys())[0] or 'G191' in list(things.keys())[0] or 'hd212311' in list(things.keys())[0]):
-            z_pol_qmeans.append(np.mean(things[list(things.keys())[0]][0][1:]))
-            z_pol_umeans.append(np.mean(things[list(things.keys())[0]][2][1:]))
-            zero_pol_date_strs.append(list(things.keys())[0])
-            
-            z_pol_qs = z_pol_qs + things[list(things.keys())[0]][0][1:]
-            z_pol_qstds = z_pol_qstds + things[list(things.keys())[0]][1][1:]
-            z_pol_us = z_pol_us + things[list(things.keys())[0]][2][1:]
-            z_pol_ustds = z_pol_ustds + things[list(things.keys())[0]][3][1:]
-        
-        elif('215806' in list(things.keys())[0] or '287' in list(things.keys())[0] or '204827' in list(things.keys())[0] or '251204' in list(things.keys())[0] or '64106' in list(things.keys())[0]):
-            h_pol_qmeans.append(np.mean(things[list(things.keys())[0]][0][1:]))
-            h_pol_umeans.append(np.mean(things[list(things.keys())[0]][2][1:]))
-            high_pol_date_strs.append(list(things.keys())[0])
-            
-            h_pol_qs = h_pol_qs + things[list(things.keys())[0]][0][1:]
-            h_pol_qstds = h_pol_qstds + things[list(things.keys())[0]][1][1:]
-            h_pol_us = h_pol_us + things[list(things.keys())[0]][2][1:]
-            h_pol_ustds = h_pol_ustds + things[list(things.keys())[0]][3][1:]     
-
-    
-    fig, axs = plt.subplots(2, 2)
-    fig.suptitle(" Pol Scatter ")
-
-    axs[0, 0].scatter(target_qs, target_us, color = 'red', alpha=0.11)
-    axs[0, 0].errorbar(target_qs, target_us, xerr=targ_qstds, yerr=targ_ustds, lw=0.75, fmt="o", color="r", alpha=0.1)
-
-    axs[0, 0].grid()
-    axs[0, 0].set_title('Target')
-    axs[0, 0].tick_params(axis='both', which='major', labelsize=20)
-    axs[0, 0].set_ylabel('u', fontsize = 24)
-    axs[0, 0].set_xlabel('q', fontsize = 24)
-    axs[0, 0].axhline(y=0, color = 'black')
-    axs[0, 0].axvline(x=0, color = 'black')
-        
-        
-    if(pol_deg):
-        for z in range(0, len(targ_qmeans)):
-            axs[0, 0].plot([0,targ_qmeans[z]], [0, targ_umeans[z]], 'k-', lw=1.75, alpha=0.4, linestyle = '--')
-            axs[0, 0].text(targ_qmeans[z], targ_umeans[z], targ_date_strs[z].replace("_","\n"), rotation=-45, fontsize=10)
-
-    axs[1, 0].scatter(z_pol_qs,  z_pol_us, color = 'blue', alpha=0.11)
-    axs[1, 0].errorbar(z_pol_qs,  z_pol_us, xerr=z_pol_qstds, yerr=z_pol_ustds, lw=0.75, fmt="o", color="blue", alpha=0.1)
-    axs[1, 0].grid()
-    axs[1, 0].set_title('Zero Polarization Standard')
-    axs[1, 0].tick_params(axis='both', which='major', labelsize=20)
-    axs[1, 0].set_ylabel('u', fontsize = 24)
-    axs[1, 0].set_xlabel('q', fontsize = 24)
-    axs[1, 0].axhline(y=0, color = 'black')
-    axs[1, 0].axvline(x=0, color = 'black')
-    if(pol_deg):
-        for z in range(0, len(z_pol_qmeans)):
-            axs[1, 0].plot([0,z_pol_qmeans[z]], [0, z_pol_umeans[z]], 'k-', lw=1.75, alpha=0.4, linestyle = '--')
-            axs[1, 0].text(z_pol_qmeans[z], z_pol_umeans[z], zero_pol_date_strs[z].replace("_","\n"), rotation=-45  , fontsize=10)
-
-    axs[0, 1].scatter(h_pol_qs,  h_pol_us, color = 'green', alpha=0.11)
-    axs[0, 1].errorbar(h_pol_qs,  h_pol_us, xerr=h_pol_qstds, yerr=h_pol_ustds, lw=0.75, fmt="o", color="green", alpha=0.1)        
-        
-    axs[0, 1].grid()
-    axs[0, 1].set_title('High Polarization Standard')
-    axs[0, 1].tick_params(axis='both', which='major', labelsize=20)
-    axs[0, 1].set_ylabel('u', fontsize = 24)
-    axs[0, 1].set_xlabel('q', fontsize = 24)
-    axs[0, 1].axhline(y=0, color = 'black')
-    axs[0, 1].axvline(x=0, color = 'black')
-    if(pol_deg):
-        for z in range(0, len(h_pol_qmeans)):
-            axs[0, 1].plot([0,h_pol_qmeans[z]], [0, h_pol_umeans[z]], 'k-', lw=1.75, alpha=0.4, linestyle = '--')
-            axs[0, 1].text(h_pol_qmeans[z], h_pol_umeans[z], high_pol_date_strs[z].replace("_","\n"), rotation=-45  , fontsize=10)
-
-    axs[1, 1].scatter(target_qs, target_us, color = 'red', alpha=0.11)
-    axs[1, 1].errorbar(target_qs, target_us, xerr=targ_qstds, yerr=targ_ustds, lw=0.75, fmt="o", color="red", alpha=0.1)
-    axs[1, 1].scatter(h_pol_qs,  h_pol_us, color = 'green', alpha=0.11)
-    axs[1, 1].errorbar(h_pol_qs,  h_pol_us, xerr=h_pol_qstds, yerr=h_pol_ustds, lw=0.75, fmt="o", color="green", alpha=0.1)
-    axs[1, 1].scatter(z_pol_qs,  z_pol_us, color = 'blue', alpha=0.11)
-    axs[1, 1].errorbar(z_pol_qs,  z_pol_us, xerr=z_pol_qstds, yerr=z_pol_ustds, lw=0.75, fmt="o", color="blue", alpha=0.1)
-    if(pol_deg):
-        for z in range(0, len(targ_qmeans)):
-            axs[1, 1].plot([0,targ_qmeans[z]], [0, targ_umeans[z]], 'k-', lw=1.75, alpha=0.4, linestyle = '--')
-        for z in range(0, len(z_pol_qmeans)):
-            axs[1, 1].plot([0,z_pol_qmeans[z]], [0, z_pol_umeans[z]], 'k-', lw=1.75, alpha=0.4, linestyle = '--')
-        for z in range(0, len(h_pol_qmeans)):
-            axs[1, 1].plot([0,h_pol_qmeans[z]], [0, h_pol_umeans[z]], 'k-', lw=1.75, alpha=0.4, linestyle = '--')
-
-    axs[1, 1].grid()
-    axs[1, 1].set_title('All objects combined')
-    axs[1, 1].tick_params(axis='both', which='major', labelsize=20)
-    axs[1, 1].set_ylabel('u', fontsize = 24)
-    axs[1, 1].set_xlabel('q', fontsize = 24)
-    axs[1, 1].axhline(y=0, color = 'black')
-    axs[1, 1].axvline(x=0, color = 'black')
-
-    fig.tight_layout()
-        
-    if(sv_im_str):
-        plt.savefig(sv_im_str,bbox_inches='tight',
-                        pad_inches=0.1)   
-    """        
 def calib_data(inp_data, 
                instrumental_pol, 
                plt_show = False,
@@ -1247,7 +1091,7 @@ def calib_data(inp_data,
     
     return(cal_prod)
     
-def mean_q_u_check(inp_data, n, q_u_ret, verb_arg):
+def mean_q_u_check(inp_data, n, q_u_ret, verb_arg=False):
     """
     Checks method of calculation of mean
     """

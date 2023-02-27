@@ -6,7 +6,6 @@ import shutil
 import importlib
 
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
 
 from astropy.time import Time
@@ -16,18 +15,20 @@ from datetime import datetime, timedelta
 from reduct_funcs import funcs_polarimetry
 importlib.reload(funcs_polarimetry)
 
-def FITS_CHECKER(data_str, param_check, verb_arg=False):   
+def FITS_CHECKER(data_str, 
+                 param_check,
+                 verb_arg=False):   
     """
-    A function that that checks a FITs file for quick checking. THis function is wrapped around astropy.io.fits.open(). Try using iteratively in a loop. Returns parameter that is checked.
+    A function that that checks a FITs file for quick checking. This function is a wrapper for astropy.io.fits.open(). Try using iteratively in a loop in the main program. Returns parameter that is checked.
 
     Parameters
     ----------
     data_str : str
-        Directory filename path.
+        Data directory filename path.
     param_check : str
          parameter to be checked
     verb_arg : bool, optional
-         Print checked parameter. True by default
+         Print checked parameter. By default false
     """
     
     load_data = astropy.io.fits.open(data_str)
@@ -44,7 +45,7 @@ def load_pol_data(in_str,
                   verbose_val_checks = False,
                   verbose_midnight_calc=False):
     """
-    A function that takes in a relative path filename and directory string and returns a list containing a dictionary of data in the standard format for polarimetric analysis ({'<date>_<obj_name>':(q, q_data, u, u_data)}) and the midpoint of all time obs in the file. Used recursively in util funcs to load data. Returns a dictionary of list data.
+    A function that takes in a relative path filename and directory string and returns a list containing a dictionary of data in the standard format for polarimetric analysis [[{'<date>_<obj_name>':(q, q_data, u, u_data)}],[<datetime>]] and the midpoint of all time obs in the file. Used recursively in util funcs to load data. Returns a dictionary of list data.
 
     Parameters
     ----------
@@ -331,22 +332,37 @@ def correct_time(Starg,
         
     return (corr_dict, dict_mjd)
     
-def combine_excels(excel_1, excel_2, sv_out , MJD, targ_obj, obs_filt ,strt_ind, end_ind):
+def combine_excels(excel_1, 
+                   excel_2, 
+                   excel_sv_out, 
+                   MJD, 
+                   targ_obj, 
+                   obs_filt,
+                   strt_ind, 
+                   end_ind):
     """
-    Function that takes in two excel scripts and combines them into the usual 1. Does not work since 
+    A utility function that takes in two excel scripts and combines them into the usual 1. Automatically computes q and u
     
-    One last chance to do this bro. Today 23/10/2021. Do it.
-    """
-    #create new workbookq
+    Parameters
+    ----------
+    excel_1 : str
+        excel filename
+    excel_2 : str
+        excel filename 
+    excel_sv_out : bool, optional
+        Prints some pandas data frame for verbosity. By default false.  
+    verbose_midnight : bool, optional
+        Prints some t_obs for either before or after midnight for verbosity. By default false.
     
+    """    
     print("Sheet 1:",excel_1)
     print("Sheet 2:",excel_2)
-    
+        
     filename= targ_obj+"_P1-P3"+obs_filt
-    workbook = xlsxwriter.Workbook(sv_out+'master_'+MJD+"_"+ filename+str(strt_ind)+"-" +str(end_ind)+'_mac_comb.xlsx')
+    workbook = xlsxwriter.Workbook(excel_sv_out+'master_'+MJD+"_"+ filename+str(strt_ind)+"-" +str(end_ind)+'_mac_comb.xlsx')
     worksheet = workbook.add_worksheet()
     
-    print('output:', sv_out+'master_'+MJD+"_"+filename+str(strt_ind)+"-" +str(end_ind)+'_mac_comb.xlsx')
+    print('output:', excel_sv_out+'master_'+MJD+"_"+filename+str(strt_ind)+"-" +str(end_ind)+'_mac_comb.xlsx')
     
     worksheet.write('A1', 'int')
     worksheet.write('B1', 'time obs')
@@ -402,7 +418,7 @@ def combine_excels(excel_1, excel_2, sv_out , MJD, targ_obj, obs_filt ,strt_ind,
             
     for u in range(1, np.min([sheet_1.nrows,   sheet_2.nrows      ])):
         
-        #First do q and q error
+        #Compute q and q error
         p_a = 4*(sheet_2.cell_value(rowx=u, colx=7)**2)*(sheet_2.cell_value(rowx=u, colx=12)**2) + (sheet_2.cell_value(rowx=u, colx=11)**2)*(sheet_2.cell_value(rowx=u, colx=8)**2)
         p_b = (sheet_2.cell_value(rowx=u, colx=7) + sheet_2.cell_value(rowx=u, colx=11))**4
         p_ans = np.sqrt(p_a/p_b)
@@ -410,14 +426,14 @@ def combine_excels(excel_1, excel_2, sv_out , MJD, targ_obj, obs_filt ,strt_ind,
         worksheet.write(u, 26, (sheet_2.cell_value(rowx=u, colx=7)-sheet_2.cell_value(rowx=u, colx=11))/(sheet_2.cell_value(rowx=u, colx=7)+sheet_2.cell_value(rowx=u, colx=11))   )
         worksheet.write(u, 27, p_ans)       
 
-        #Then do u and u error
+        #Compute u and u error
         p_a = 4*(sheet_1.cell_value(rowx=u, colx=7)**2)*(sheet_1.cell_value(rowx=u, colx=12)**2) + (sheet_1.cell_value(rowx=u, colx=11)**2)*(sheet_1.cell_value(rowx=u, colx=8)**2)
         p_b = (sheet_1.cell_value(rowx=u, colx=7) + sheet_1.cell_value(rowx=u, colx=11))**4
         p_ans = np.sqrt(p_a/p_b)
         
-        #Then do PD
+        #TODO: calculate PD
         
-        #Then do PA
+        #TODO: calculate PA
         
         worksheet.write(u, 28, (sheet_1.cell_value(rowx=u, colx=7)-sheet_1.cell_value(rowx=u, colx=11))/(sheet_1.cell_value(rowx=u, colx=7)+sheet_1.cell_value(rowx=u, colx=11))) #write q, q_err
         worksheet.write(u, 29, p_ans  ) #write q, q_err
@@ -429,7 +445,18 @@ def list_autoloader(input_string,
                     verbose_filename=False,
                     verbose_process=False):
     """
-    #A function that takes in a list
+    A utility function that takes in two excel scripts and combines them into the usual 1. Automatically computes q and u
+    
+    Parameters
+    ----------
+    excel_1 : str
+        excel filename
+    excel_2 : str
+        excel filename 
+    excel_sv_out : bool, optional
+        Prints some pandas data frame for verbosity. By default false.  
+    verbose_midnight : bool, optional
+        Prints some t_obs for either before or after midnight for verbosity. By default false.
     """
     list_return = []
     
@@ -455,7 +482,7 @@ def list_autoloader(input_string,
 def autoloader(verb_arg):
     """
     #Not working. 31/07/2021. Still not working. 04/01/2023.
-    #Autloader using glob and a bunch of exceptions
+    #An attempt at an autloader using glob and a bunch of exceptions
     """
     
     if(verb_arg):
@@ -504,23 +531,19 @@ def autoloader(verb_arg):
                 #If the list contains an item with the word corr. Drop everything else except the item with the word corr
                 #else if there is not item with the word corr. Just take the thing with comb (else do nothing)
                 #if 'g191b2b' in sha or 'hd212311' in sha:
-                #print("Low Polarization standard:", sha)
-               
-            
+                #print("Low Polarization standard:", sha)       
             
     #Check this out!
     #Suggestion: Create a text file that holds a list of text files for different data types and use preexisting
     #developed load pol data code to iterate through this list and the same product as data_loader
     #This would make good practice. Write and demo your own data loader that has to handle different data types 
     #and this will be a step towards data mastery.
-
-    
     
     return (ret_list_target, ret_list_zero_pol, ret_list_high_pol)
     
 def sample_data_loader():
     """
-    #Load small sample
+    #Load small data sample
     """
        
     ret_list_zero_pol = []
@@ -1159,7 +1182,9 @@ def data_loader():
 
     return (ret_list_target, ret_list_zero_pol, ret_list_high_pol)
     
-def filter_data(pol_data, filter_strings, verb_arg):
+def filter_data(pol_data, 
+                filter_strings, 
+                verb_arg=False):
     """
     #A look for this funtion
     """
@@ -1176,13 +1201,14 @@ def filter_data(pol_data, filter_strings, verb_arg):
                 
     return(TOI_list)
     
-def make_dir(directory_path ):
+def make_dir(directory_path, verbose_arg = False ):
     """
-    #used for extracting and unloading data
+    #used for extracting and unloading FITS data
     """
     x = glob.glob(directory_path+'/*')
-    print("Inside dir:", directory_path, len(x), "Things detected")
-    print("Print without .gz 3:", x[0][:-3])
+    if(verbose_arg):
+        print("Inside dir:", directory_path, len(x), "Things detected")
+        print("Print without .gz 3:", x[0][:-3])
     for archives in x:
         with gzip.open(archives, 'rb') as f_in:
             with open( archives[:-3], 'wb') as f_out:
