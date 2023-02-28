@@ -4,7 +4,6 @@ import astropy
 import ccdproc
 
 from copy import deepcopy as cp
-from scipy import stats
 from astropy import units as u
 from astropy.nddata import CCDData
 
@@ -23,7 +22,6 @@ from astropy.visualization import SqrtStretch
 from reduct_funcs import funcs_utils
 from reduct_funcs import funcs_polarimetry
 
-# Some style for better looking plots
 from pylab import rcParams
 plt.rcParams['font.family'] = 'sans-serif'
 plt.rcParams['font.sans-serif'] = ['Verdana']
@@ -42,7 +40,10 @@ plt.rcParams['figure.subplot.bottom'] = 0.15
 plt.rcParams['ytick.labelsize'] = 10
 plt.rcParams['xtick.labelsize'] = 10
 
-def make_calib_files(bias, dark, flat_p1, flat_p3):
+def make_calib_files(bias, 
+                     dark, 
+                     flat_p1, 
+                     flat_p3):
     """
     A function that takes in lists of bias, dark, p1 and p3 FITS files. Creates master bias, master dark, and master flat by taking the median of the data and returning result.
 
@@ -109,7 +110,7 @@ def file_splits(list_data):
     
     for k in range(0, len(list_data)):
         if(astropy.io.fits.open(list_data[0])[0].header['IMAGETYP'] == 'object'):
-            exp_times.append(  astropy.io.fits.open(list_data[k])[0].header['EXPTIME']   ) 
+            exp_times.append(astropy.io.fits.open(list_data[k])[0].header['EXPTIME']   ) 
         filts.append(astropy.io.fits.open(list_data[k])[0].header['FILTER'])
         objects.append(astropy.io.fits.open(list_data[k])[0].header['OBJECT'])
         img_type.append(astropy.io.fits.open(list_data[k])[0].header['IMAGETYP'])
@@ -119,7 +120,8 @@ def file_splits(list_data):
           "Filters:", [(filters, filts.count(filters)) for filters in set(filts)],
           "\nTotal " + str(np.round(sum(exp_times)/60)) + " min exposure time" if astropy.io.fits.open(list_data[0])[0].header['IMAGETYP'] == 'object' else '' )
 
-def reduction(raw_data, calib_files):
+def reduction(raw_data, 
+              calib_files):
     """
     A function that takes in openned FITS image data and performs reduction with raw numpy routines (direct quick and dirty computation). Image subtract bias, subtract dark, and divide flat. Returns 2d nd array data.
 
@@ -137,9 +139,11 @@ def reduction(raw_data, calib_files):
                           
     return(bs_ds_ff_data)
 
-def reduction_ccd_proc(unredu_fits_data, calib_files, key):
+def reduction_ccd_proc(unredu_fits_data, 
+                       calib_files, 
+                       key):
     """
-    A function that takes in FITS file data and performs reduction with ccd proc routines. Image subtract bias, subtract dark, and divide flat. Was still in testing and not used in deployment for EAS 2022. As of 21/12/2022 still not deployed and in testing but last I recall the results were approximately similar with quick and dirty method. Do another round of verification adn deploy.Returns 2D nd array data.
+    A function that takes in FITS file data and performs reduction with ccd proc routines. Image subtract bias, subtract dark, and divide flat. Was still in testing and not used in deployment for EAS 2022. As of 21/12/2022 still not deployed and in testing but last I recall the results were approximately similar with quick and dirty method. Followup to do another round of verification and deploy.Returns 2D nd array data.
 
     Parameters
     ----------
@@ -226,7 +230,10 @@ def reduction_ccd_proc(unredu_fits_data, calib_files, key):
                           
     return(shad_cop)
 
-def plot_raw_double_compare(fits_data_1, scale_arr, comp_what = ["plot A", "plot B"], sv_img = False):
+def plot_raw_double_compare(fits_data_1, 
+                            scale_arr, 
+                            comp_what = ["plot A", "plot B"], 
+                            sv_img = False):
     """
     A function that plots FITS image data. Does not return anything
 
@@ -291,7 +298,12 @@ def plot_raw_double_compare(fits_data_1, scale_arr, comp_what = ["plot A", "plot
     fig.tight_layout(pad=0.6, w_pad=0.5, h_pad=1.0)
     plt.show()
         
-def plot_double_raw_v_reduced(fits_data_1, calib_files,scale_arr, sigma=False, plot=True, sv_img=False):
+def plot_double_raw_v_reduced(fits_data_1, 
+                              calib_files,
+                              scale_arr, 
+                              sigma=False, 
+                              plot=True, 
+                              sv_img=False):
     """
     A function that plots fits image data. Does not return anything
 
@@ -378,6 +390,52 @@ def plot_double_raw_v_reduced(fits_data_1, calib_files,scale_arr, sigma=False, p
                     pad_inches=0.1)
        
     return(reduced_fits_data)
+
+def calib_data(inp_data, 
+               instrumental_pol, 
+               plt_show = False,
+               verbose=False):
+    """
+    A function that takes in data and value for instrumental polarization and computes calibration shift. Returns standard data artefact.
+
+    Parameters
+    ----------
+    input_data : tuple
+        Tuple containing a list of dictionaries with q, q error, u, u error data, and a list of date time objects (data timestamps)
+    instrumental_pol : tuple
+        Tuple of list
+    plot_show : bool, optional
+        Prints calculations for extra verbosity.  False by default 
+    verbose : bool, optional
+        Saves image to file.  False by default 
+    """  
+    cal_prod = cp(inp_data) #I have copied the data
+    
+    if(verbose):
+        print("Calibrating data...") #calibration point an
+        print("Data (pre cal):", inp_data)
+        print("Instrumental Polarization:", instrumental_pol) 
+        
+    for k in range(0, len(cal_prod[0])):    #runs through the calib product    
+        for l in range(0, len(cal_prod[0][k][ list(cal_prod[0][k].keys())[0]][0][1:])):
+            if(verbose): #goes through each q value and shifts them
+                print("Old val:", cal_prod[0][ list(cal_prod[0][k].keys())[0]][0][l])
+
+            cal_prod[0][k][list(cal_prod[0][k].keys())[0]][0][l] = cal_prod[0][k][ list(cal_prod[0][k].keys())[0]][0][l] - instrumental_pol[0][0]
+
+            if(verbose):            
+                print("New val:", cal_prod[0][k][list(cal_prod[0][k].keys())[0]][0][l])
+
+        for l in range(0, len(cal_prod[0][k][list(cal_prod[0][k].keys())[0]][2][1:])):
+            if(verbose):
+                print("Old val:", cal_prod[0][k][ list(cal_prod[0][k].keys())[0]][0][l])
+                
+            cal_prod[0][k][list(cal_prod[0][k].keys())[0]][2][l] = cal_prod[0][k][ list(cal_prod[0][k].keys())[0]][2][l] - instrumental_pol[1][0]
+            if(verbose):
+                print("New val:", cal_prod[k][ list(cal_prod[k].keys())[0]][0][l])
+    
+    return(cal_prod)
+
 
 def calib_pipe(input_data, 
                zero_pol_data, 

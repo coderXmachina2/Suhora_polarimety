@@ -33,7 +33,7 @@ def check_pol_std():
 
     Parameters
     ----------
-    None.
+        None.
     """
     high_pol_std = ['BDp64106', 
                 'BDp59389', 
@@ -77,21 +77,20 @@ def calc_pd2(input_data,
 
     Parameters
     ----------
-    input_data : List
-        List of standardised polarimetric data containing a list of dictionaries with q, q error, u, u error data, and a list of date time
-        objects (data timestamps)
-    plot_legend : List,
-        List of strings that define the legends on the plot. Manually input the target name.
-    plot_title : str,
-        String that defines the title of the plot. Used in the filename if the pol data is saved to file.
-    perc_arg : bool, optional
-        Multiply calculated pd values by 100 to get percentage polarization. 
-    verbose_calc_pd : bool, optional
-        Prints calculations for extra verbosity.  False by default
-    verbose_data : bool, optional
-        Prints calculations for extra verbosity.  False by default 
-    sv_arg : bool, optional
-        Saves image to file.  False by default 
+        input_data : List
+            List of standardised polarimetric data containing a list of dictionaries with q, q error, u, u error data, and a list of date time objects (data timestamps)
+        plot_legend : List,
+            List of strings that define the legends on the plot. Manually input the target name.
+        plot_title : str,
+            String that defines the title of the plot. Used in the filename if the pol data is saved to file.
+        perc_arg : bool, optional
+            Multiply calculated pd values by 100 to get percentage polarization.
+        verbose_calc_pd : bool, optional
+            Prints calculations for extra verbosity.  False by default.
+        verbose_data : bool, optional
+            Prints calculations for extra verbosity.  False by default.
+        sv_arg : bool, optional
+            Saves image to file.  False by default.
     """   
     print("Calculate and plot polarization degree for", len(input_data), "inputs without returning data.")
     for k in range(0, len(input_data)): 
@@ -186,21 +185,20 @@ def calc_pa2(input_data,
 
     Parameters
     ----------
-    input_data : List
-        List of standardised polarimetric data containing a list of dictionaries with q, q error, u, u error data, and a list of date time
-        objects (data timestamps)
-    plot_legend : List,
-        List of strings that define the legends on the plot. Manually input the target name.
-    plot_title : str,
-        String that defines the title of the plot. Used in the filename if the pol data is saved to file.
-    deg_arg : bool, optional
-        Multiply calculated pd values by 180/pi to get pol angle degree. 
-    verbose_calc_pa : bool, optional
-        Prints calculations for extra verbosity.  False by default
-    verbose_data : bool, optional
-        Prints calculations for extra verbosity.  False by default 
-    sv_polpa_img : bool, optional
-        Saves image to file.  False by default 
+        input_data : List
+            List of standardised polarimetric data containing a list of dictionaries with q, q error, u, u error data, and a list of date time objects (data timestamps)
+        plot_legend : List,
+            List of strings that define the legends on the plot. Manually input the target name.
+        plot_title : str,
+            String that defines the title of the plot. Used in the filename if the pol data is saved to file.
+        deg_arg : bool, optional
+            Multiply calculated pd values by 180/pi to get pol angle degree. 
+        verbose_calc_pa : bool, optional
+            Prints calculations for extra verbosity.  False by default
+        verbose_data : bool, optional
+            Prints calculations for extra verbosity.  False by default 
+        sv_polpa_img : bool, optional
+            Saves image to file.  False by default 
     """
     
     print("Calculate and plot polarization degree for", len(input_data), "input types without returning data")
@@ -298,20 +296,20 @@ def calc_PD_stability(input_data,
 
     Parameters
     ----------
-    input_data : tuple
-        Tuple containing a list of dictionaries with q, q error, u, u error data, and a list of date time objects (data timestamps)
-    targ_corr_MJD : str
-        String to identify filename for correcting MJD. Used inconjunctuiib if corr_MJD=True
-    corr_MJD : bool, optional
-        Corrects MJD if MJD needs correcting
-    perc_arg : bool, optional
-        Multiply calculated pd values by 100 to get percentage polarization. 
-    to_excel : bool, optional
-        Saves data to file.  False by default 
-    verbose_calc_pd : bool, optional
-        Multiply calculated pd values by 100 to get percentage polarization degree. 
-    verbose_mjd_align_check : bool, optional
-        Prints calculations for extra verbosity.  False by default 
+        input_data : tuple
+            Tuple containing a list of dictionaries with q, q error, u, u error data, and a list of date time objects (data timestamps)
+        targ_corr_MJD : str
+            String to identify filename for correcting MJD. Used inconjunctuiib if corr_MJD=True
+        corr_MJD : bool, optional
+            Corrects MJD if MJD needs correcting
+        perc_arg : bool, optional
+            Multiply calculated pd values by 100 to get percentage polarization. 
+        to_excel : bool, optional
+            Saves data to file.  False by default 
+        verbose_calc_pd : bool, optional
+            Multiply calculated pd values by 100 to get percentage polarization degree. 
+        verbose_mjd_align_check : bool, optional
+            Prints calculations for extra verbosity.  False by default 
     """
     dates = sorted(input_data[1])
     objn = list(input_data[0][0].keys())[0][11:]
@@ -399,20 +397,20 @@ def calc_PA_stability(input_data,
 
     Parameters
     ----------
-    input_data : tuple
-        Tuple containing a list of dictionaries with q, q error, u, u error data, and a list of date time objects (data timestamps)
-    targ_corr_MJD : str
-        String to identify filename for correcting MJD. Used inconjunctuiib if corr_MJD=True
-    corr_MJD : bool, optional
-        Corrects MJD if MJD needs correcting
-    deg_arg : bool, optional
-        Multiply calculated pd values by 180/pi to get pol angle degree. 
-    to_excel : bool, optional
-        Saves image to file.  False by default 
-    verbose_calc_pa : bool, optional
-        Multiply calculated pd values by 180/pi to get position angle in degree degree. 
-    verbose_mjd_align_check : bool, optional
-        Prints calculations and time for extra verbosity. False by default 
+        input_data : tuple
+            Tuple containing a list of dictionaries with q, q error, u, u error data, and a list of date time objects (data timestamps)
+        targ_corr_MJD : str
+            String to identify filename for correcting MJD. Used inconjunctuiib if corr_MJD=True
+        corr_MJD : bool, optional
+            Corrects MJD if MJD needs correcting
+        deg_arg : bool, optional
+            Multiply calculated pd values by 180/pi to get pol angle degree. 
+        to_excel : bool, optional
+            Saves image to file.  False by default 
+        verbose_calc_pa : bool, optional
+            Multiply calculated pd values by 180/pi to get position angle in degree degree. 
+        verbose_mjd_align_check : bool, optional
+            Prints calculations and time for extra verbosity. False by default 
     """
     dates = sorted(input_data[1])
     objn = list(input_data[0][0].keys())[0][11:]
@@ -505,20 +503,20 @@ def plot_pol_stab(MJD_track,
 
     Parameters
     ----------
-    input_data : tuple
-        Tuple containing a list of dictionaries with q, q error, u, u error data, and a list of date time objects (data timestamps)
-    targ_corr_MJD : str
-        String to identify data file for correcting MJD
-    verbose_calc_pa : bool, optional
-        Multiply calculated pd values by 180/pi to get position angle in degree degree. 
-    verbose_mjd_align_check : bool, optional
-        Prints calculations for extra verbosity.  False by default 
-    perc_arg : bool, optional
-        Saves image to file.  False by default
-    to_excel : bool, optional
-        Saves image to file.  False by default 
-    corr_MJD : bool, optional
-        Saves image to file.  False by default 
+        input_data : tuple
+            Tuple containing a list of dictionaries with q, q error, u, u error data, and a list of date time objects (data timestamps)
+        targ_corr_MJD : str
+            String to identify data file for correcting MJD
+        verbose_calc_pa : bool, optional
+            Multiply calculated pd values by 180/pi to get position angle in degree degree. 
+        verbose_mjd_align_check : bool, optional
+            Prints calculations for extra verbosity.  False by default 
+        perc_arg : bool, optional
+            Saves image to file.  False by default
+        to_excel : bool, optional
+            Saves image to file.  False by default 
+        corr_MJD : bool, optional
+            Saves image to file.  False by default 
     """
     
     fig, ax = plt.subplots(figsize=(36, 12))
@@ -596,23 +594,23 @@ def plot_pol_stab_PDPA(input_data,
 
     Parameters
     ----------
-    input_data : list
-        Lis of data where expectation is:
-        input_data[0] = MJD_track_PD
-        input_data[1] = MJD_track_PA
-        input_data[2] = obj_pol_PD
-        input_data[3] = obj_pol_PA
-        input_data[4] = obj_pol_PD_err
-    icon : list
-        List of strings where expectation is:
-        fmt_icon[0] = '*'
-        fmt_icon[1] = '-'
-        Or whatever format icon is preferred
-    color_icon : list
-        List of strings where expectation is:
-        color_icon[0] = 'red'
-        color_icon[1] = 'blue'
-        Or whatever format color is preferred
+        input_data : list
+            List of data where expectation is:
+                input_data[0] = MJD_track_PD
+                input_data[1] = MJD_track_PA
+                input_data[2] = obj_pol_PD
+                input_data[3] = obj_pol_PA
+                input_data[4] = obj_pol_PD_err
+        icon : list
+            List of strings where expectation is:
+                fmt_icon[0] = '*'
+                fmt_icon[1] = '-'
+            Or whatever format icon is preferred/ accepted
+        color_icon : list
+            List of strings where expectation is:
+                color_icon[0] = 'red'
+                color_icon[1] = 'blue'
+            Or whatever format color is preferred
     """
     fig, ax1 = plt.subplots(figsize=(36, 12))
     mjds_PD_arr = Time([x.strftime("%Y-%m-%dT%H:%M:%S.%f") for x in input_data[0]], 
@@ -685,16 +683,16 @@ def plot_q_u_stability(input_data,
 
     Parameters
     ----------
-    input_data : tuple
-        Tuple containing a list of dictionaries with q, q error, u, u error data, and a list of date time objects (data timestamps)
-    q_u_check : str
-        String to identify data file for correcting MJD
-    sv_im : bool, optional
-        Saves image to file.  False by default  
-    plot_verbose : bool, optional
-        Prints calculations for extra verbosity.  False by default 
-    m_plot : bool, optional
-        Makes plot
+        input_data : tuple
+            Tuple containing a list of dictionaries with q, q error, u, u error data, and a list of date time objects (data timestamps).
+        q_u_check : str
+            String to identify data file for correcting MJD
+        sv_im : bool, optional
+            Saves image to file.  False by default  
+        plot_verbose : bool, optional
+            Prints calculations for extra verbosity.  False by default 
+        m_plot : bool, optional
+            Makes plot
     """
     
     means_arr = []
@@ -778,16 +776,16 @@ def q_n_u_single_plot_v1(input_data,
 
     Parameters
     ----------
-    input_data : tuple
-        Tuple containing a list of dictionaries with q, q error, u, u error data, and a list of date time objects (data timestamps)
-    plot_c : str
-        String to specify the color of the plot. Blue by default.
-    sv_im : bool, optional
-        Multiply calculated pd values by 180/pi to get position angle in degree degree. 
-    verbose_MJD_arg : bool, optional
-        Prints MJDs 
-    pol_deg : bool, optional
-        Saves image to file.  False by default 
+        input_data : tuple
+            Tuple containing a list of dictionaries with q, q error, u, u error data, and a list of date time objects (data timestamps)
+        plot_c : str
+            String to specify the color of the plot. Blue by default.
+        sv_im : bool, optional
+            Multiply calculated pd values by 180/pi to get position angle in degree degree. 
+        verbose_MJD_arg : bool, optional
+            Prints MJDs 
+        pol_deg : bool, optional
+            Saves image to file.  False by default 
     """    
     if(key_verb):
         print("N data:", len(input_data[0]))
@@ -877,14 +875,14 @@ def q_n_u_stack_plot_v2(pol_data,
 
     Parameters
     ----------
-    input_data : tuple
-        Data structure that contains all the data. Must inclue zero pol, high pol, and target
-    sv_im_str  : str
-        String to specify the filename of the image output
-    pol_deg : bool, optional
-        Plots a line from 0 to the mean scatter 
-    key_verb : bool, optional
-        Counts all data 
+        input_data : tuple
+            Data structure that contains all the data. Must inclue zero pol, high pol, and target
+        sv_im_str  : str
+            String to specify the filename of the image output
+        pol_deg : bool, optional
+            Plots a line from 0 to the mean scatter 
+        key_verb : bool, optional
+            Counts all data 
     """
     dtypes = ['zero pol', 'high pol', 'target']
     if(key_verb):
@@ -1046,54 +1044,23 @@ def q_n_u_stack_plot_v2(pol_data,
                 axs[r, o].grid()
                 axs[r, o].set_title('Data Combined')               
 
-def calib_data(inp_data, 
-               instrumental_pol, 
-               plt_show = False,
-               verbose=False):
+def mean_q_u_check(inp_data, 
+                   n, 
+                   q_u_ret, 
+                   verb_arg=False):
     """
-    A function that takes in data and calculates position angle (PA). Returns data to be used in other plot tools. More presentable publication quality style.
+    A function that checks the computation of the mean 
 
     Parameters
     ----------
-    input_data : tuple
-        Tuple containing a list of dictionaries with q, q error, u, u error data, and a list of date time objects (data timestamps)
-    instrumental_pol : tuple
-        Tuple of list
-    plot_show : bool, optional
-        Prints calculations for extra verbosity.  False by default 
-    verbose : bool, optional
-        Saves image to file.  False by default 
-    """  
-    cal_prod = cp(inp_data) #I have copied the data
-    
-    if(verbose):
-        print("Calibrating data...") #calibration point an
-        print("Data (pre cal):", inp_data)
-        print("Instrumental Polarization:", instrumental_pol) 
-        
-    for k in range(0, len(cal_prod[0])):    #runs through the calib product    
-        for l in range(0, len(cal_prod[0][k][ list(cal_prod[0][k].keys())[0]][0][1:])):
-            if(verbose): #goes through each q value and shifts them
-                print("Old val:", cal_prod[0][ list(cal_prod[0][k].keys())[0]][0][l])
-
-            cal_prod[0][k][list(cal_prod[0][k].keys())[0]][0][l] = cal_prod[0][k][ list(cal_prod[0][k].keys())[0]][0][l] - instrumental_pol[0][0]
-
-            if(verbose):            
-                print("New val:", cal_prod[0][k][list(cal_prod[0][k].keys())[0]][0][l])
-
-        for l in range(0, len(cal_prod[0][k][list(cal_prod[0][k].keys())[0]][2][1:])):
-            if(verbose):
-                print("Old val:", cal_prod[0][k][ list(cal_prod[0][k].keys())[0]][0][l])
-                
-            cal_prod[0][k][list(cal_prod[0][k].keys())[0]][2][l] = cal_prod[0][k][ list(cal_prod[0][k].keys())[0]][2][l] - instrumental_pol[1][0]
-            if(verbose):
-                print("New val:", cal_prod[k][ list(cal_prod[k].keys())[0]][0][l])
-    
-    return(cal_prod)
-    
-def mean_q_u_check(inp_data, n, q_u_ret, verb_arg=False):
-    """
-    Checks method of calculation of mean
+        input_data : tuple
+            Data structure that contains all the data. Must inclue zero pol, high pol, and target
+        n  : int
+            integer
+        q_u_ret : str
+            Plots a line from 0 to the mean scatter 
+        verb_arg : bool, optional
+            Counts all data 
     """
     q_top = []
     q_bot = []
@@ -1135,5 +1102,4 @@ def mean_q_u_check(inp_data, n, q_u_ret, verb_arg=False):
     elif(q_u_ret == 'RINGO'):
         return (q_mean , u_mean)
     else:
-        print("Invalid")
-        
+        print("Invalid")       

@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import astropy
 from copy import deepcopy as cp
-from scipy import stats
 
 from photutils.aperture import CircularAperture, CircularAnnulus
 from photutils.aperture import EllipticalAperture, EllipticalAnnulus
@@ -10,7 +9,6 @@ from photutils.aperture import aperture_photometry
 from astropy.visualization import simple_norm
 from astropy.io import fits
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from astropy.stats import sigma_clipped_stats
 from photutils import find_peaks
 from photutils.detection import DAOStarFinder
 from astropy.visualization.mpl_normalize import ImageNormalize
