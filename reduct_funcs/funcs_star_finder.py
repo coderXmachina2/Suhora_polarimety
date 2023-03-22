@@ -17,7 +17,12 @@ from photutils.detection import DAOStarFinder
 from astropy.visualization.mpl_normalize import ImageNormalize
 from astropy.visualization import SqrtStretch
 
-def source_peak_finder(fits_data_1, search_array, siegma, trim, plot_peaks=False, verbose=False):
+def source_peak_finder(fits_data_1, 
+                       search_array, 
+                       siegma, 
+                       trim, 
+                       plot_peaks=False, 
+                       verbose=False):
     """
     A function that finds location and values of peaks in the image bounded within offsets given in array (that define a region of interest shaped in a rectangle/square). Involves some further trhesholding/ filtering routines. Returns list of x coordinates, list of y coordinates, and list of the peak in image. This function is succeeded with plot_spotted for maximum results.
     
@@ -118,7 +123,13 @@ def source_peak_finder(fits_data_1, search_array, siegma, trim, plot_peaks=False
     return(x_targ, y_targ, peak_targ)
 
 
-def plot_spotted(fits_data_1, search_array, x_targ, y_targ, peak_targ, img_offset, plot_im=False):
+def plot_spotted(fits_data_1, 
+                 search_array, 
+                 x_targ, 
+                 y_targ, 
+                 peak_targ, 
+                 img_offset, 
+                 plot_im=False):
     """
     A function that takes in 2D image data and plots them along with search offsets. Creats a list of tuples with x and y coordinates packaged together. Takes in list of x and y coordinates and peak fluxes to put them on the image. Returns a list of tuples which are apeture positions. apeture positions x and y coordinates are calculated based on the search offset. So what if the image is not 512? We may face problems moving forward.
     

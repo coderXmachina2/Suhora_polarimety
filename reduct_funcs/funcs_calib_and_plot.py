@@ -7,8 +7,6 @@ from copy import deepcopy as cp
 from astropy import units as u
 from astropy.nddata import CCDData
 
-from photutils.aperture import CircularAperture, CircularAnnulus
-from photutils.aperture import EllipticalAperture, EllipticalAnnulus
 from photutils.aperture import aperture_photometry
 from astropy.visualization import simple_norm
 from astropy.io import fits
@@ -49,14 +47,14 @@ def make_calib_files(bias,
 
     Parameters
     ----------
-    bias : list
-        List of bias FITS file names with their relative directory path. 
-    dark : list
-        List of dark FITS files names with their relative directory path.
-    flat_p1 : list
-        List of P1 flat FITS files names with  with their relative directory path.
-    flat_p3 : list
-        List of P3 flat FITS files names with their relative directory path.
+        bias : list
+            List of bias FITS file names with their relative directory path. 
+        dark : list
+            List of dark FITS files names with their relative directory path.
+        flat_p1 : list
+            List of P1 flat FITS files names with  with their relative directory path.
+        flat_p3 : list
+            List of P3 flat FITS files names with their relative directory path.
     """
 
     b_frames = []
@@ -100,8 +98,8 @@ def file_splits(list_data):
 
     Parameters
     ----------
-    list_data : list
-        List of either bias, dark, flat, or data FITS files with their relative directory path. Loops through the list and adds FITS metadata from the header into separate list. Prints the information with some formatting.
+        list_data : list
+            List of either bias, dark, flat, or data FITS files with their relative directory path. Loops through the list and adds FITS metadata from the header into separate list. Prints the information with some formatting.
     """
     img_type= []
     filts= []
@@ -127,10 +125,10 @@ def reduction(raw_data,
 
     Parameters
     ----------
-    raw_data : numpy ndarray
-        Single numpy ndarray of image intensities. 2D image array.
-    calib_files : tuple
-        Tuple of length 3 comprising of bias (calib_files[0]), dark (calib_files[1]), and flat (calib_files[1]).
+        raw_data : numpy ndarray
+            Single numpy ndarray of image intensities. 2D image array.
+        calib_files : tuple
+            Tuple of length 3 comprising of bias (calib_files[0]), dark (calib_files[1]), and flat (calib_files[1]).
     """
     
     bs_data = np.subtract(raw_data, calib_files[0]) #subtract the bias
@@ -141,18 +139,18 @@ def reduction(raw_data,
 
 def reduction_ccd_proc(unredu_fits_data, 
                        calib_files, 
-                       key):
+                       key=''):
     """
     A function that takes in FITS file data and performs reduction with ccd proc routines. Image subtract bias, subtract dark, and divide flat. Was still in testing and not used in deployment for EAS 2022. As of 21/12/2022 still not deployed and in testing but last I recall the results were approximately similar with quick and dirty method. Followup to do another round of verification and deploy.Returns 2D nd array data.
 
     Parameters
     ----------
-    unredu_fits_data : str
-        Single FITS file name with their relative directory path
-    calib_files : tuple,
-        Tuple of length 3 comprising of bias (calib_files[0]), dark (calib_files[1]), and flat (calib_files[1]).
-    key: str
-        Year '2020' or '2021'. Conducts different reduction based on camera used to capture data assuming the correct input files are given.
+        unredu_fits_data : str
+            Single FITS file name with their relative directory path
+        calib_files : tuple,
+            Tuple of length 3 comprising of bias (calib_files[0]), dark (calib_files[1]), and flat (calib_files[1]).
+        key: str
+            Year '2020' or '2021'. Conducts different reduction based on camera used to capture data assuming the correct input files are given.
     """
     
     shad_cop = cp(astropy.io.fits.open(unredu_fits_data))
@@ -224,6 +222,8 @@ def reduction_ccd_proc(unredu_fits_data,
                                    readnoise= 8.5*u.electron, 
                                    exposure_unit=u.second, 
                                    exposure_key='exposure') #and put in the values 
+    else:
+        print("Invalid Key")
         
     #make the new one become the shadcop. return the shadcop
     shad_cop.data = nccd.data
@@ -239,17 +239,17 @@ def plot_raw_double_compare(fits_data_1,
 
     Parameters
     ----------
-    fits_data_1 : str
-        Single numpy ndarray of image intensities. 2D image array.
-    scale_arr : list
-        List of integers. Array that scales both image data to act as zoom. 
-    comp_what :  list
-        A list that contains image sub titles.
-    sv_img : bool, optional
-         Saves image to file. Expects the correct directory to already exist.
+        fits_data_1 : str
+            Single numpy ndarray of image intensities. 2D image array.
+        scale_arr : list
+            List of integers. Array that scales both image data to act as zoom. 
+        comp_what :  list
+            A list that contains image sub titles.
+        sv_img : bool, optional
+            Saves image to file. Expects the correct directory to already exist.
     """
     
-    op = astropy.io.fits.open(fits_data_1)[0] #heade abd data
+    op = astropy.io.fits.open(fits_data_1)[0] #header abd data
     
     m1 = op.data[scale_arr[0]-scale_arr[2]:scale_arr[1]+scale_arr[2],  
                           scale_arr[1]-scale_arr[3]:scale_arr[1]+scale_arr[3]]
@@ -309,18 +309,18 @@ def plot_double_raw_v_reduced(fits_data_1,
 
     Parameters
     ----------
-    fits_data_1 : str
-        Single FITS file name with their relative directory path
-    calib_files : tuple
-        Tuple of length 3 comprising of bias (calib_files[0]), dark (calib_files[1]), and flat (calib_files[1])
-    scale_arr : list
-        List of integers. Array that scales both image data to act as zoom. 
-    sigma : bool, optional
-         Applies sigma_clipped_stats to image. Sigma is 3 by default
-    plot : bool, optional
-         Plot image. True by default.
-    sv_img : bool, optional
-         Saves image to file.
+        fits_data_1 : str
+            Single FITS file name with their relative directory path
+        calib_files : tuple
+            Tuple of length 3 comprising of bias (calib_files[0]), dark (calib_files[1]), and flat (calib_files[1])
+        scale_arr : list
+            List of integers. Array that scales both image data to act as zoom. 
+        sigma : bool, optional
+            Applies sigma_clipped_stats to image. Sigma is 3 by default
+        plot : bool, optional
+            Plot image. True by default.
+        sv_img : bool, optional
+            Saves image to file.
     """
     
     op = astropy.io.fits.open(fits_data_1)[0] 
@@ -400,14 +400,14 @@ def calib_data(inp_data,
 
     Parameters
     ----------
-    input_data : tuple
-        Tuple containing a list of dictionaries with q, q error, u, u error data, and a list of date time objects (data timestamps)
-    instrumental_pol : tuple
-        Tuple of list
-    plot_show : bool, optional
-        Prints calculations for extra verbosity.  False by default 
-    verbose : bool, optional
-        Saves image to file.  False by default 
+        input_data : tuple
+            Tuple containing a list of dictionaries with q, q error, u, u error data, and a list of date time objects (data timestamps)
+        instrumental_pol : tuple
+            Tuple of list
+        plot_show : bool, optional
+            Prints calculations for extra verbosity.  False by default 
+        verbose : bool, optional
+            Saves image to file.  False by default 
     """  
     cal_prod = cp(inp_data) #I have copied the data
     
@@ -448,19 +448,18 @@ def calib_pipe(input_data,
 
     Parameters
     ----------
-    input_data : list
-        Tuple containing a list of dictionaries with q, q error, u, u error data, and a list of date time objects (data timestamps)
-    zero_pol_data : list
-        Tuple of length 3 comprising of bias (calib_files[0]), dark (calib_files[1]), and flat (calib_files[1]).
-    list_index_unstable_data : list
-        List of indexes of the zero polarization points to be removed. Be warned, remove one and the index shifts. Practice in notebook 
-        first then proceed.
-    verbose_plot_zpol : bool, optional
-        List of integers. Array that scales both image data to act as zoom. 
-    verbose_plot_points : bool, optional
-        List of integers. Array that scales both image data to act as zoom. 
-    key_verb_t : bool, optional
-         Applies sigma_clipped_stats to image. Sigma is 3 by default.
+        input_data : list
+            Tuple containing a list of dictionaries with q, q error, u, u error data, and a list of date time objects (data timestamps)
+        zero_pol_data : list
+            Tuple of length 3 comprising of bias (calib_files[0]), dark (calib_files[1]), and flat (calib_files[1]).
+        list_index_unstable_data : list
+            List of indexes of the zero polarization points to be removed. Be warned, remove one and the index shifts. Practice in notebook first then proceed.
+        verbose_plot_zpol : bool, optional
+            List of integers. Array that scales both image data to act as zoom. 
+        verbose_plot_points : bool, optional
+            List of integers. Array that scales both image data to act as zoom. 
+        key_verb_t : bool, optional
+            Applies sigma_clipped_stats to image. Sigma is 3 by default.
     """
     
     cal_prod = cp(input_data)

@@ -4,7 +4,6 @@ import astropy
 from copy import deepcopy as cp
 
 from photutils.aperture import CircularAperture, CircularAnnulus
-from photutils.aperture import EllipticalAperture, EllipticalAnnulus
 from photutils.aperture import aperture_photometry
 from astropy.visualization import simple_norm
 from astropy.io import fits
@@ -15,24 +14,29 @@ from astropy.visualization.mpl_normalize import ImageNormalize
 from astropy.visualization import SqrtStretch
 from kneed import KneeLocator
 
-def apt_phot_global_bkg_sub(fits_data_1, search_offset, positions, apt_rad, plot_phot_tab, plot_sky_med): #, ann_in_rad, ann_out_rad   ):
+def apt_phot_global_bkg_sub(fits_data_1, 
+                            search_offset, 
+                            positions, 
+                            apt_rad, 
+                            plot_phot_tab=False,
+                            plot_sky_med=False): #, ann_in_rad, ann_out_rad   ):
     """
     A function that does apeture photometry with global background subtraction. Returns a table of photometry fluxes with errors. Was verified to yield similarity to local background subtraction.
 
     Parameters
     ----------
-    fits_data_1 : numpy ndarray
-        Single numpy ndarray of image intensities. 2D image array.
-    search_offset : list
-        List of length 4 integers that determine a region to search within image
-    positions : list
-        List of integers. Array that scales both image data to act as zoom. 
-    apt_rad : float
-         aperture radius
-    plot_phot_tab : bool, optional
-         plot image. True by default
-    plot_sky_med : bool, optional
-         Saves image to file. False by default
+        fits_data_1 : numpy ndarray
+            Single numpy ndarray of image intensities. 2D image array.
+        search_offset : list
+            List of length 4 integers that determine a region to search within image
+        positions : list
+            List of integers. Array that scales both image data to act as zoom. 
+        apt_rad : float
+            Float defining inner aperture radius
+        plot_phot_tab : bool, optional
+            Plot image. False by default
+        plot_sky_med : bool, optional
+            Saves image to file. False by default
     """    
     search_this = fits_data_1[0].data[512-search_offset:512+search_offset,
                                        512-search_offset:512+search_offset]
@@ -83,24 +87,31 @@ def apt_phot_global_bkg_sub(fits_data_1, search_offset, positions, apt_rad, plot
     
     return phot_table
     
-def apt_phot_local_bkg_sub(fits_data_1, positions, search_array, img_offset,  apt_rad, ann_in_rad, ann_out_rad, plot = False):
+def apt_phot_local_bkg_sub(fits_data_1,
+                           positions,
+                           search_array,
+                           img_offset,  
+                           apt_rad,
+                           ann_in_rad,
+                           ann_out_rad, 
+                           plot = False):
     """   
     A function that does apterture photometry with local background subtraction. Returns photometry table
 
     Parameters
     ----------
-    fits_data_1 : numpy ndarray
-        Single numpy ndarray of image intensities. 2D image array.
-    positions : list
-        List of lists. Should be a list of 2 lists for Suhora data polarimeter. The nested list contain x and y coordinates. 
-    search_array :  list
-        A list of length 4 containing integer limits that determine the area of interest.
-    img_offset : int
-        Integer that determines new bounds of sub image.
-    apt_rad : float
-        Aperture radius.
-    plot : bool, optional
-        Plots image. Prints photometry table.  
+        fits_data_1 : numpy ndarray
+            Single numpy ndarray of image intensities. 2D image array.
+        positions : list
+            List of lists. Should be a list of 2 lists for Suhora data polarimeter. The nested list contain x and y coordinates. 
+        search_array :  list
+            A list of length 4 containing integer limits that determine the area of interest.
+        img_offset : int
+            Integer that determines new bounds of sub image.
+        apt_rad : float
+            Aperture radius.
+        plot : bool, optional
+            Plots image. Prints photometry table.  
     """
     search_this = fits_data_1[512-img_offset:512+img_offset,
                                        512-img_offset:512+img_offset]
@@ -175,18 +186,20 @@ def apt_phot_local_bkg_sub(fits_data_1, positions, search_array, img_offset,  ap
     
     return phot_table
 
-def solve_apt(combine_target, trial_radii,verbose):
+def solve_apt(combine_target, 
+              trial_radii,
+              verbose=False):
     """
     A function that takes in a list of lists of combined targets and a list of trial_radii and fits for the knee point. Returns the median of the knee which is supposed to be a recommended radius for aperture photometry.
     
     Parameters
     ----------
-    combine_target : list
-        List of lists. The nested lists contain photometry fluxes.
-    trial_radii : list
-        List of trial radii. 
-    verbose : bool, optional
-        Prints some extrat things     
+        combine_target : list
+            List of lists. The nested lists contain photometry fluxes.
+        trial_radii : list
+            List of trial radii. 
+        verbose : bool, optional
+            Prints some extrat things     
     """
     
     knees = []

@@ -2,6 +2,7 @@ import astropy
 import gzip
 import glob
 import re
+import os
 import shutil
 import importlib
 
@@ -355,10 +356,67 @@ def combine_excels(excel_1,
         Prints some t_obs for either before or after midnight for verbosity. By default false.
     
     """    
-    print("Sheet 1:",excel_1)
-    print("Sheet 2:",excel_2)
-        
+    #print("Sheet 1:",excel_1)
+    #print("Sheet 2:",excel_2)
+    
+    df1 = pd.read_excel(excel_1,engine='openpyxl')
+    df2 = pd.read_excel(excel_2,engine='openpyxl')
+   
     filename= targ_obj+"_P1-P3"+obs_filt
+    
+    #compute u from df1 ['target 1 counts'] and df1 ['target 2 counts'] 
+    q = (df1 ['target 1 counts']-df1 ['target 2 counts'])/(df1 ['target 1 counts']+df1 ['target 2 counts'])
+    
+    #compute u from df1 ['target 1 counts'] and df1 ['target 2 counts'] 
+    q = (df1['target 1 counts']-df1['target 2 counts'])/(df1['target 1 counts']+df1['target 2 counts'])
+
+    #compute u err from df1 ['target 1 counts'] and df1 ['target 2 counts'] 
+    p_a = 4*(  (df1['target 1 counts']**2)*(df1['target 2 error']**2) + (df1['target 2 counts']**2)*(df1['target 1 error']**2))
+    p_b = (df1['target 1 counts'] + df1['target 2 counts'])**4
+    q_ans = np.sqrt(p_a/p_b)
+
+    #compute q err from df2 ['target 1 counts'] and df2 ['target 2 counts'] 
+    u = (df2['target 1 counts']-df2['target 2 counts'])/(df2['target 1 counts']+df2['target 2 counts'])
+
+    #compute q err from df2 ['target 1 counts'] and df2 ['target 2 counts'] 
+    p_a = 4*(  (df2['target 1 counts']**2)*(df2['target 2 error']**2) + (df2['target 2 counts']**2)*(df2['target 1 error']**2))
+    p_b = (df2['target 1 counts'] + df2['target 2 counts'])**4
+    u_ans = np.sqrt(p_a/p_b)
+    
+    #Combine the dataFrame
+    df3 = pd.concat([df1.iloc[:,:13], df2.iloc[:,:13]], axis=1)
+    
+    df3['q'] = q 
+    df3['q error'] = q_ans
+
+    df3['u'] = u 
+    df3['u error'] = u_ans
+
+    """
+    #Perform add on computations
+    #Compute q and q error. Use P3 to calculate q and q error
+    p_a = 4*(sheet_2.cell_value(rowx=u, colx=7)**2)*(sheet_2.cell_value(rowx=u, colx=12)**2) + (sheet_2.cell_value(rowx=u, colx=11)**2)*(sheet_2.cell_value(rowx=u, colx=8)**2)
+    p_b = (sheet_2.cell_value(rowx=u, colx=7) + sheet_2.cell_value(rowx=u, colx=11))**4
+    p_ans = np.sqrt(p_a/p_b)
+
+    worksheet.write(u, 26, (sheet_2.cell_value(rowx=u, colx=7)-sheet_2.cell_value(rowx=u, colx=11))/(sheet_2.cell_value(rowx=u, colx=7)+sheet_2.cell_value(rowx=u, colx=11))   )
+    worksheet.write(u, 27, p_ans)  
+
+
+
+
+    #Compute u and u error. Use P1 to calculate u and u error
+    p_a = 4*(sheet_1.cell_value(rowx=u, colx=7)**2)*(sheet_1.cell_value(rowx=u, colx=12)**2) + (sheet_1.cell_value(rowx=u, colx=11)**2)*(sheet_1.cell_value(rowx=u, colx=8)**2)
+    p_b = (sheet_1.cell_value(rowx=u, colx=7) + sheet_1.cell_value(rowx=u, colx=11))**4
+    p_ans = np.sqrt(p_a/p_b)
+    
+    worksheet.write(u, 28, (sheet_1.cell_value(rowx=u, colx=7)-sheet_1.cell_value(rowx=u, colx=11))/(sheet_1.cell_value(rowx=u, colx=7)+sheet_1.cell_value(rowx=u, colx=11))) #write q, q_err
+    worksheet.write(u, 29, p_ans  )
+    """
+    df3.to_excel(excel_sv_out+'master_'+MJD+"_"+filename+str(strt_ind)+"-" +str(end_ind)+'_mac_comb.xlsx')  
+    
+    return(df1, df2, df3)
+    """
     workbook = xlsxwriter.Workbook(excel_sv_out+'master_'+MJD+"_"+ filename+str(strt_ind)+"-" +str(end_ind)+'_mac_comb.xlsx')
     worksheet = workbook.add_worksheet()
     
@@ -418,6 +476,7 @@ def combine_excels(excel_1,
             
     for u in range(1, np.min([sheet_1.nrows,   sheet_2.nrows      ])):
         
+        ############################################################################################################
         #Compute q and q error
         p_a = 4*(sheet_2.cell_value(rowx=u, colx=7)**2)*(sheet_2.cell_value(rowx=u, colx=12)**2) + (sheet_2.cell_value(rowx=u, colx=11)**2)*(sheet_2.cell_value(rowx=u, colx=8)**2)
         p_b = (sheet_2.cell_value(rowx=u, colx=7) + sheet_2.cell_value(rowx=u, colx=11))**4
@@ -431,15 +490,17 @@ def combine_excels(excel_1,
         p_b = (sheet_1.cell_value(rowx=u, colx=7) + sheet_1.cell_value(rowx=u, colx=11))**4
         p_ans = np.sqrt(p_a/p_b)
         
+        worksheet.write(u, 28, (sheet_1.cell_value(rowx=u, colx=7)-sheet_1.cell_value(rowx=u, colx=11))/(sheet_1.cell_value(rowx=u, colx=7)+sheet_1.cell_value(rowx=u, colx=11))) #write q, q_err
+        worksheet.write(u, 29, p_ans  ) #write q, q_err
+
+        ############################################################################################################
+           
         #TODO: calculate PD
         
         #TODO: calculate PA
-        
-        worksheet.write(u, 28, (sheet_1.cell_value(rowx=u, colx=7)-sheet_1.cell_value(rowx=u, colx=11))/(sheet_1.cell_value(rowx=u, colx=7)+sheet_1.cell_value(rowx=u, colx=11))) #write q, q_err
-        worksheet.write(u, 29, p_ans  ) #write q, q_err
     
     workbook.close() #I guess this writes the thing
-
+    """
 def list_autoloader(input_string, 
                     verbose_file=False, 
                     verbose_filename=False,
@@ -1181,7 +1242,34 @@ def data_loader():
     
 
     return (ret_list_target, ret_list_zero_pol, ret_list_high_pol)
+
+def init_dir(dirname, init_array=[], pol_std_arry = []):
+    '''
+    Function that initialises directory supposing that directory has been extracted
+    '''
+    print("Checking this dir:", dirname)
+
+    dateDir = re.search('files_sorted/(.*)', dirname)
+    dateDir = './'+dateDir.group(0)+'/'
     
+    for fname in os.listdir(dateDir):
+        if fname.endswith('.gz'):
+            print(fname)
+            os.remove(dateDir+fname)
+            
+    for inits in init_array:
+        if os.path.isdir(dateDir+inits):
+            print(dateDir+inits, 'exists... moving file')
+            for fname in os.listdir(dateDir):
+                if fname.endswith('.fits') and inits in fname:
+                    shutil.move(dateDir+fname, dateDir+inits+"/")
+                for stds in pol_std_arry:
+                    if stds in fname:
+                        shutil.move(dateDir+fname, dateDir+"pol_std"+"/")                        
+        else:
+            print(dateDir+inits, 'does not exist...creating')
+            os.mkdir(dateDir+inits)
+        
 def filter_data(pol_data, 
                 filter_strings, 
                 verb_arg=False):
