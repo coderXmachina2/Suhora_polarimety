@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import astropy
 import ccdproc
+import glob
 
 from copy import deepcopy as cp
 from astropy import units as u
@@ -41,7 +42,8 @@ plt.rcParams['xtick.labelsize'] = 10
 def make_calib_files(bias, 
                      dark, 
                      flat_p1, 
-                     flat_p3):
+                     flat_p3,
+                     MJD):
     """
     A function that takes in lists of bias, dark, p1 and p3 FITS files. Creates master bias, master dark, and master flat by taking the median of the data and returning result.
 
@@ -55,13 +57,15 @@ def make_calib_files(bias,
             List of P1 flat FITS files names with  with their relative directory path.
         flat_p3 : list
             List of P3 flat FITS files names with their relative directory path.
+        flat_dir : str
+            String that specifies flat
     """
 
     b_frames = []
     drk_frames = []
     normed_bs_p1fl_frames = []
     normed_bs_p3fl_frames = []
-
+    
     for bias_file in bias:
         bias_frame = astropy.io.fits.open(bias_file)
         b_frames.append(bias_frame[0].data)
@@ -74,7 +78,41 @@ def make_calib_files(bias,
         drk_frames.append(bias_subtracted_dark)
     
     master_drk =  np.median(drk_frames, axis= 0)
-        
+    
+    #Get all flats within ± 2 the directories
+    
+    x = glob.glob('./files_sorted/*')
+    data_dirs = []
+    print("Search index:", x.index('./files_sorted\\'+MJD))
+    for l in range(0, len(x)):
+        if(l == x.index('./files_sorted\\'+MJD)):
+            print(x[l], "<--- Main")
+            data_dirs.append(x[l])
+        elif(l == x.index('./files_sorted\\'+MJD) + 1 or 
+             l == x.index('./files_sorted\\'+MJD) - 1 or
+             l == x.index('./files_sorted\\'+MJD) + 2 or
+             l == x.index('./files_sorted\\'+MJD) - 2):
+            print(x[l], "<-")
+            data_dirs.append(x[l])
+        else:
+            print(x[l])
+            
+    flat_p1 = []
+    flat_p3 = []
+    
+    for dirs in data_dirs:
+        print(dirs+'flat/*'   )
+        gdirs = glob.glob(dirs+'/flat/*')
+        print(gdirs)
+        for flatf in gdirs:
+            if 'p1' in flatf:
+                print(flatf, "<- p1 flat")
+                flat_p1.append(flatf)
+            elif 'p3' in flatf:
+                print(flatf, "<- p3 flat")
+                flat_p3.append(flatf)        
+
+           
     for flat_x in flat_p1:
         flat_frame = astropy.io.fits.open(flat_x)
         bias_subtracted_flat = np.subtract(flat_frame[0].data, master_bias)
@@ -86,10 +124,10 @@ def make_calib_files(bias,
         bias_subtracted_flat = np.subtract(flat_frame[0].data,master_bias)
         normed_bias_subtracted_flat = np.divide(bias_subtracted_flat, np.median(flat_frame[0].data))
         normed_bs_p3fl_frames.append(normed_bias_subtracted_flat)
-
+    
     masterf_p1 = np.median(normed_bs_p1fl_frames, axis= 0)
     masterf_p3 = np.median(normed_bs_p3fl_frames, axis= 0)    
-    
+   
     return(master_bias, master_drk, masterf_p1, masterf_p3)
 
 def file_splits(list_data):
@@ -223,7 +261,7 @@ def reduction_ccd_proc(unredu_fits_data,
                                    exposure_unit=u.second, 
                                    exposure_key='exposure') #and put in the values 
     else:
-        print("Invalid Key")
+        print("Invalid Camera Key")
         
     #make the new one become the shadcop. return the shadcop
     shad_cop.data = nccd.data
@@ -540,7 +578,8 @@ def calib_pipe(input_data,
         q_cal = [np.mean(mean_q), np.mean(mean_q_err)]
         u_cal = [np.mean(mean_u), np.mean(mean_u_err)]
 
-        cal_section = funcs_polarimetry.calib_data(targ_data_arr[k], (q_cal, u_cal))
+        cal_section = calib_data(targ_data_arr[k], (q_cal, u_cal))
+        #cal_section = funcs_polarimetry.calib_data(targ_data_arr[k], (q_cal, u_cal))
 
         for di in range(0, len(cal_section[0])):
             cal_targ[0].append(cal_section[0][di])

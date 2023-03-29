@@ -363,10 +363,7 @@ def combine_excels(excel_1,
     df2 = pd.read_excel(excel_2,engine='openpyxl')
    
     filename= targ_obj+"_P1-P3"+obs_filt
-    
-    #compute u from df1 ['target 1 counts'] and df1 ['target 2 counts'] 
-    q = (df1 ['target 1 counts']-df1 ['target 2 counts'])/(df1 ['target 1 counts']+df1 ['target 2 counts'])
-    
+        
     #compute u from df1 ['target 1 counts'] and df1 ['target 2 counts'] 
     q = (df1['target 1 counts']-df1['target 2 counts'])/(df1['target 1 counts']+df1['target 2 counts'])
 
@@ -392,115 +389,32 @@ def combine_excels(excel_1,
     df3['u'] = u 
     df3['u error'] = u_ans
 
+    df3.to_excel(excel_sv_out+'master_'+MJD+"_"+filename+str(strt_ind)+"-" +str(end_ind)+'_mac_comb_newfunc.xlsx')  
     """
-    #Perform add on computations
-    #Compute q and q error. Use P3 to calculate q and q error
-    p_a = 4*(sheet_2.cell_value(rowx=u, colx=7)**2)*(sheet_2.cell_value(rowx=u, colx=12)**2) + (sheet_2.cell_value(rowx=u, colx=11)**2)*(sheet_2.cell_value(rowx=u, colx=8)**2)
+    #Prior Method of computation
+        
+    #Compute q and q error from P3
+    p_a = 4*(sheet_2.cell_value(rowx=u, colx=7)**2)*(sheet_2.cell_value(rowx=u, colx=12)**2) + (sheet_2.cell_value(rowx=u, colx=11)**2)*(sheet_2.cell_value(rowx=u, colx=8)**2) 
     p_b = (sheet_2.cell_value(rowx=u, colx=7) + sheet_2.cell_value(rowx=u, colx=11))**4
     p_ans = np.sqrt(p_a/p_b)
-
+        
+    #q
     worksheet.write(u, 26, (sheet_2.cell_value(rowx=u, colx=7)-sheet_2.cell_value(rowx=u, colx=11))/(sheet_2.cell_value(rowx=u, colx=7)+sheet_2.cell_value(rowx=u, colx=11))   )
-    worksheet.write(u, 27, p_ans)  
+    worksheet.write(u, 27, p_ans)       
 
-
-
-
-    #Compute u and u error. Use P1 to calculate u and u error
+    #Compute u and u error from P3
     p_a = 4*(sheet_1.cell_value(rowx=u, colx=7)**2)*(sheet_1.cell_value(rowx=u, colx=12)**2) + (sheet_1.cell_value(rowx=u, colx=11)**2)*(sheet_1.cell_value(rowx=u, colx=8)**2)
     p_b = (sheet_1.cell_value(rowx=u, colx=7) + sheet_1.cell_value(rowx=u, colx=11))**4
     p_ans = np.sqrt(p_a/p_b)
-    
+        
+    #u
     worksheet.write(u, 28, (sheet_1.cell_value(rowx=u, colx=7)-sheet_1.cell_value(rowx=u, colx=11))/(sheet_1.cell_value(rowx=u, colx=7)+sheet_1.cell_value(rowx=u, colx=11))) #write q, q_err
-    worksheet.write(u, 29, p_ans  )
-    """
-    df3.to_excel(excel_sv_out+'master_'+MJD+"_"+filename+str(strt_ind)+"-" +str(end_ind)+'_mac_comb.xlsx')  
-    
-    return(df1, df2, df3)
-    """
-    workbook = xlsxwriter.Workbook(excel_sv_out+'master_'+MJD+"_"+ filename+str(strt_ind)+"-" +str(end_ind)+'_mac_comb.xlsx')
-    worksheet = workbook.add_worksheet()
-    
-    print('output:', excel_sv_out+'master_'+MJD+"_"+filename+str(strt_ind)+"-" +str(end_ind)+'_mac_comb.xlsx')
-    
-    worksheet.write('A1', 'int')
-    worksheet.write('B1', 'time obs')
-    worksheet.write('C1', 'filter')
-    worksheet.write('D1', 'exptime')
-    worksheet.write('E1', 'aperture radius')
-    worksheet.write('F1', 'target 1 x center')
-    worksheet.write('G1', 'target 1 y center')
-    worksheet.write('H1', 'target 1 counts')
-    worksheet.write('I1', 'target 1 error')
-    worksheet.write('J1', 'target 2 x center')
-    worksheet.write('K1', 'target 2 y center')
-    worksheet.write('L1', 'target 2 counts')
-    worksheet.write('M1', 'target 2 error')
-    
-    worksheet.write('N1', 'int')
-    worksheet.write('O1', 'time obs')
-    worksheet.write('P1', 'filter')
-    worksheet.write('Q1', 'exptime')
-    worksheet.write('R1', 'aperture radius')
-    worksheet.write('S1', 'target 1 x center')
-    worksheet.write('T1', 'target 1 y center')
-    worksheet.write('U1', 'target 1 counts')
-    worksheet.write('V1', 'target 1 error')
-    worksheet.write('W1', 'target 2 x center')
-    worksheet.write('X1', 'target 2 y center')
-    worksheet.write('Y1', 'target 2 counts')
-    worksheet.write('Z1', 'target 2 error')
+    worksheet.write(u, 29, p_ans  ) #write q, q_err
 
-    worksheet.write('AA1', 'q')
-    worksheet.write('AB1', 'q error')
-    worksheet.write('AC1', 'u')
-    worksheet.write('AD1', 'u error')
-    
-    #Just calc. Previously not calculated but we should now calculate anyway
-    worksheet.write('AE1', 'PD') 
-    worksheet.write('AF1', 'PD error')
-    worksheet.write('AG1', 'PA')
-    worksheet.write('AH1', 'PA error')
-    
-    wb_1 = xlrd.open_workbook((excel_1))
-    wb_2 = xlrd.open_workbook((excel_2))
-    
-    sheet_1 = wb_1.sheet_by_index(0)
-    sheet_2 = wb_2.sheet_by_index(0)
-    
-    #This reokucates
-    for u in range(1, np.min([sheet_1.nrows,   sheet_2.nrows      ])):
-        for x in range(0, 13):
-            worksheet.write(u, x, sheet_1.cell_value(rowx=u, colx=x))
-        for x in range(0, 13):
-            worksheet.write(u, x+13, sheet_2.cell_value(rowx=u, colx=x))
-            
-    for u in range(1, np.min([sheet_1.nrows,   sheet_2.nrows      ])):
-        
-        ############################################################################################################
-        #Compute q and q error
-        p_a = 4*(sheet_2.cell_value(rowx=u, colx=7)**2)*(sheet_2.cell_value(rowx=u, colx=12)**2) + (sheet_2.cell_value(rowx=u, colx=11)**2)*(sheet_2.cell_value(rowx=u, colx=8)**2)
-        p_b = (sheet_2.cell_value(rowx=u, colx=7) + sheet_2.cell_value(rowx=u, colx=11))**4
-        p_ans = np.sqrt(p_a/p_b)
-        
-        worksheet.write(u, 26, (sheet_2.cell_value(rowx=u, colx=7)-sheet_2.cell_value(rowx=u, colx=11))/(sheet_2.cell_value(rowx=u, colx=7)+sheet_2.cell_value(rowx=u, colx=11))   )
-        worksheet.write(u, 27, p_ans)       
-
-        #Compute u and u error
-        p_a = 4*(sheet_1.cell_value(rowx=u, colx=7)**2)*(sheet_1.cell_value(rowx=u, colx=12)**2) + (sheet_1.cell_value(rowx=u, colx=11)**2)*(sheet_1.cell_value(rowx=u, colx=8)**2)
-        p_b = (sheet_1.cell_value(rowx=u, colx=7) + sheet_1.cell_value(rowx=u, colx=11))**4
-        p_ans = np.sqrt(p_a/p_b)
-        
-        worksheet.write(u, 28, (sheet_1.cell_value(rowx=u, colx=7)-sheet_1.cell_value(rowx=u, colx=11))/(sheet_1.cell_value(rowx=u, colx=7)+sheet_1.cell_value(rowx=u, colx=11))) #write q, q_err
-        worksheet.write(u, 29, p_ans  ) #write q, q_err
-
-        ############################################################################################################
-           
-        #TODO: calculate PD
-        
-        #TODO: calculate PA
-    
-    workbook.close() #I guess this writes the thing
+    ############################################################################################################
     """
+    return(df3)
+
 def list_autoloader(input_string, 
                     verbose_file=False, 
                     verbose_filename=False,
@@ -1354,13 +1268,41 @@ def ringo_error_prop( test_list ):
     return (sigma_q)
 
 def print_list(MJD, f_list):
-    print(MJD)
+    #integer_count = np.linspace(0, len(f_list)-1, len(f_list)).astype(int)
+    time_stamp = []
+    optfilter = []
+    MJD = []
+    MJDtime = []
+    exp_time = []
+    obj = []
+
     for i in range(0, len(f_list)):
-        print(i, 
-        astropy.io.fits.open(f_list[i])[0].header['TIME-OBS'],
-        astropy.io.fits.open(f_list[i])[0].header['FILTER'],
-        astropy.io.fits.open(f_list[i])[0].header['EXPTIME'],
-        astropy.io.fits.open(f_list[i])[0].header['OBJECT'])
+        x = astropy.io.fits.open(f_list[i])[0].header['DATE-OBS']+"T"+ astropy.io.fits.open(f_list[i])[0].header['TIME-OBS']
+        full_dtime = datetime.strptime(x, "%Y-%m-%dT%H:%M:%S.%f")
+        
+        #print(i, int(integer_count[i]), 
+        #astropy.io.fits.open(f_list[i])[0].header['TIME-OBS'], full_dtime, Time(x, format='isot', scale='utc').mjd,
+        #astropy.io.fits.open(f_list[i])[0].header['FILTER'],
+        #astropy.io.fits.open(f_list[i])[0].header['EXPTIME'],
+        #astropy.io.fits.open(f_list[i])[0].header['OBJECT'])
+        
+        time_stamp.append(full_dtime) #Full T Obs
+        MJD.append(Time(x, format='isot', scale='utc').mjd)
+        MJDtime.append(astropy.io.fits.open(f_list[i])[0].header['MID-TIME'])
+        optfilter.append(astropy.io.fits.open(f_list[i])[0].header['FILTER'])
+        exp_time.append(astropy.io.fits.open(f_list[i])[0].header['EXPTIME'])
+        obj.append(astropy.io.fits.open(f_list[i])[0].header['OBJECT'])
+        
+    #Load into pandas dataframe
+
+    obsdf = pd.DataFrame({'TIME-OBS':time_stamp,
+                          'MJD':MJD,
+                          'MID-TIME': MJDtime,
+                          'EXPTIME':optfilter,
+                          'OBJECT':obj})
+    obsdf.style.hide_index()
+    pd.set_option('display.max_rows', None)    
+    return(obsdf)
         
 def data_to_excel(data_struct, obj_name ,who_am_i):
     """
