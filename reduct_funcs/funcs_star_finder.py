@@ -229,7 +229,16 @@ def peak_to_DAO(apt_pos):
         
     return(DAO_array)
     
-def dao_star_finder(fits_data_1, search_array, siegma, trim ,img_offset, apt_rad, ann_in_rad, ann_out_rad, plot=False, plot_tab=False):
+def dao_star_finder(fits_data_1, 
+                    search_array, 
+                    siegma, 
+                    trim,
+                    img_offset, 
+                    apt_rad,
+                    ann_in_rad, 
+                    ann_out_rad, 
+                    plot=False,
+                    plot_tab=False):
     """
     A function that finds location and values of peaks in the image bounded within offsets given in array (that define a region of interest shaped in a rectangle/square). Involves some further trhesholding/ filtering routines. Does a little bit of preliminary aperture photometry but does not return the results. Returns list of x coordinates, list of y coordinates, and list of the peak in image. This function is used in pipeline counts extraction cell. Returns positions of target of interest.
     

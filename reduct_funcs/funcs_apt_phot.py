@@ -195,7 +195,7 @@ def solve_apt(combine_target,
     Parameters
     ----------
         combine_target : list
-            List of lists. The nested lists contain photometry fluxes.
+            List of lists. The nested lists contain photometry fluxes (counts).
         trial_radii : list
             List of trial radii. 
         verbose : bool, optional
@@ -205,7 +205,8 @@ def solve_apt(combine_target,
     knees = []
 
     for x in range(0, len(combine_target)):
-        #print(x)
+
+        #plots the knee locator
         kn = KneeLocator(trial_radii, 
                          combine_target[x], 
                          curve='concave', 

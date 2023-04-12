@@ -388,7 +388,7 @@ def combine_excels(excel_1,
 
     df3['u'] = u 
     df3['u error'] = u_ans
-
+    print("This:", excel_sv_out+'master_'+MJD+"_"+filename+str(strt_ind)+"-" +str(end_ind)+'_mac_comb_newfunc.xlsx'   )
     df3.to_excel(excel_sv_out+'master_'+MJD+"_"+filename+str(strt_ind)+"-" +str(end_ind)+'_mac_comb_newfunc.xlsx')  
     """
     #Prior Method of computation
