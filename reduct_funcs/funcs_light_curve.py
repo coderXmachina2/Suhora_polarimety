@@ -43,13 +43,13 @@ from reduct_funcs import funcs_utils
 def EECep_light_curve_based_pol(target_data, 
                                 MJD_L_cutoff,
                                 MJD_cutoff, 
-                                point_MJD, 
-                                mark_t,
-                                txt_arg='', 
+                                mark_t='*',
+                                txt_arg='',
+                                point_MJD=False,
                                 lc=False,
                                 verb_t=False,
                                 true_pa=False, 
-                                title_t=False,):
+                                title_t=False):
     """
     A function that takes in data and plots. Inputs a list 10 args
     
@@ -78,7 +78,7 @@ def EECep_light_curve_based_pol(target_data,
     """
     
     print("Reading:", 'ee_cep_2014.txt')
-    file1 = open('./EE_Cep_light_curve/ee_cep_2014.txt', 'r')
+    file1 = open('./EE_Cep_light_curve/EECEPLightCurve.txt', 'r')
     #file1 = open('./EE_Cep_light_curve/ee_cep_small_our_obs.txt', 'r')    
     ee_lines = file1.readlines()
     
@@ -132,6 +132,7 @@ def EECep_light_curve_based_pol(target_data,
     index_L_cutt = []
     
     for jk in range(0, len(mjd_arr_k)):
+        print("Test:", mjd_arr_k[jk] )
         idx = np.abs(mjd_arr_k[jk].to_value('mjd', 'float')   - MJD_cutoff).argmin()
         idxL = np.abs(mjd_arr_k[jk].to_value('mjd', 'float')   - MJD_L_cutoff).argmin()
         index_cutt.append(int(idx))
@@ -386,7 +387,7 @@ def EECep_stacked_based_pol(target_data_PD,
         
             #axs[1].plot(target_data_PA[2][index_L_cutt[4]:index_cutt[4]+1].mjd, target_data_PA[0])
         markers, caps, bars = axs[1].errorbar(
-            target_data_PA[2][index_L_cutt[4]:index_cutt[4]+1].mjd, 
+            mjd_arr_k[4][index_L_cutt[4]:index_cutt[4]+1].mjd, 
             target_data_PA[0][index_L_cutt[4]:index_cutt[4]+1],
             yerr=target_data_PA[1][index_L_cutt[4]:index_cutt[4]+1], 
             xerr =[0]*len(target_data_PA[0][index_L_cutt[4]:index_cutt[4]+1]), 
@@ -423,7 +424,6 @@ def EECep_stacked_based_pol(target_data_PD,
         axs[0].set_ylabel('PD, (%)', fontsize=32)
         axs[0].tick_params(axis="y", labelsize=28)
         axs[1].set_ylabel('PA, ('+u'\N{DEGREE SIGN}'+')', fontsize=32)
-        #axs[1].set_yticklabels(fontsize=28) #Disabled for debugging
         axs[1].tick_params(axis="y", labelsize=28)
         
    

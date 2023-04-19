@@ -1157,7 +1157,9 @@ def data_loader():
 
     return (ret_list_target, ret_list_zero_pol, ret_list_high_pol)
 
-def init_dir(dirname, init_array=[], pol_std_arry = []):
+def init_dir(dirname, 
+             init_array=[], 
+             pol_std_arry = []):
     '''
     Function that initialises directory supposing that directory has been extracted
     '''
@@ -1166,6 +1168,7 @@ def init_dir(dirname, init_array=[], pol_std_arry = []):
     dateDir = re.search('files_sorted/(.*)', dirname)
     dateDir = './'+dateDir.group(0)+'/'
     
+    #Deletes all the .gzs
     for fname in os.listdir(dateDir):
         if fname.endswith('.gz'):
             print(fname)

@@ -116,7 +116,8 @@ def source_peak_finder(fits_data_1,
               "peaks detected from image of size", 
               "HEADER NAXIS1 x NAXIS2",
               #fits_data_1[0].header['NAXIS1'], "x", fits_data_1[0].header['NAXIS2'],
-              "with sigma:", siegma, "and threshold:", threshold, "threshold is nan and there is error" if math.isnan(threshold) else "valid" )
+              "with sigma:", siegma, "and threshold:", threshold, "threshold is nan and there is error" if math.isnan(threshold) else 
+              "valid" )
 
         print("Targets within region of interest: ", len(x_targ))
 
