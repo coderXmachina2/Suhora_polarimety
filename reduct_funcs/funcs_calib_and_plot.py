@@ -89,9 +89,9 @@ def make_calib_files(bias,
             print(x[l], "<--- Main")
             data_dirs.append(x[l])
         elif(l == x.index('./files_sorted\\'+MJD) + 1 or 
-             l == x.index('./files_sorted\\'+MJD) - 1 or
-             l == x.index('./files_sorted\\'+MJD) + 2 or
-             l == x.index('./files_sorted\\'+MJD) - 2):
+             l == x.index('./files_sorted\\'+MJD) - 1):# or
+             #l == x.index('./files_sorted\\'+MJD) + 2 or
+             #l == x.index('./files_sorted\\'+MJD) - 2
             print(x[l], "<-")
             data_dirs.append(x[l])
         else:
