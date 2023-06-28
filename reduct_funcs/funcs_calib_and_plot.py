@@ -79,11 +79,11 @@ def make_calib_files(bias,
     
     master_drk =  np.median(drk_frames, axis= 0)
     
-    #Get all flats within ± 2 the directories
+    #Get all flats within ± 1 the directories
     
     x = glob.glob('./files_sorted/*')
     data_dirs = []
-    print("Search index:", x.index('./files_sorted\\'+MJD))
+    #print("Search index:", x.index('./files_sorted\\'+MJD))
     for l in range(0, len(x)):
         if(l == x.index('./files_sorted\\'+MJD)):
             print(x[l], "<--- Main")
@@ -93,26 +93,27 @@ def make_calib_files(bias,
              #l == x.index('./files_sorted\\'+MJD) + 2 or
              #l == x.index('./files_sorted\\'+MJD) - 2
             print(x[l], "<-")
-            data_dirs.append(x[l])
+            data_dirs.append(x[l]) #take from these dirs
         else:
-            print(x[l])
+            print(x[l]) #print like normal
             
     flat_p1 = []
     flat_p3 = []
     
     for dirs in data_dirs:
-        print(dirs+'flat/*'   )
+        #print(dirs+'flat/*'   )
         gdirs = glob.glob(dirs+'/flat/*')
-        print(gdirs)
+        #print(gdirs)
         for flatf in gdirs:
             if 'p1' in flatf:
-                print(flatf, "<- p1 flat")
+                #print(flatf, "<- p1 flat")
                 flat_p1.append(flatf)
             elif 'p3' in flatf:
-                print(flatf, "<- p3 flat")
+                #print(flatf, "<- p3 flat")
                 flat_p3.append(flatf)        
-
-           
+    print("N p1 flats:", len(flat_p1)  )
+    print("N p3 flats:", len(flat_p3)   )    
+    
     for flat_x in flat_p1:
         flat_frame = astropy.io.fits.open(flat_x)
         bias_subtracted_flat = np.subtract(flat_frame[0].data, master_bias)
@@ -229,7 +230,9 @@ def reduction_ccd_proc(unredu_fits_data,
         dark_subtracted = ccdproc.subtract_dark(bias_subtracted, master_d,
                                                 exposure_time='exposure',
                                                 exposure_unit=u.second)
+        
         reduced_image = ccdproc.flat_correct(dark_subtracted, masterf)
+        
         nccd = ccdproc.ccd_process(dark_subtracted,
                                    gain= 1.15*u.electron/u.adu, 
                                    readnoise= 48.9*u.electron,                              
@@ -254,7 +257,9 @@ def reduction_ccd_proc(unredu_fits_data,
         dark_subtracted = ccdproc.subtract_dark(bias_subtracted, master_d,
                                                 exposure_time='exposure',
                                                 exposure_unit=u.second)
+        
         reduced_image = ccdproc.flat_correct(dark_subtracted, masterf)
+        
         nccd = ccdproc.ccd_process(ccd_data, 
                                    gain= 1.5*u.electron/u.adu, 
                                    readnoise= 8.5*u.electron, 

@@ -66,9 +66,10 @@ def load_pol_data(in_str,
         Prints some measurements of t_obs midpoint for verbosity. By default false.
     """
     
+    #print( in_str)
     path_s = re.search('(.*)master_', in_str)
     f_name_s = re.search('master_(.*)', in_str)
-    
+    #print( f_name_s )    
     f_name = 'master_' + f_name_s.group(1)
     
     result_MJD = re.search('master_(.*)_', f_name[:19])
@@ -363,7 +364,10 @@ def combine_excels(excel_1,
     df2 = pd.read_excel(excel_2,engine='openpyxl')
    
     filename= targ_obj+"_P1-P3"+obs_filt
-        
+
+    #For some reason... this is resulting in a y=x reflection... please verify again.
+    #Please just fix to save time in intermediate step.
+    
     #compute u from df1 ['target 1 counts'] and df1 ['target 2 counts'] 
     q = (df1['target 1 counts']-df1['target 2 counts'])/(df1['target 1 counts']+df1['target 2 counts'])
 
@@ -392,6 +396,7 @@ def combine_excels(excel_1,
     df3.to_excel(excel_sv_out+'master_'+MJD+"_"+filename+str(strt_ind)+"-" +str(end_ind)+'_mac_comb_newfunc.xlsx')  
     """
     #Prior Method of computation
+    #For some reason the previous method of computation does not match the results of this method of computation
         
     #Compute q and q error from P3
     p_a = 4*(sheet_2.cell_value(rowx=u, colx=7)**2)*(sheet_2.cell_value(rowx=u, colx=12)**2) + (sheet_2.cell_value(rowx=u, colx=11)**2)*(sheet_2.cell_value(rowx=u, colx=8)**2) 
@@ -436,7 +441,7 @@ def list_autoloader(input_string,
     list_return = []
     
     if(verbose_file):
-        print("Load all the files in this text file:", input_string)
+        print("Loading this file:", input_string)
     
     f = open(input_string, "r")
     
@@ -445,6 +450,7 @@ def list_autoloader(input_string,
             print("Loading:", things)
             
         pol_data = load_pol_data(things.strip()) #this returns a tuple  
+        
         list_return.append(pol_data)
 
     if(verbose_process):
@@ -1161,7 +1167,9 @@ def init_dir(dirname,
              init_array=[], 
              pol_std_arry = []):
     '''
-    Function that initialises directory supposing that directory has been extracted
+    Function that initialises directory supposing that all the files in the directory has been extracted
+    
+    dirname
     '''
     print("Checking this dir:", dirname)
 

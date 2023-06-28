@@ -288,7 +288,7 @@ def EECep_light_curve_stacked(PD_data, #PD, PDerror, MJD
     if(phase_plot):
         print("Phase Shift Translation:")
         
-        phase_shift_data = process_A(PD_data, #PD, PDerror, MJD
+        phase_shift_data = compute_phase(PD_data, #PD, PDerror, MJD
                               PA_data,
                               [],
                               verbose_text=False,
@@ -561,7 +561,7 @@ def EECep_light_curve_superposed(pol_data, #PD, PDerror, MJD
     if(phase_plot):
         print("Phase Shift:")
         
-        phase_shift_data = process_A(pol_data, #PD, PDerror, MJD
+        phase_shift_data = compute_phase(pol_data, #PD, PDerror, MJD
                               pol_data,
                               [],
                               verbose_text=False,
