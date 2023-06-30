@@ -784,6 +784,7 @@ def q_n_u_single_plot_v1(input_data,
                          in_title = '',
                          sv_im='', 
                          reflection_axis =  '',
+                         time_ord = False,
                          verbose_MJD_arg=False,
                          pol_deg=False, 
                          only_means=False, 
@@ -843,12 +844,45 @@ def q_n_u_single_plot_v1(input_data,
                     alpha=0.9, color = plot_c,)
         plt.errorbar(targ_qmeans, targ_umeans, xerr=targ_qmeans_err, yerr=targ_umeans_err,
                      color = plot_c, lw=0.75, fmt="o", alpha=0.9)
+        #Draw a line from first date to next date
+        if time_ord:
+            
+            
+            #plt.arrow(targ_qmeans[0], targ_umeans[0],
+            #          targ_qmeans[1]-targ_qmeans[0], targ_umeans[1]-targ_umeans[0],
+            #          width=0.00005, head_width=0.0001,
+            #          head_length=0.0001, color='black',
+            #          alpha=0.2, linestyle='--')
+                      
+                #          targ_qmeans[i+1], targ_umeans[i+1], width=0.00005,
+                #          head_width=0.0005, head_length=0.0000005, color='black')
+            for i in range(0, len(targ_qmeans)-1):
+            # (starting_x, starting_y, dx, dy, ...)
+                
+                #plt.plot( [targ_qmeans[i], targ_qmeans[i+1]], [targ_umeans[i], targ_umeans[i+1]], linestyle='--', alpha=0.2 ) 
+                
+                #obviously some scaling computations would be needed. Compute arrow size as some fraction of what?
+                xlen = targ_qmeans[i+1]-targ_qmeans[i]
+                ylen = targ_umeans[i+1]-targ_umeans[i]
+                
+                plt.arrow(targ_qmeans[i], targ_umeans[i],
+                          xlen, ylen,
+                          width=0.0001, head_width=0.0005,
+                          length_includes_head=True,
+                          head_length=(1/5)*np.sqrt(xlen**2 + ylen**2), color='black',
+                          alpha=0.2, linestyle='--')
+                
+                #plt.arrow(targ_qmeans[i], targ_umeans[i], 
+                #          targ_qmeans[i+1], targ_umeans[i+1] , width=0.00005,
+                #          head_width=0.0005, head_length=0.0000005, color='black')
+                #print( targ_qmeans[i], targ_umeans[i], "--------------->" ,  targ_qmeans[i+1], targ_umeans[i+1]      )
     else:
         plt.scatter(targ_qs, targ_us, 
                     color = plot_c, alpha=0.22)
         plt.errorbar(targ_qs, targ_us, 
                      xerr=targ_qstds, yerr=targ_ustds, 
                      lw=0.75, fmt="o", color=plot_c, alpha=0.22)
+       
     #reflection checker
     if(reflection_axis=='pos'):
         plt.plot( [0, 0.01], [0, 0.01] , linestyle='--', alpha=0.2 ) #left side x y    
