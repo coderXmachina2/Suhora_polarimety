@@ -78,12 +78,25 @@ def load_default_light_curve():
     return(color_arr, mjd_arr_k) 
 
 def compute_phase(PD_data,
-              PA_data,
-              light_curve_data,
-              relative_phase=False,
-              verbose_text=False):
+                  PA_data,
+                  light_curve_data,
+                  relative_phase=False,
+                  verbose_text=False):
     """
-    #Inputs are double polarization data
+    A function that takes in polarization master plot.
+    
+    Parameters
+    ----------
+    PD_data : 
+        Polarization Degree data
+    PA_data : 
+        Polarization Angle data
+    light_curve_data : 
+        Magnitude and time phase  
+    true_pa : bool
+        Blah 
+    title_t : bool
+        Blah
     """
     if len(light_curve_data) == 0:
         #print("Loading Default light curve")
@@ -234,12 +247,12 @@ def EECep_light_curve_stacked(PD_data, #PD, PDerror, MJD
         Marker type
     lc : bool
         Blah
-    verb_t : bool
+    verb_t : verbose to trigger
         Blah
     true_pa : bool
-        Blah 
+        Corrects for true Position Angle
     title_t : bool
-        Blah
+        Title of plot
     """
     if len(light_curve_data) == 0:
         print("Loading Default light curve")
@@ -294,53 +307,8 @@ def EECep_light_curve_stacked(PD_data, #PD, PDerror, MJD
                               verbose_text=False,
                               relative_phase=True)
         
-        #print("Expectation is 3",len(phase_shift_data))
-        
+        #print("Expectation is 3",len(phase_shift_data))        
         #phase_shift_axis=phase_shift[0]
-        """
-        phase_axis = []
-        t = Time(2456894, format='jd') #this is your zero
-        mjdz = t.mjd
-        
-        # Calculate the number of seconds in 5.6 years
-        seconds_in_year = 31536000
-        seconds_in_5_6_years = int(5.6 * seconds_in_year)
-
-        # Create a timedelta object representing 5.6 years
-        delta_years = datetime.timedelta(seconds=seconds_in_5_6_years)
-        twtyeclipse = t.to_datetime() + delta_years
-        twentynineclipse = t.to_datetime() - delta_years
-        
-        print("Spans 0 - 2009:", mjdz - Time(twentynineclipse).mjd )
-        print("Spans 2020 - 2014:", Time(twtyeclipse).mjd - mjdz )
-        print(twtyeclipse, twentynineclipse)
-        
-        x_axis = []
-        for k in mjd_arr_k[4]:
-            if(k.mjd<Time(twtyeclipse).mjd and k.mjd >  mjdz):
-                x_axis.append( (k.mjd-mjdz)/(Time(twtyeclipse).mjd - mjdz))
-                
-            elif(k.mjd>Time(twtyeclipse).mjd ):
-                x_axis.append( (k.mjd-mjdz)/(Time(twtyeclipse).mjd - mjdz)-1)
-        
-        #This is the light curve
-        for timelists in mjd_arr_k[:-1]: #in range(0, len(mjd_arr_k)-1): #this is a recursive call. Just recursive call the third plot   
-            lctrans = []
-            for things in timelists:
-                #print(things)
-                if(things.mjd< mjdz and things.mjd > Time(twentynineclipse).mjd ):
-                    print(things,  (things.mjd-Time(twentynineclipse).mjd)/(Time(twtyeclipse).mjd - mjdz), 'before 2014'    )
-                    lctrans.append((things.mjd-Time(twentynineclipse).mjd)/(Time(twtyeclipse).mjd - mjdz))
-                    
-                elif(things.mjd<Time(twtyeclipse).mjd and things.mjd >  mjdz):
-                    print(things, (things.mjd-mjdz)/(Time(twtyeclipse).mjd - mjdz), 'after 2014 before 2020'  )
-                    lctrans.append((things.mjd-mjdz)/(Time(twtyeclipse).mjd - mjdz))
-                    
-                elif(things.mjd>Time(twtyeclipse).mjd ):
-                    print(things,  (things.mjd-mjdz)/(Time(twtyeclipse).mjd - mjdz)-1, 'after 2020')
-                    lctrans.append((things.mjd-mjdz)/(Time(twtyeclipse).mjd - mjdz)-1)
-            phase_axis.append(lctrans)
-        """
         
     #print("xaxis:",  x_axis) 
     #x=range(len(x_axis))
@@ -445,15 +413,7 @@ def EECep_light_curve_stacked(PD_data, #PD, PDerror, MJD
                          fontsize=32)    
     else:
         fig.suptitle('Polarization degree (PD), Position angle (PA) and EE CEP light curve', fontsize=32)
-        
-    if(phase_plot): 
-        k=0
-        #axs[2].axvline(Time(twtyeclipse).mjd) #this is definitely one year later
-        #axs[2].axvline(x=mjdz )
-        #axs[2].set_xticks(x)
-    else:
-        k=0
-               
+                       
     axs[0].grid()
     axs[1].grid()
     axs[2].grid()
@@ -481,7 +441,6 @@ def EECep_light_curve_stacked(PD_data, #PD, PDerror, MJD
     fig.tight_layout()
     plt.show()
             
-    
 def EECep_light_curve_superposed(pol_data, #PD, PDerror, MJD
                      light_curve_data, #colour = [0], MJD = [1]
                      MJD_cuts, #Tuple... Left and Right

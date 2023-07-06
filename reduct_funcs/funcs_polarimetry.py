@@ -885,11 +885,11 @@ def q_n_u_single_plot_v1(input_data,
        
     #reflection checker
     if(reflection_axis=='pos'):
-        plt.plot( [0, 0.01], [0, 0.01] , linestyle='--', alpha=0.2 ) #left side x y    
+        plt.plot( [0, 0.01], [0, 0.01] , linestyle='--', alpha=0.7 ) #left side x y    
     elif(reflection_axis=='neg'):
-        plt.plot( [0,-0.01], [0, -0.01] , linestyle='--', alpha=0.2 ) #left side x y
+        plt.plot( [0,-0.01], [0, -0.01] , linestyle='--', alpha=0.7 ) #left side x y
     elif(reflection_axis=='xy'):
-        plt.plot( [-0.01,0.01], [-0.01,0.01] , linestyle='--', alpha=0.2 ) #left side x y        
+        plt.plot( [-0.01,0.01], [-0.01,0.01] , linestyle='--', alpha=0.7 ) #left side x y        
     else:
         t=0
            
