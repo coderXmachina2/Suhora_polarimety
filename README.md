@@ -1,10 +1,14 @@
 # Suhora_polarimety data processing pipeline
 
-R band optical polarimetry of EE Cephei with birefringent Wollaston prism/ birefringent Savart plate polarimetric filter. Basically the tools and processing pipe to compute polarization degree and position angle.
+R band optical polarimetry of EE Cephei with birefringent Wollaston prism/ birefringent Savart plate polarimetric filter. This code encompasses the tools and processing pipe to compute polarization degree and position angle as a function of time with addititonal light curve visualization capable.
 
-The objective of the experiment is to investigate the variation of Polarization Degree (PD) and Polarization Angle (PA) as a function of time in conjunction with the 2020 Eclipse of the debris disk of the variable star EE Cep (d `≈` 2.75 kpc). The eclipse standardized magnitude is visualized in the light_curve below where the ingress occurs in Febuar 
+The objective of the experiment is to investigate the variation of Polarization Degree (PD) and Polarization Angle (PA) as a function of time in conjunction with the 2020 Eclipse of the debris disk of the variable star EE Cep (d `≈` 2.75 kpc). The eclipse standardized magnitude is visualized in the light_curve below where the ingress occuring in February and the eggress in May-June.
 
 ![light_curve](https://github.com/coderXmachina2/Suhora_polarimety/blob/main/github_imgs/EE_Cep_Stand_Mag_flux_plot.PNG)
+
+Published as a European Astronomical Society (EAS) conference poster in 2022. Link found here:
+
+https://k-poster.kuoni-congress.info/eas2022/poster/1694cb25-448d-4d5e-a953-80b932538b2a
 
 Custom code was written to reduce, process, and analyze data from the 60 cm telescope on Mt. Suhora Poland. The raw data (FITS files) are not included in this repo, however, the stats containing Stokes polarimetry values are included. Derivation of the statistics are as follows with in depth documentation coming soon:
 
