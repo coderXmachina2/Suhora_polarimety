@@ -16,10 +16,10 @@ from astropy.visualization import simple_norm
 from astropy.io import fits
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from astropy.visualization.mpl_normalize import ImageNormalize
-#from astropy.visualization import SqrtStftch
 
 from reduct_funcs import funcs_utils
 
+plt.rcParams['savefig.facecolor'] = 'black'
 #Functions that plot pol data with light curve?
 #EECep_light_curve_based_pol    10 args
 #EECep_stacked_based_pol        11 args
@@ -33,6 +33,7 @@ from reduct_funcs import funcs_utils
 #plot things
 
 #Misc Funtions
+#The main point of this stuff is superposed and stacked
 
 def load_default_light_curve():
     """
@@ -226,6 +227,7 @@ def EECep_light_curve_stacked(PD_data, #PD, PDerror, MJD
                               PA_data,
                               light_curve_data,
                               MJD_cuts,
+                              sv_im='',
                               phase_plot=False,
                               verb_t=False,
                               true_pa=False, 
@@ -235,20 +237,16 @@ def EECep_light_curve_stacked(PD_data, #PD, PDerror, MJD
     
     Parameters
     ----------
-    PD_data : 
-        Polarization Degree data
-    PA_data : 
+    PD_data : Tuple
+        Polarization Degree data. 
+    PA_data : Tuple 
         Polarization Angle data
-    MJD_L_cutoff : 
-        Left side MJD cutoff. More backwards in time    
-    MJD_cutoff  : Tuple  
+    light_curve_data : list
+        List containing magnitudes and time (MJD)   
+    MJD_cuts : Tuple 
         Right side MJD cutoff. More backwards in time 
-    mark_t : 
-        Marker type
-    lc : bool
-        Blah
-    verb_t : verbose to trigger
-        Blah
+    verb_t : 
+        verbose to trigger
     true_pa : bool
         Corrects for true Position Angle
     title_t : bool
@@ -309,23 +307,7 @@ def EECep_light_curve_stacked(PD_data, #PD, PDerror, MJD
         
         #print("Expectation is 3",len(phase_shift_data))        
         #phase_shift_axis=phase_shift[0]
-        
-    #print("xaxis:",  x_axis) 
-    #x=range(len(x_axis))
-    #return_val[0] #BVRI phase shifts
-    #return_val[1] #PD data phase shifts
-    #return_val[2]#BVRI magnitudes
-    #print("This is your new x axis:",phase_shift_data[0])
-    #print("This should be the same size:",  
-    #      len(mjd_arr_k[4][index_L_cutt[4]:index_R_cutt[4]+1].mjd),
-    #      len(phase_shift_data[1])  )
-    #print( mjd_arr_k[4][index_L_cutt[4]:index_R_cutt[4]+1].mjd )
-    #print(phase_shift_data[1]  )
-    #print(len(phase_shift_data[0][0]), len(color_arr[0]) ) #should be the same.
-    #print(len(phase_shift_data[0][1]), len(color_arr[1]) ) 
-    #print(len(phase_shift_data[0][2]), len(color_arr[2]) ) 
-    #print(len(phase_shift_data[0][3]), len(color_arr[3]) ) 
-    
+            
     #You are still calculating the old x axis. 
         
     fig = plt.figure(figsize=(36, 12))
@@ -403,7 +385,8 @@ def EECep_light_curve_stacked(PD_data, #PD, PDerror, MJD
     #                    color_arr[ka][:], 
     #                    alpha = 0.72, s=16, color=c_arr[ka], label=c_labs[ka])
     else:   
-        for ka in range(0, len(mjd_arr_k)-1): #this is a recursive call. Just recursive call the third plot
+        for ka in range(0, len(mjd_arr_k)-1): 
+            #this is a recursive call. Just recursive call the third plot
             axs[2].scatter(mjd_arr_k[ka][index_L_cutt[ka]:index_R_cutt[ka]].mjd, 
                         color_arr[ka][index_L_cutt[ka]:index_R_cutt[ka]], 
                         alpha = 0.72, s=16, color=c_arr[ka], label=c_labs[ka])
@@ -438,7 +421,11 @@ def EECep_light_curve_stacked(PD_data, #PD, PDerror, MJD
     lgnd.legendHandles[4]._sizes = [999]
     lgnd.legendHandles[5]._sizes = [999]
         
-    fig.tight_layout()
+    fig.tight_layout()    
+    
+    if(sv_im != ''):
+            plt.savefig(sv_im,bbox_inches='tight',pad_inches=0.1 , facecolor='w')
+    
     plt.show()
             
 def EECep_light_curve_superposed(pol_data, #PD, PDerror, MJD
@@ -583,9 +570,6 @@ def EECep_light_curve_superposed(pol_data, #PD, PDerror, MJD
     else:
         print("Insufficient polarization input")
 
-    """
-    """
-
     ax2.tick_params(axis="y", labelsize=28)
    
     ax1.set_ylabel('magnitude, (m)', fontsize=32)
@@ -665,8 +649,4 @@ def EECep_light_curve_superposed(pol_data, #PD, PDerror, MJD
         
     fig.tight_layout()
     plt.show()
-    """
-    """    
-    plt.show()
     """ 
-    

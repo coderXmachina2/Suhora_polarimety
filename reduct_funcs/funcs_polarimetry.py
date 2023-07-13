@@ -836,8 +836,6 @@ def q_n_u_single_plot_v1(input_data,
         
 
     t = Time([x.strftime("%Y-%m-%dT%H:%M:%S.%f") for x in input_data[1]], format='isot', scale='utc')
-    #for things in t:
-    #    print(int(things.mjd))
     
     if(only_means):
         plt.scatter(targ_qmeans, targ_umeans,
@@ -883,15 +881,12 @@ def q_n_u_single_plot_v1(input_data,
                      xerr=targ_qstds, yerr=targ_ustds, 
                      lw=0.75, fmt="o", color=plot_c, alpha=0.22)
        
-    #reflection checker
     if(reflection_axis=='pos'):
         plt.plot( [0, 0.01], [0, 0.01] , linestyle='--', alpha=0.7 ) #left side x y    
     elif(reflection_axis=='neg'):
         plt.plot( [0,-0.01], [0, -0.01] , linestyle='--', alpha=0.7 ) #left side x y
     elif(reflection_axis=='xy'):
         plt.plot( [-0.01,0.01], [-0.01,0.01] , linestyle='--', alpha=0.7 ) #left side x y        
-    else:
-        t=0
            
     if(pol_deg):
         for z in range(0, len(targ_qmeans)):
@@ -902,9 +897,6 @@ def q_n_u_single_plot_v1(input_data,
             plt.text(targ_qmeans[z], 
                      targ_umeans[z], 
                      str(int(t[z].mjd)), rotation=45, fontsize=16)   #'int' object is not subscriptable    
-    else:
-        t=0
-
     
     plt.grid()
     plt.title(in_title + " Q and U Scatter")        
@@ -930,8 +922,6 @@ def q_n_u_single_plot_v1(input_data,
     #Returns what what you plot... It strips.
     if(retrun_plotelems):
         return(targ_qmeans, targ_qmeans_err, targ_umeans, targ_umeans_err)
-    """
-    """
     
 def q_n_u_stack_plot_v2(pol_data, 
                         cal_data=[],
