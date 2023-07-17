@@ -160,7 +160,7 @@ def file_splits(list_data):
 def reduction(raw_data, 
               calib_files):
     """
-    A function that takes in openned FITS image data and performs reduction with raw numpy routines (direct quick and dirty computation). Image subtract bias, subtract dark, and divide flat. Returns 2d nd array data.
+    A basic function that takes in openned FITS image data and performs reduction with raw numpy routines (direct quick and dirty computation). Image subtract bias, subtract dark, and divide flat. Returns 2d nd array data.
 
     Parameters
     ----------
@@ -180,7 +180,7 @@ def reduction_ccd_proc(unredu_fits_data,
                        calib_files, 
                        key=''):
     """
-    A function that takes in FITS file data and performs reduction with ccd proc routines. Image subtract bias, subtract dark, and divide flat. Was still in testing and not used in deployment for EAS 2022. As of 21/12/2022 still not deployed and in testing but last I recall the results were approximately similar with quick and dirty method. Followup to do another round of verification and deploy.Returns 2D nd array data.
+    A more enhanced function that takes in FITS file data and performs reduction with ccd proc routines. Image subtract bias, subtract dark, and divide flat. Was still in testing and not deployed for EAS 2022. As of 21/12/2022 still not deployed and in testing but last I recall the results were approximately similar with quick and dirty method. Followup to do another round of verification and deploy.Returns 2D nd array data.
 
     Parameters
     ----------

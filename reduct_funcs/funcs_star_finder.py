@@ -236,8 +236,7 @@ def dao_star_finder(fits_data_1,
                     trim,
                     img_offset, 
                     apt_rad,
-                    ann_in_rad, 
-                    ann_out_rad, 
+                    ann_radii, 
                     plot=False,
                     plot_tab=False):
     """
@@ -325,7 +324,7 @@ def dao_star_finder(fits_data_1,
     
     positions = np.transpose((x_targ, y_targ)) #positions
     apertures = CircularAperture(positions, r=apt_rad) #Its just standard 4
-    annulus_aperture = CircularAnnulus(positions, r_in= ann_in_rad, r_out=ann_out_rad)
+    annulus_aperture = CircularAnnulus(positions, r_in= ann_radii[0], r_out=ann_radii[1])
     
     if (plot):
         plt.imshow(search_this)#, cmap='Greys', origin='lower', norm=norm,interpolation='nearest')
@@ -368,9 +367,18 @@ def dao_star_finder(fits_data_1,
     
     return positions
 
-def dao_star_finder_HD104860(fits_data_1, search_array, siegma, second_thresh ,search_offset, apt_rad, ann_in_rad, ann_out_rad, plot, plot_tab):
+def dao_star_finder_HD104860(fits_data_1, 
+                             search_array, 
+                             siegma, 
+                             second_thresh,
+                             search_offset, 
+                             apt_rad, 
+                             ann_in_rad, 
+                             ann_out_rad, 
+                             plot, 
+                             plot_tab):
     """
-    Experimental. I attempted it a few times in 2021. It works but not refined as of 23-12-2019
+    Experimental. I attempted it a few times in 2021. It works but not refined as of 23-12-2019. Not concluded.
     
     Parameters
     ----------

@@ -252,6 +252,7 @@ def EECep_light_curve_stacked(PD_data, #PD, PDerror, MJD
     title_t : bool
         Title of plot
     """
+    
     if len(light_curve_data) == 0:
         print("Loading Default light curve")
         def_light_curve = load_default_light_curve()
@@ -322,14 +323,6 @@ def EECep_light_curve_stacked(PD_data, #PD, PDerror, MJD
                 xerr =[0]*len(PD_data[0][index_L_cutt[4]:index_R_cutt[4]+1]), 
                 color='black', fmt='*', markersize=16, capsize=10, capthick=5, label='PD')
         
-        #You had attempted it earlier. Bravo
-        #markers, caps, bars = axs[0].errorbar(
-        #    x, 
-        #    PD_data[0][index_L_cutt[4]:index_R_cutt[4]+1], 
-        #    yerr=PD_data[1][index_L_cutt[4]:index_R_cutt[4]+1], 
-        #    xerr =[0]*len(PD_data[0][index_L_cutt[4]:index_R_cutt[4]+1]), 
-        #    color='black', fmt='*', markersize=16, capsize=10, capthick=5, label='PD')
-        
     else:
         markers, caps, bars = axs[0].errorbar(
                 mjd_arr_k[4][index_L_cutt[4]:index_R_cutt[4]+1].mjd, 
@@ -348,13 +341,6 @@ def EECep_light_curve_stacked(PD_data, #PD, PDerror, MJD
                 yerr=PA_data[1][index_L_cutt[4]:index_R_cutt[4]+1], 
                 xerr =[0]*len(PA_data[0][index_L_cutt[4]:index_R_cutt[4]+1]), 
                 color='black', fmt='*', markersize=16, capsize=10, capthick=5, label='PA')
-        #You had attempted it earlier. Bravo
-        #markers, caps, bars = axs[1].errorbar(
-        #        x, 
-        #        PA_data[0][index_L_cutt[4]:index_R_cutt[4]+1], 
-        #        yerr=PA_data[1][index_L_cutt[4]:index_R_cutt[4]+1], 
-        #        xerr =[0]*len(PA_data[0][index_L_cutt[4]:index_R_cutt[4]+1]), 
-        #        color='black', fmt='*', markersize=16, capsize=10, capthick=5, label='PA')
         
     else:
         markers, caps, bars = axs[1].errorbar(

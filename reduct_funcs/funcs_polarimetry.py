@@ -7,6 +7,7 @@ import re
 import shutil
 
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 import numpy as np
 import pandas as pd
 
@@ -294,7 +295,7 @@ def calc_PD_stability(input_data,
                       to_excel=False, 
                       corr_MJD=False,
                       verbose_calc_pd=False, 
-                      verbose_mjd_align_check=False,):
+                      verbose_mjd_align_check=False):
     
     """
     A function that takes in data and calculates polarization degree (PD). Returns data as list to be used in other plot tools.
@@ -498,17 +499,19 @@ def calc_PA_stability(input_data,
             
     return(means_arr, means_err_arr, t) #This is where it happens.
 
-def plot_pol_stab(MJD_track,
+def plot_pol_stab(MJD,
                   obj_pol, 
                   obj_pol_err, 
-                  plot_data,  
-                  toggle=False):
+                  plot_data,
+                  sv_pold_img = '',
+                  toggle=True,
+                  plot_date=False):
     """
-    A function that takes in computed data and calculates position angle (PA). Returns data to be used in other plot tools. More presentable publication quality style.
+    A function that takes in computed data and plots either polarization degree (PD) or position angle (PA). Does not return any data. Only plots in more presentable publication quality style.
 
     Parameters
     ----------
-        input_data : tuple
+        MJD : list
             Tuple containing a list of dictionaries with q, q error, u, u error data, and a list of date time objects (data timestamps)
         targ_corr_MJD : str
             String to identify data file for correcting MJD
@@ -522,64 +525,75 @@ def plot_pol_stab(MJD_track,
             Saves image to file.  False by default 
         corr_MJD : bool, optional
             Saves image to file.  False by default 
+
     """
     
     fig, ax = plt.subplots(figsize=(36, 12))
     
-    MJD_track = Time([x.strftime("%Y-%m-%dT%H:%M:%S.%f") for x in MJD_track], format='isot', scale='utc')
+    MJD_track = Time([x.strftime("%Y-%m-%dT%H:%M:%S.%f") for x in MJD], format='isot', scale='utc')
     
     if(plot_data=='PD'):
-        markers, caps, bars = ax.errorbar(MJD_track.mjd, obj_pol, yerr=obj_pol_err, xerr =[0]*len(obj_pol),
-                        fmt='o',markersize=16, ecolor='blue',capsize=10, capthick=5,  label='PD')
+        if(plot_date):
+            datetime64_list = mdates.date2num(MJD)  
+          
+            markers, caps, bars = ax.errorbar(datetime64_list, obj_pol, 
+                                              yerr=obj_pol_err, xerr =[0]*len(obj_pol),
+                                              fmt='o',markersize=16, ecolor='blue',
+                                              capsize=10, capthick=5,  label='PD')
+            # Format the x-axis as dates
+            ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+            ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+        else:
+            markers, caps, bars = ax.errorbar(MJD_track.mjd, obj_pol, 
+                                              yerr=obj_pol_err, xerr =[0]*len(obj_pol),
+                                              fmt='o',markersize=16, ecolor='blue',
+                                              capsize=10, capthick=5,  label='PD')
     elif(plot_data=='PA'):
-        markers, caps, bars = ax.errorbar(MJD_track.mjd, obj_pol, yerr=obj_pol_err, xerr =[0]*len(obj_pol),
-                        fmt='o',markersize=16, ecolor='blue',capsize=10, capthick=5,  label='PA')
+        if(plot_date):
+            markers, caps, bars = ax.errorbar(MJD_track, obj_pol,
+                                          yerr=obj_pol_err, xerr =[0]*len(obj_pol),
+                                          fmt='o',markersize=16, ecolor='blue',
+                                          capsize=10, capthick=5,  label='PA')            
+            
+        else:
+            markers, caps, bars = ax.errorbar(MJD_track.mjd, obj_pol,
+                                          yerr=obj_pol_err, xerr =[0]*len(obj_pol),
+                                          fmt='o',markersize=16, ecolor='blue',
+                                          capsize=10, capthick=5,  label='PA')
 
     plt.grid()
-    plt.xticks(fontsize=24)
-    plt.yticks(fontsize=24)
-    
+    plt.xticks(fontsize=24, rotation=45)
+    plt.yticks(fontsize=24, rotation=45)
+        
     if(plot_data=='PD'):
-        plt.title('Polarization Degree (PD) versus Time (MJD)', fontsize=32)
+        if(plot_date):
+            plt.title('Polarization Degree (PD) versus Time UTC', fontsize=32) 
+
+        else:
+            plt.title('Polarization Degree (PD) versus Time (MJD)', fontsize=32)  
+            
         plt.ylabel('PD, (%)', fontsize=28)
         plt.xlabel('Time, (MJD)', fontsize=28)
         if(toggle):
-            bounce = 1
-            mjds_arr = Time([x.strftime("%Y-%m-%dT%H:%M:%S.%f") for x in MJD_track], scale='utc',format='isot')
-            for k in range(0, len(MJD_track.value)):
-                if (bounce == 0):
-                    plt.text(float(mjds_arr[k].mjd), 2.8+0.025, k) #The 
-                    bounce = 1
-                elif (bounce == 1):
-                    plt.text(float(mjds_arr[k].mjd), 2.8-0.025, k)
-                    bounce = 2
-                elif (bounce == 2):
-                    plt.text(float(mjds_arr[k].mjd), 2.8+0.06, k)
-                    bounce = 3
-                elif (bounce == 3):
-                    plt.text(float(mjds_arr[k].mjd), 2.8-0.06, k)
-                    bounce = 0
+            #This thing was used to mark some sequence order on the top bar
+            if not plot_date:
+                mjds_arr = Time([x.strftime("%Y-%m-%dT%H:%M:%S.%f") for x in MJD_track],
+                                 scale='utc',
+                                 format='isot')
+                for k in range(0, len(MJD_track.value)):
+                    plt.text(float(mjds_arr[k].mjd), ax.get_ylim()[1], k) #This cannot exist with the date
                         
     elif(plot_data=='PA'):
         plt.title('Positiona Angle (PA) versus time (MJD)', fontsize=32)
         plt.ylabel('PA, ('+u'\N{DEGREE SIGN}'+')', fontsize=28)
         plt.xlabel('Time, (MJD)', fontsize=28)
         if(toggle):
-            bounce = 1
-            mjds_arr = Time([x.strftime("%Y-%m-%dT%H:%M:%S.%f") for x in MJD_track], scale='utc',format='isot')
-            for k in range(0, len(MJD_track.value)):
-                if (bounce == 0):
-                    plt.text(mjds_arr[k].mjd, -10+0.525, k)
-                    bounce = 1
-                elif (bounce == 1):
-                    plt.text(mjds_arr[k].mjd, -10-0.525, k)
-                    bounce = 2
-                elif (bounce == 2):
-                    plt.text(mjds_arr[k].mjd, -10+1.06, k)
-                    bounce = 3
-                elif (bounce == 3):
-                    plt.text(mjds_arr[k].mjd, -10-1.06, k)
-                    bounce = 0
+            #This thing was used to mark some sequence order on the top bar
+            if not plot_date:
+                mjds_arr = Time([x.strftime("%Y-%m-%dT%H:%M:%S.%f") for x in MJD_track], 
+                                scale='utc',format='isot')
+                for k in range(0, len(MJD_track.value)):
+                    plt.text(mjds_arr[k].mjd, ax.get_ylim()[1], k)
     else:
         print("error. Please supply correct pol type.")
         
@@ -588,6 +602,11 @@ def plot_pol_stab(MJD_track,
     
     fig.legend(loc="upper right", fontsize=64, borderaxespad=0.86)
     fig.tight_layout()
+    
+    if(sv_pold_img != ''):
+        plt.savefig(sv_pold_img,bbox_inches='tight',pad_inches=0.1 , facecolor='w' )
+        
+    plt.tight_layout()
     plt.show()
     
 def plot_pol_stab_PDPA(input_data, 
