@@ -1,12 +1,14 @@
 import astropy
 import gzip
 import glob
-import numpy as np
+import pickle
 import math
 import xlrd
 import datetime
+
 import matplotlib.pyplot as plt
-import pickle
+import matplotlib.dates as mdates
+import numpy as np
 
 from astropy.time import Time,  TimeJD
 from copy import deepcopy as cp
@@ -16,7 +18,6 @@ from astropy.visualization import simple_norm
 from astropy.io import fits
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from astropy.visualization.mpl_normalize import ImageNormalize
-
 from reduct_funcs import funcs_utils
 
 plt.rcParams['savefig.facecolor'] = 'black'
@@ -229,6 +230,7 @@ def EECep_light_curve_stacked(PD_data, #PD, PDerror, MJD
                               MJD_cuts,
                               sv_im='',
                               phase_plot=False,
+                              plot_date=False,
                               verb_t=False,
                               true_pa=False, 
                               title_t=False):
@@ -290,7 +292,7 @@ def EECep_light_curve_stacked(PD_data, #PD, PDerror, MJD
     index_R_cutt = []
         
     for jk in range(0, len(mjd_arr_k)):        
-        #Find the index of the value that most corresponds to the cutoff
+        #Find the index of the value that most corresponds to the input cutoff
         idxL = np.abs(mjd_arr_k[jk].to_value('mjd', 'float') - MJD_cuts[0]).argmin()
         idxR = np.abs(mjd_arr_k[jk].to_value('mjd', 'float') - MJD_cuts[1]).argmin() 
         
@@ -305,7 +307,17 @@ def EECep_light_curve_stacked(PD_data, #PD, PDerror, MJD
                               [],
                               verbose_text=False,
                               relative_phase=True)
+               
+    elif(plot_date):       
+        plot_date_array = [mdates.date2num(t_b.to_datetime()),
+                           mdates.date2num(t_v.to_datetime()),
+                           mdates.date2num(t_r.to_datetime()),
+                           mdates.date2num(t_i.to_datetime()),
+                           mdates.date2num(Time(t_data , format='mjd', scale='utc').to_datetime())]
         
+    elif phase_plot and plot_date:
+        print("Phase plot and plot date cannot be both true")
+
         #print("Expectation is 3",len(phase_shift_data))        
         #phase_shift_axis=phase_shift[0]
             
@@ -316,12 +328,35 @@ def EECep_light_curve_stacked(PD_data, #PD, PDerror, MJD
     axs = gs.subplots(sharex=True, sharey=False)    
 
     if(phase_plot):
+        #PD
         markers, caps, bars = axs[0].errorbar(
-                phase_shift_data[1] , 
+                phase_shift_data[1], 
                 PD_data[0][index_L_cutt[4]:index_R_cutt[4]+1], 
                 yerr=PD_data[1][index_L_cutt[4]:index_R_cutt[4]+1], 
                 xerr =[0]*len(PD_data[0][index_L_cutt[4]:index_R_cutt[4]+1]), 
                 color='black', fmt='*', markersize=16, capsize=10, capthick=5, label='PD')
+        
+    elif(plot_date):
+        #MJDs on the x axis
+        #print(len(plot_date_array[4][index_L_cutt[4]:index_R_cutt[4]+1]))
+        
+        #Currently has length issues. That plus one was added because of reasons in the past.
+        
+        print(len(plot_date_array[4][index_L_cutt[4]:index_R_cutt[4]]), #This is 46
+              len( PD_data[0][index_L_cutt[4]:index_R_cutt[4]+1] ))     #This is 47
+        
+        markers, caps, bars = axs[0].errorbar(
+                plot_date_array[4][index_L_cutt[4]:index_R_cutt[4]+1], 
+                PD_data[0][index_L_cutt[4]:index_R_cutt[4]+1],
+                yerr=PD_data[1][index_L_cutt[4]:index_R_cutt[4]+1], 
+                xerr =[0]*len(PD_data[0][index_L_cutt[4]:index_R_cutt[4]+1]),             
+                color='black', fmt='*', markersize=16, capsize=10, capthick=5, label='PD')   
+            
+        # Format the x-axis as dates
+        axs[0].xaxis.set_major_locator(mdates.AutoDateLocator())
+        axs[0].xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+
+        axs[0].tick_params(axis="x", labelsize=28, rotation=45)
         
     else:
         markers, caps, bars = axs[0].errorbar(
@@ -342,7 +377,21 @@ def EECep_light_curve_stacked(PD_data, #PD, PDerror, MJD
                 xerr =[0]*len(PA_data[0][index_L_cutt[4]:index_R_cutt[4]+1]), 
                 color='black', fmt='*', markersize=16, capsize=10, capthick=5, label='PA')
         
+    elif(plot_date):
+        axs[1].scatter(plot_date_array[4][index_L_cutt[4]:index_R_cutt[4]+1], 
+                PA_data[0][index_L_cutt[4]:index_R_cutt[4]], 
+                yerr=PA_data[1][index_L_cutt[4]:index_R_cutt[4]+1], 
+                xerr =[0]*len(PA_data[0][index_L_cutt[4]:index_R_cutt[4]+1]), 
+                color='black', fmt='*', markersize=16, capsize=10, capthick=5, label='PA')   
+            
+        # Format the x-axis as dates
+        axs[1].xaxis.set_major_locator(mdates.AutoDateLocator())
+        axs[1].xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+
+        axs[1].tick_params(axis="x", labelsize=28, rotation=45)
+        
     else:
+        #PA
         markers, caps, bars = axs[1].errorbar(
                 mjd_arr_k[4][index_L_cutt[4]:index_R_cutt[4]+1].mjd, 
                 PA_data[0][index_L_cutt[4]:index_R_cutt[4]+1], 
@@ -364,6 +413,18 @@ def EECep_light_curve_stacked(PD_data, #PD, PDerror, MJD
             axs[2].scatter(phase_shift_data[0][ka][index_L_cutt[ka]:index_R_cutt[ka]], 
                         color_arr[ka][index_L_cutt[ka]:index_R_cutt[ka]], 
                         alpha = 0.72, s=16, color=c_arr[ka], label=c_labs[ka])    
+    
+    elif(plot_date):
+        for ka in range(0, len(mjd_arr_k)-1):
+            axs[2].scatter(plot_date_array[ka][index_L_cutt[ka]:index_R_cutt[ka]], 
+                           color_arr[0][index_L_cutt[ka]:index_R_cutt[ka]], 
+                           alpha = 0.72, s=16, color=c_arr[ka], label=c_labs[ka])   
+            
+        # Format the x-axis as dates
+        axs[2].xaxis.set_major_locator(mdates.AutoDateLocator())
+        axs[2].xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+
+        axs[2].tick_params(axis="x", labelsize=28, rotation=45)
     
     #This is the light curve
     #    for ka in range(0, len(phase_axis)): #this is a recursive call. Just recursive call the third plot
@@ -420,6 +481,8 @@ def EECep_light_curve_superposed(pol_data, #PD, PDerror, MJD
                      txt_arg='',
                      lc=False,
                      phase_plot = False,
+                     plot_date = False,
+                     date = False,
                      verb_t=False,
                      true_pa=False, 
                      title_t=False):
@@ -461,6 +524,7 @@ def EECep_light_curve_superposed(pol_data, #PD, PDerror, MJD
         t_data = [Time(x).mjd for x in pol_data[2]]         
     
     else:
+        #Expects a trimmed light curve. We were told not to do that.
         color_arr = [light_curve_data[0][0], 
                      light_curve_data[0][1], 
                      light_curve_data[0][2], 
@@ -472,6 +536,7 @@ def EECep_light_curve_superposed(pol_data, #PD, PDerror, MJD
         t_i = Time(light_curve_data[1][3] , format='mjd', scale='utc')
         t_data = [Time(x).mjd for x in pol_data[2]]         
 
+    #All time here
     mjd_arr_k = [t_b, t_v, t_r, t_i, Time(t_data , format='mjd', scale='utc') ]
     
     c_arr = ['blue',  'green',  'red', 'purple']
@@ -481,9 +546,7 @@ def EECep_light_curve_superposed(pol_data, #PD, PDerror, MJD
     index_R_cutt = []
     
     for jk in range(0, len(mjd_arr_k)):
-        #For each data string
-        
-        #Find the index of the value that most corresponds to the cutoff
+        #For each list find the index of the value that most corresponds to the cutoff
         idxL = np.abs(mjd_arr_k[jk].to_value('mjd', 'float') - MJD_cuts[0]).argmin()
         idxR = np.abs(mjd_arr_k[jk].to_value('mjd', 'float') - MJD_cuts[1]).argmin() 
         
@@ -498,18 +561,46 @@ def EECep_light_curve_superposed(pol_data, #PD, PDerror, MJD
                               [],
                               verbose_text=False,
                               relative_phase=True)
+        
+    elif(plot_date):       
+        plot_date_array = [mdates.date2num(t_b.to_datetime()),
+                           mdates.date2num(t_v.to_datetime()),
+                           mdates.date2num(t_r.to_datetime()),
+                           mdates.date2num(t_i.to_datetime()),
+                           mdates.date2num(Time(t_data , format='mjd', scale='utc').to_datetime())]
+        
+    elif phase_plot and plot_date:
+        print("Phase plot and plot date cannot be both true")
     
     #fig = plt.figure(figsize=(36, 12))    
     fig, ax1 = plt.subplots(figsize=(36, 12))
     
     #Plot colour magnitudes
     if(phase_plot):    
-        #I do not need to return the magnitudes.
+        #phase shifts on the x axis
         for ka in range(0, len(mjd_arr_k)-1): #this is a recursive call. Just recursive call the third plot
             ax1.scatter(phase_shift_data[0][ka][index_L_cutt[ka]:index_R_cutt[ka]], 
                         color_arr[ka][index_L_cutt[ka]:index_R_cutt[ka]], 
                         alpha = 0.72, s=16, color=c_arr[ka], label=c_labs[ka])
+            
+    elif(plot_date):
+        #MJDs on the x axis
+        for ka in range(0, len(plot_date_array )-1): #this is a recursive call. Just recursive call the third plot
+            ax1.scatter(plot_date_array[ka][index_L_cutt[ka]:index_R_cutt[ka]], 
+                        color_arr[ka][index_L_cutt[ka]:index_R_cutt[ka]], 
+                        alpha = 0.72, s=16, color=c_arr[ka], label=c_labs[ka])   
+            
+            # Format the x-axis as dates
+        ax1.xaxis.set_major_locator(mdates.AutoDateLocator())
+        ax1.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+
+        ax1.tick_params(axis="x", labelsize=28, rotation=45)
+        
+    elif phase_plot and plot_date:
+        print("Phase plot and plot date cannot be both true")        
+            
     else:
+        #MJDs on the x axis
         for ka in range(0, len(mjd_arr_k)-1): #this is a recursive call. Just recursive call the third plot
             ax1.scatter(mjd_arr_k[ka][index_L_cutt[ka]:index_R_cutt[ka]].mjd, 
                         color_arr[ka][index_L_cutt[ka]:index_R_cutt[ka]], 
@@ -526,7 +617,22 @@ def EECep_light_curve_superposed(pol_data, #PD, PDerror, MJD
                 pol_data[0][index_L_cutt[4]:index_R_cutt[4]+1], 
                 yerr=pol_data[1][index_L_cutt[4]:index_R_cutt[4]+1], 
                 xerr =[0]*len(pol_data[0][index_L_cutt[4]:index_R_cutt[4]+1]), 
-                color='black', fmt='*', markersize=16, capsize=10, capthick=5, label=txt_arg)        
+                color='black', fmt='*', markersize=16, capsize=10, capthick=5, label=txt_arg)   
+        
+    elif(plot_date):
+        markers, caps, bars = ax2.errorbar(
+                plot_date_array[-1], 
+                pol_data[0][index_L_cutt[4]:index_R_cutt[4]+1], 
+                yerr=pol_data[1][index_L_cutt[4]:index_R_cutt[4]+1], 
+                xerr =[0]*len(pol_data[0][index_L_cutt[4]:index_R_cutt[4]+1]), 
+                color='black', fmt='*', markersize=16, capsize=10, capthick=5, label=txt_arg)
+       
+            # Format the x-axis as dates
+        ax2.xaxis.set_major_locator(mdates.AutoDateLocator())
+        ax2.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+        
+        ax2.tick_params(axis="x", labelsize=28, rotation=45)      
+        
     else:
         markers, caps, bars = ax2.errorbar(
                 mjd_arr_k[4][index_L_cutt[4]:index_R_cutt[4]+1].mjd, 
@@ -562,11 +668,9 @@ def EECep_light_curve_superposed(pol_data, #PD, PDerror, MJD
     ax1.set_xlabel('Time, (MJD)', fontsize=32)
     ax1.tick_params(axis="y", labelsize=28)
     ax1.tick_params(axis="x", labelsize=28)
-    #plt.xticks(fontsize=28)
-    #plt.yticks(fontsize=28)
     
     plt.grid()    
-        
+    plt.show()
     """
     fig = plt.figure(figsize=(36, 12))
     #gs = fig.add_gridspec(3, hspace=0)

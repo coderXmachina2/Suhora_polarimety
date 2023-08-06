@@ -504,7 +504,7 @@ def plot_pol_stab(MJD,
                   obj_pol_err, 
                   plot_data,
                   sv_pold_img = '',
-                  toggle=True,
+                  toggle=False,
                   plot_date=False):
     """
     A function that takes in computed data and plots either polarization degree (PD) or position angle (PA). Does not return any data. Only plots in more presentable publication quality style.
@@ -525,7 +525,6 @@ def plot_pol_stab(MJD,
             Saves image to file.  False by default 
         corr_MJD : bool, optional
             Saves image to file.  False by default 
-
     """
     
     fig, ax = plt.subplots(figsize=(36, 12))

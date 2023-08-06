@@ -8,9 +8,6 @@ import re
 
 from copy import deepcopy as cp
 
-from reduct_funcs import funcs_utils
-from reduct_funcs import funcs_calib_and_plot
-from reduct_funcs import funcs_star_finder
 from photutils.aperture import CircularAperture, CircularAnnulus
 from photutils.aperture import aperture_photometry
 from astropy.visualization import simple_norm
@@ -22,9 +19,15 @@ from astropy.visualization.mpl_normalize import ImageNormalize
 from astropy.visualization import SqrtStretch
 from kneed import KneeLocator
 
+from reduct_funcs import funcs_utils
+from reduct_funcs import funcs_calib_and_plot
+from reduct_funcs import funcs_star_finder
+from reduct_funcs import funcs_apt_phot
+
 importlib.reload(funcs_star_finder)
 importlib.reload(funcs_calib_and_plot)
 importlib.reload(funcs_utils)
+importlib.reload(funcs_apt_phot)
 
 def apt_phot_global_bkg_sub(fits_data_1, 
                             search_offset, 
@@ -207,8 +210,13 @@ def process_obs_track(list_data_files,
                       radii_range,
                       track_ints,
                       ann_radii,
-                      verbose_print=False):
-
+                      verbose_print=False,
+                      verbose_apt_size=False):
+    """
+    #Note. Aperture sizes slightly different. Slightly larger for this version but  the structure of the excel files are the same.
+    
+    
+    """
     MJD = re.search('./files_sorted/(.*)/',  list_data_files[0]).group(1)
     
     if(verbose_print):
@@ -227,7 +235,11 @@ def process_obs_track(list_data_files,
 
     filename = 'ref' + astropy.io.fits.open(list_data_files[track_ints[0]])[0].header['OBJECT'] +"_" + astropy.io.fits.open(list_data_files[track_ints[0]])[0].header['FILTER']
     
-    workbook = xlsxwriter.Workbook('./stats/'+MJD+"_"+ filename+str(track_ints[0])+"-" +str(track_ints[1])  +'.xlsx')
+    workbook = xlsxwriter.Workbook('./stats/'+MJD+"_"+ filename+str(track_ints[0])+"-" +str(track_ints[1])  +'TestExperiment.xlsx')
+    
+    print("Meta File:",
+         './metadata/'+MJD+"_"+ filename+str(track_ints[0])+"-" +str(track_ints[1])  +'_metadata.xlsx')
+    
     worksheet = workbook.add_worksheet()
     worksheet.write('A1', 'int')
     worksheet.write('B1', 'time obs')
@@ -262,7 +274,7 @@ def process_obs_track(list_data_files,
             print(k, list_data_files[k])
             
         #Key processing step make a reduced object
-        #Discrepancy of structure with laptop. OMG!
+        #Discrepancy of structure with laptop. So annoying OMG!
         reduced_obj = funcs_calib_and_plot.plot_double_raw_v_reduced(list_data_files[k],
                                             (cal_files[0], cal_files[1], cal_files[2]),
                                             [512, 512, 512, 512], 
@@ -289,7 +301,7 @@ def process_obs_track(list_data_files,
                                                               plot_tab=False)
             if (len(DAO_positions) != 2):
                 #what do I return from this? 
-                print("Second Detector Triggered")
+                #print("Second Detector Triggered")
                 x_targ, y_targ, peak_targ = funcs_star_finder.source_peak_finder(reduced_obj, 
                                                                                  search_array,
                                                                                  3, 
@@ -309,7 +321,7 @@ def process_obs_track(list_data_files,
             
             phot_tab = funcs_apt_phot.apt_phot_local_bkg_sub(reduced_obj,
                                                              DAO_positions,
-                                                             search_bracket, 
+                                                             search_array, 
                                                              search_off,  
                                                              radii, 
                                                              (12, 22), 
@@ -322,8 +334,52 @@ def process_obs_track(list_data_files,
         
         good_radii=funcs_apt_phot.solve_apt(combine_target, #
                                             trial_radii, 
-                                            verbose=True) #
+                                            verbose=verbose_apt_size) #
         
+        phot_tab = funcs_apt_phot.apt_phot_local_bkg_sub(reduced_obj,
+                                                     DAO_positions,
+                                                     search_array, 
+                                                     search_off,  
+                                                     radii, 
+                                                     (12, 22), 
+                                                     False)
+        
+        print("\nData File:", list_data_files[k])
+        print(k, 
+              astropy.io.fits.open(list_data_files[k])[0].header['TIME-OBS'],
+              astropy.io.fits.open(list_data_files[k])[0].header['FILTER'],
+              astropy.io.fits.open(list_data_files[k])[0].header['EXPTIME'],
+              good_radii,
+              phot_tab['xcenter'][0].value, 
+              phot_tab['ycenter'][0].value,
+              phot_tab['residual_aperture_sum'][0], 
+              phot_tab['residual_aperture_sum_err'][0],
+              phot_tab['xcenter'][1].value, 
+              phot_tab['ycenter'][1].value,
+              phot_tab['residual_aperture_sum'][1], 
+              phot_tab['residual_aperture_sum_err'][1],"\n")
+        
+        write_this = [k, 
+              astropy.io.fits.open(list_data_files[k])[0].header['TIME-OBS'],
+              astropy.io.fits.open(list_data_files[k])[0].header['FILTER'],
+              astropy.io.fits.open(list_data_files[k])[0].header['EXPTIME'],
+              good_radii,
+              phot_tab['xcenter'][0].value,
+              phot_tab['ycenter'][0].value,
+              phot_tab['residual_aperture_sum'][0],
+              phot_tab['residual_aperture_sum_err'][0],
+              phot_tab['xcenter'][1].value,
+              phot_tab['ycenter'][1].value,
+              phot_tab['residual_aperture_sum'][1],
+              phot_tab['residual_aperture_sum_err'][1]]
+        
+        for item in write_this :
+            worksheet.write(row, column, item)
+            column += 1
+
+        column = 0
+        row += 1
+                        
     workbook.close()
     
 def solve_apt(combine_target, 
